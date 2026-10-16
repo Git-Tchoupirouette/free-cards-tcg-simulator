@@ -1,0 +1,1398 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090b12">
+  <title>Free Cards — Pokémon TCG Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:dark;--bg:#090b12;--panel:#11141e;--muted:#8f96a8;--gold:#eecb78;--line:rgba(255,255,255,.09)}
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(ellipse at 72% -15%,rgba(103,78,156,.19),transparent 45%),radial-gradient(ellipse at 0% 48%,rgba(45,88,123,.10),transparent 35%),var(--bg);color:#f7f6f2;font-family:"DM Sans",sans-serif;min-height:100vh}
+    h1,h2,h3,.display{font-family:Outfit,sans-serif}
+    button{font:inherit}
+    .glass{background:linear-gradient(145deg,rgba(24,27,39,.88),rgba(15,17,26,.84));border:1px solid var(--line);box-shadow:0 16px 48px rgba(0,0,0,.22);backdrop-filter:blur(18px)}
+    .muted{color:var(--muted)}
+    .gold{color:var(--gold)}
+    .nav-btn{color:#9298a9;transition:.2s}
+    .nav-btn.active,.nav-btn:hover{color:#fff;background:rgba(255,255,255,.07)}
+    .set-card{min-width:0;width:100%;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);transition:transform .2s,border-color .2s,background .2s}
+    #shop-panel section{min-width:0}
+    .set-card:hover{transform:translateY(-2px);border-color:rgba(238,203,120,.38);background:rgba(255,255,255,.055)}
+    .set-card.selected{border-color:rgba(238,203,120,.72);background:linear-gradient(135deg,rgba(238,203,120,.12),rgba(255,255,255,.025))}
+    .year-card{min-width:0;min-height:122px;border:1px solid rgba(255,255,255,.09);background:linear-gradient(145deg,rgba(30,34,49,.82),rgba(15,17,26,.72));transition:transform .2s,border-color .2s,background .2s}
+    .year-card:hover{transform:translateY(-2px);border-color:rgba(238,203,120,.42);background:linear-gradient(145deg,rgba(48,43,61,.88),rgba(19,21,31,.82))}
+    .set-group>summary{cursor:pointer;list-style:none}
+    .set-group>summary::-webkit-details-marker{display:none}
+    .set-group[open]>summary .set-group-chevron{transform:rotate(180deg)}
+    .favorite-card{border-color:rgba(238,203,120,.38);box-shadow:0 0 0 1px rgba(238,203,120,.12),0 12px 30px rgba(0,0,0,.2)}
+    .pack-art{position:relative;overflow:hidden;background:linear-gradient(160deg,#4c3d78,#172338 58%,#11141e);isolation:isolate}
+    .pack-art:before{content:"";position:absolute;width:125px;height:160px;top:-50px;right:-20px;background:rgba(255,255,255,.13);filter:blur(22px);transform:rotate(25deg)}
+    .pack-art:after{content:"";position:absolute;inset:0;background:linear-gradient(125deg,transparent 35%,rgba(255,255,255,.14) 48%,transparent 60%);transform:translateX(-120%);animation:packSheen 5s ease-in-out infinite}
+    @keyframes packSheen{50%,100%{transform:translateX(120%)}}
+    .booster{transform:rotate(-5deg);box-shadow:0 18px 35px rgba(0,0,0,.35)}
+    .card-tile{perspective:900px;animation:rise .48s cubic-bezier(.2,.8,.2,1) both}
+    .card-inner{position:relative;transition:transform .25s;transform-style:preserve-3d}
+    .card-tile:hover .card-inner{transform:rotateY(-5deg) rotateX(4deg) translateY(-4px)}
+    .card-image{display:block;width:100%;aspect-ratio:2.5/3.5;object-fit:cover;border-radius:11px;background:#1c2230}
+    .opening-stage{position:relative;display:grid;min-height:min(68vh,680px);place-items:center;overflow:hidden;border:1px solid rgba(255,255,255,.07);border-radius:18px;background:radial-gradient(ellipse at 50% 58%,rgba(105,86,167,.22),transparent 52%),linear-gradient(150deg,rgba(22,25,37,.92),rgba(10,12,19,.96))}
+    .opening-stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.05) 50%,transparent 65%);transform:translateX(-100%);animation:stageSweep 2.3s ease-in-out infinite}
+    @keyframes stageSweep{to{transform:translateX(100%)}}
+    .reveal-stack{position:relative;width:min(42vw,430px,calc((min(68vh,680px) - 85px)*.714));max-width:calc(100vw - 72px);aspect-ratio:2.5/3.5;perspective:1100px;touch-action:pan-y;user-select:none}
+    .stack-back{position:absolute;inset:0;border:4px solid #d6c4a1;border-radius:14px;background:radial-gradient(circle at 50% 50%,#f2d783 0 8%,#db6f6a 9% 14%,#e6d1a6 15% 17%,transparent 18%),repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0 3px,transparent 3px 8px),linear-gradient(145deg,#2d72b1,#172950 56%,#5b4387);box-shadow:0 12px 32px rgba(0,0,0,.55),inset 0 0 0 2px rgba(28,37,74,.85);transition:transform .3s}
+    .stack-back:after{content:"C";position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,239,190,.7);font:700 58px Outfit,sans-serif;text-shadow:0 2px 15px rgba(255,226,144,.65)}
+    .stack-top{position:absolute;inset:0;z-index:5;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:#111522;box-shadow:0 18px 42px rgba(0,0,0,.58);cursor:pointer;transform-origin:50% 75%;animation:topCardIn .3s cubic-bezier(.2,.8,.2,1) both}
+    .stack-top img{display:block;width:100%;height:100%;object-fit:contain;background:#10131c}
+    .stack-top.swiping{transition:transform .28s ease,opacity .28s ease;transform:translateX(-125%) rotate(-15deg);opacity:0}
+    @keyframes topCardIn{from{opacity:.5;transform:translateY(8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .stack-card-caption{position:absolute;right:0;bottom:0;left:0;padding:30px 12px 11px;background:linear-gradient(0deg,rgba(4,6,11,.97),rgba(4,6,11,0));text-shadow:0 1px 4px #000}
+    .image-unavailable{display:grid!important;place-items:center;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:radial-gradient(circle at 50% 25%,rgba(135,105,195,.27),transparent 45%),linear-gradient(150deg,#202438,#10131c)!important}
+    .image-unavailable:before{content:"ILLUSTRATION NON DISPONIBLE";position:absolute;top:45%;left:10px;right:10px;text-align:center;color:rgba(255,255,255,.52);font:600 9px "DM Sans",sans-serif;letter-spacing:.12em}
+    .image-unavailable:after{content:attr(data-card-name);position:absolute;top:51%;left:10px;right:10px;text-align:center;color:#f0d38f;font:600 13px Outfit,sans-serif}
+    .opening-copy{position:absolute;right:12px;bottom:14px;left:12px;text-align:center}
+    .reveal-price{min-width:175px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(14,16,25,.82);padding:8px 16px;text-align:center;transition:transform .25s,border-color .25s,box-shadow .25s}
+    .reveal-price.price-pop{animation:pricePop .55s cubic-bezier(.2,.8,.2,1)}
+    .reveal-price.price-hit{border-color:rgba(245,205,112,.75);box-shadow:0 0 18px rgba(238,203,120,.35),inset 0 0 18px rgba(238,203,120,.08)}
+    .reveal-price.price-jackpot{border-color:rgba(216,156,255,.85);box-shadow:0 0 30px rgba(189,114,255,.5),inset 0 0 24px rgba(189,114,255,.16)}
+    @keyframes pricePop{0%{transform:scale(.84)}55%{transform:scale(1.16)}100%{transform:scale(1)}}
+    .daily-wheel-wrap{position:relative;width:min(74vw,340px);aspect-ratio:1}
+    .daily-wheel{position:absolute;inset:0;border:8px solid #d3b66f;border-radius:50%;background:conic-gradient(from -22.5deg,#6c51a5 0deg 45deg,#282e50 45deg 90deg,#765995 90deg 135deg,#303d61 135deg 180deg,#956f48 180deg 225deg,#423764 225deg 270deg,#827044 270deg 315deg,#39436e 315deg 360deg);box-shadow:0 0 0 5px rgba(255,255,255,.07),0 18px 48px rgba(0,0,0,.42);transition:transform 5s cubic-bezier(.12,.74,.11,1);overflow:hidden}
+    .daily-wheel:after{content:"";position:absolute;inset:46%;border:4px solid #f7dfa0;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3c6,#b88638 75%);box-shadow:0 0 20px rgba(238,203,120,.8)}
+    .wheel-label{position:absolute;top:50%;left:50%;width:78px;margin-left:-39px;margin-top:-11px;text-align:center;color:#fff;font-size:11px;font-weight:700;text-shadow:0 2px 5px #000;transform:rotate(var(--wheel-angle)) translateY(-115px) rotate(calc(-1 * var(--wheel-angle)))}
+    .wheel-pointer{position:absolute;z-index:3;top:-11px;left:calc(50% - 14px);width:28px;height:42px;clip-path:polygon(50% 100%,0 0,100% 0);background:linear-gradient(#fff1b9,#c49337);filter:drop-shadow(0 3px 4px #000)}
+    .wheel-spin{position:absolute;z-index:4;inset:calc(50% - 48px);display:grid;place-items:center;border:1px solid rgba(255,255,255,.16);border-radius:50%;background:#10131c;color:#f4d68f;font:700 12px Outfit,sans-serif;letter-spacing:.12em;text-align:center;box-shadow:0 5px 20px #0008}
+    .day-node{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.025)}
+    .day-node.current{border-color:rgba(238,203,120,.5);background:rgba(238,203,120,.09)}
+    .day-node.claimed{border-color:rgba(110,231,183,.22);color:#86efac}
+    @media(max-width:640px){.mobile-sticky nav .nav-btn{padding-left:7px;padding-right:7px}.opening-stage{min-height:min(66vh,590px)}.reveal-stack{width:min(70vw,390px);max-width:calc(100vw - 48px)}.opening-copy{bottom:9px}.wheel-label{transform:rotate(var(--wheel-angle)) translateY(-28vw) rotate(calc(-1 * var(--wheel-angle)));font-size:10px}}
+    @media(max-width:640px){.mobile-sticky #account-label{display:none}.mobile-sticky #account-open{padding:8px}}
+    @media(max-width:480px){.mobile-sticky a.flex.items-center.gap-3{gap:6px}.mobile-sticky a .h-10.w-10{width:34px;height:34px}.mobile-sticky a .display{font-size:15px;letter-spacing:.1em}.mobile-sticky a>span:last-child>span:last-child{display:none}.mobile-sticky nav{gap:0!important;padding:3px!important}.mobile-sticky nav .nav-btn{padding:5px 4px!important}.mobile-sticky nav #daily-badge{display:none}.mobile-sticky #account-open{padding:7px!important}}
+    @media(max-width:360px){.mobile-sticky>div:first-child{gap:4px!important}.mobile-sticky a.flex.items-center.gap-3{min-width:0;flex:1;gap:5px}.mobile-sticky a .h-10.w-10{width:32px;height:32px}.mobile-sticky a .display{font-size:14px;letter-spacing:.08em}.mobile-sticky a>span:last-child>span:last-child{display:none}.mobile-sticky nav{flex:0 0 auto;gap:0!important;padding:3px!important}.mobile-sticky nav .nav-btn{padding:5px 4px!important}.mobile-sticky nav #binder-count{display:none}.mobile-sticky #account-open{padding:7px!important}}
+    @media(max-height:700px) and (min-width:641px){.opening-stage{min-height:calc(100vh - 250px)}.reveal-stack{width:min(34vw,calc((100vh - 335px)*.714))}}
+    .foil{position:relative}
+    .foil:after{content:"";position:absolute;inset:0;border-radius:11px;pointer-events:none;background:linear-gradient(115deg,transparent 10%,rgba(255,255,255,.23) 27%,rgba(95,243,255,.12) 36%,rgba(255,92,213,.16) 49%,rgba(255,235,132,.13) 61%,transparent 75%);background-size:220% 220%;mix-blend-mode:screen;opacity:.52;animation:foil 4s ease-in-out infinite}
+    @keyframes foil{0%,100%{background-position:100% 100%}50%{background-position:0 0}}
+    @keyframes rise{from{opacity:0;transform:translateY(22px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .tear{animation:tear .55s ease-out both}
+    @keyframes tear{0%{transform:scale(1) rotate(0);opacity:1}45%{transform:scale(1.05) rotate(-4deg)}100%{transform:scale(.15) rotate(20deg);opacity:0}}
+    .progress-line{height:3px;background:rgba(255,255,255,.08);overflow:hidden}
+    .progress-line>span{display:block;height:100%;width:0;background:linear-gradient(90deg,#a888ff,#f0cf81);transition:width .35s}
+    .scrollbar::-webkit-scrollbar{width:6px}
+    .scrollbar::-webkit-scrollbar-thumb{background:#343848;border-radius:9px}
+    .toast{animation:rise .25s ease-out}
+    .tab-panel[hidden]{display:none}
+    @media(max-width:640px){.mobile-sticky{position:sticky;top:0;z-index:30}.pack-art{min-height:220px}}
+    @media(max-width:420px){.mobile-sticky .flex.h-\[76px\]{gap:6px}.mobile-sticky .flex.h-\[76px\]>a{min-width:0;gap:6px}.mobile-sticky .flex.h-\[76px\]>a>span:last-child{min-width:0}.mobile-sticky .flex.h-\[76px\]>a .display{font-size:14px;letter-spacing:.1em}.mobile-sticky .flex.h-\[76px\]>a .muted{display:none}.mobile-sticky nav{gap:0;padding:2px}.mobile-sticky .nav-btn{padding-left:3px;padding-right:3px}#account-open{flex:none;padding:8px}#account-open span{display:none}}
+  </style>
+</head>
+<body>
+  <div class="mx-auto max-w-[1440px] px-4 pb-12 sm:px-6 lg:px-10">
+    <header class="mobile-sticky -mx-4 border-b border-white/[.07] bg-[#090b12]/85 px-4 backdrop-blur-xl sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0">
+      <div class="flex h-[76px] items-center justify-between">
+        <a href="#" class="flex items-center gap-3" aria-label="Free Cards accueil">
+          <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[.08] text-amber-200"><i data-lucide="crown" class="h-5 w-5"></i></span>
+          <span><span class="display block text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span></span><span class="muted block text-[9px] tracking-[.28em]">TCG COLLECTION SIMULATOR</span></span>
+        </a>
+        <nav class="flex items-center gap-1 rounded-xl border border-white/[.07] bg-white/[.025] p-1">
+          <button class="nav-btn active flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="shop"><i data-lucide="store" class="h-4 w-4"></i><span class="hidden lg:inline">Boutique</span></button>
+          <button class="nav-btn flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="binder"><i data-lucide="library" class="h-4 w-4"></i><span class="hidden lg:inline">Classeur</span><span id="binder-count" class="rounded-full bg-white/10 px-1.5 text-[10px]">0</span></button>
+          <button class="nav-btn flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="showcase"><i data-lucide="panels-top-left" class="h-4 w-4"></i><span class="hidden lg:inline">Vitrine</span></button>
+          <button class="nav-btn flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="daily"><i data-lucide="gift" class="h-4 w-4"></i><span class="hidden lg:inline">Bonus</span><span id="daily-badge" class="hidden h-2 w-2 rounded-full bg-emerald-300"></span></button>
+        </nav>
+        <div class="flex items-center gap-2"><button id="account-open" class="rounded-xl border border-violet-300/20 bg-violet-300/[.06] px-3 py-2 text-xs text-violet-100 hover:bg-violet-300/[.12]"><i data-lucide="user-round" class="mr-1 inline h-4 w-4"></i><span id="account-label">Compte</span></button><div class="hidden items-center gap-2 rounded-xl border border-amber-200/15 bg-amber-100/[.055] px-4 py-2.5 lg:flex"><i data-lucide="wallet" class="h-4 w-4 text-amber-200"></i><div><span class="muted block text-[9px] uppercase tracking-[.16em]">Portefeuille</span><strong id="wallet" class="display text-sm">$150.00</strong></div></div></div>
+      </div>
+    </header>
+
+    <div class="mb-4 flex items-center justify-between rounded-xl border border-amber-200/10 bg-amber-100/[.025] px-3 py-2 sm:hidden"><span class="muted flex items-center gap-2 text-xs"><i data-lucide="wallet" class="h-4 w-4 text-amber-200"></i>Portefeuille</span><strong id="wallet-mobile" class="display gold">$150.00</strong></div>
+
+    <main>
+      <section id="shop-panel" class="tab-panel">
+        <div class="mb-8 grid grid-cols-1 gap-6 pt-5 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end lg:pt-9">
+          <div><div class="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[.24em] text-violet-300"><span class="h-px w-7 bg-violet-300/60"></span>Votre prochaine trouvaille commence ici</div>
+            <h1 class="display max-w-2xl text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl">Ouvrez un pack.<br><span class="bg-gradient-to-r from-amber-100 via-amber-300 to-violet-300 bg-clip-text text-transparent">Trouvez votre légende.</span></h1>
+            <p class="muted mt-4 max-w-xl text-sm leading-6">Explorez les extensions emblématiques, révélez vos cartes une à une et construisez votre collection. Une simulation, sans achats réels.</p>
+          </div>
+          <div class="glass grid grid-cols-2 gap-3 rounded-2xl p-4"><div><span class="muted text-[10px] uppercase tracking-wider">Collection</span><div id="collection-value" class="display mt-1 text-xl font-semibold">$0.00</div></div><div class="border-l border-white/10 pl-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes trouvées</span><div id="collection-count" class="display mt-1 text-xl font-semibold">0</div></div></div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <section>
+            <div class="mb-3 flex flex-wrap items-end justify-between gap-3"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><button id="shop-back-years" type="button" class="hidden shrink-0 items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-white/75 hover:bg-white/[.07]"><i data-lucide="arrow-left" class="h-3.5 w-3.5"></i>Années</button><h2 id="shop-heading" class="display text-xl font-semibold">Choisissez votre booster</h2></div><p id="set-count" class="muted mt-1 text-xs">Choisissez une année pour parcourir les extensions · prix simulés en USD</p></div><label class="relative block w-full sm:w-72"><i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40"></i><input id="set-search" type="search" placeholder="Rechercher un set, une année…" class="w-full rounded-xl border border-white/10 bg-white/[.035] py-2.5 pl-9 pr-3 text-xs text-white placeholder:text-white/35"></label></div>
+            <div id="set-list" class="min-w-0"></div>
+          </section>
+          <aside class="lg:sticky lg:top-6 lg:self-start">
+            <div class="glass overflow-hidden rounded-2xl">
+              <div id="pack-art" class="pack-art flex min-h-[200px] items-center justify-center">
+                <div class="booster flex h-[142px] w-[102px] flex-col items-center justify-center rounded-xl border border-white/25 bg-gradient-to-br from-violet-500 via-indigo-800 to-slate-950 p-2 text-center">
+                  <i data-lucide="sparkles" class="mb-2 h-5 w-5 text-amber-200"></i><span class="display text-xs font-bold tracking-wider">FREE<br>CARDS</span><span id="pack-card-count" class="mt-2 text-[8px] tracking-[.25em] text-white/65">10 CARTES</span>
+                </div>
+                <span class="absolute bottom-3 right-4 rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-[10px] text-white/70">BOOSTER SIMULÉ</span>
+              </div>
+              <div class="p-5">
+                <div class="flex items-start justify-between gap-3"><div><p id="selected-era" class="muted text-[10px] uppercase tracking-[.18em]">Sélectionnez un set</p><h2 id="selected-name" class="display mt-1 text-xl font-semibold">Votre prochain pack</h2></div><div class="text-right"><span class="muted text-[10px] uppercase">Prix / pack</span><div id="selected-price" class="display gold text-xl font-semibold">—</div></div></div>
+                <div class="mt-4 grid grid-cols-3 gap-2 border-y border-white/[.07] py-3 text-center"><div><span class="muted block text-[9px] uppercase">Par booster</span><b id="selected-pack-count" class="text-xs">10 cartes</b></div><div><span class="muted block text-[9px] uppercase">Reverse</span><b id="selected-reverse-count" class="text-xs">2</b></div><div><span class="muted block text-[9px] uppercase">Hit simulé*</span><b class="text-xs">1</b></div></div>
+                <div class="mt-4 flex items-center justify-between"><label for="booster-quantity" class="muted text-xs">Nombre de boosters</label><div class="flex items-center gap-3"><button id="quantity-minus" type="button" aria-label="Retirer un booster" class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-white/75 hover:bg-white/10"><i data-lucide="minus" class="h-4 w-4"></i></button><select id="booster-quantity" class="min-w-[74px] rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-center text-sm text-white" aria-label="Nombre de boosters"></select><button id="quantity-plus" type="button" aria-label="Ajouter un booster" class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-white/75 hover:bg-white/10"><i data-lucide="plus" class="h-4 w-4"></i></button></div></div>
+                <label class="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-violet-300/15 bg-violet-300/[.045] p-3"><input id="hit-pile-mode" type="checkbox" class="mt-0.5 h-4 w-4 accent-violet-300"><span><span class="block text-xs font-semibold text-violet-100">Mode Hit Pile</span><span class="muted mt-1 block text-[10px] leading-4">Empile les 3 dernières cartes de chaque booster. Les 7 autres restent dans le classeur.</span></span></label>
+                <div class="mt-3 flex items-center justify-between text-xs"><span class="muted">Total</span><strong id="total-price" class="display gold text-base">—</strong></div>
+                <button id="buy-button" class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-200 to-amber-300 px-4 py-3 text-sm font-bold text-[#19140a] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40" disabled><i data-lucide="package-open" class="h-4 w-4"></i><span>Choisissez un booster</span></button>
+                <p class="muted mt-3 text-center text-[10px]">* Le slot rare garantit une carte rare ou mieux. Les tirages restent aléatoires.</p>
+                <div id="api-status" class="muted mt-3 flex items-center justify-center gap-1.5 text-[10px]"><span class="h-1.5 w-1.5 rounded-full bg-slate-500"></span>En attente d'une extension</div>
+              </div>
+            </div>
+            <p class="muted mt-3 px-1 text-[10px] leading-4">Simulation éducative non affiliée à Pokémon, Nintendo ou TCGplayer. Valeurs indicatives ; aucune transaction réelle.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section id="binder-panel" class="tab-panel" hidden>
+        <div class="flex flex-col justify-between gap-4 pt-8 sm:flex-row sm:items-end"><div><p class="mb-2 text-[10px] uppercase tracking-[.24em] text-violet-300">Votre collection personnelle</p><h1 class="display text-4xl font-semibold">Mon classeur</h1><p class="muted mt-2 text-sm">Toutes vos trouvailles, réunies au même endroit.</p></div>
+          <div class="flex flex-wrap items-center gap-2"><label class="sr-only" for="sort-select">Trier les cartes</label><select id="sort-select" class="rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs text-white"><option value="recent" selected>Récentes · plus récentes d’abord</option><option value="value-desc">Valeur · décroissante</option><option value="value-asc">Valeur · croissante</option><option value="rarity">Rareté · meilleure d’abord</option><option value="name">Nom · A–Z</option><option value="set">Extension · A–Z</option></select><button id="sell-all" class="flex items-center gap-2 rounded-lg border border-rose-300/20 bg-rose-400/[.07] px-3 py-2 text-xs text-rose-200 transition hover:bg-rose-400/[.14] disabled:opacity-40" disabled><i data-lucide="badge-dollar-sign" class="h-4 w-4"></i>Tout vendre (hors favoris)</button></div>
+        </div>
+        <div class="my-6 grid gap-3 sm:grid-cols-3"><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Valeur estimée</span><div id="binder-value" class="display mt-1 text-2xl font-semibold">$0.00</div></div><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes possédées</span><div id="binder-total" class="display mt-1 text-2xl font-semibold">0</div></div><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes uniques</span><div id="binder-unique" class="display mt-1 text-2xl font-semibold">0</div></div></div>
+        <p id="price-refresh-status" class="muted mb-4 text-xs" aria-live="polite">Prix du marché TCGPlayer en USD ; certaines cartes peuvent n’avoir qu’une estimation.</p>
+        <div class="glass mb-5 rounded-2xl p-4">
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <label class="text-[10px] uppercase tracking-wider text-white/55">Rechercher<input id="binder-search" type="search" placeholder="Nom d’une carte…" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs normal-case tracking-normal text-white placeholder:text-white/30"></label>
+            <label class="text-[10px] uppercase tracking-wider text-white/55">Extension<select id="binder-set-filter" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs normal-case tracking-normal text-white"><option value="">Toutes les extensions</option></select></label>
+            <label class="text-[10px] uppercase tracking-wider text-white/55">Rareté<select id="binder-rarity-filter" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs normal-case tracking-normal text-white"><option value="">Toutes les raretés</option><option value="common">Communes</option><option value="uncommon">Peu communes</option><option value="rare">Rares</option><option value="hit">Ultra rares et hits</option></select></label>
+            <label class="text-[10px] uppercase tracking-wider text-white/55">Type de carte<select id="binder-type-filter" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs normal-case tracking-normal text-white"><option value="">Tous les types</option><option value="pokemon">Pokémon</option><option value="trainer">Dresseurs</option><option value="energy">Énergies</option><option value="foil">Holo / hit</option><option value="unknown">Type non indiqué (anciennes cartes)</option></select></label>
+            <label class="text-[10px] uppercase tracking-wider text-white/55">Collection<select id="binder-collection-filter" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs normal-case tracking-normal text-white"><option value="">Toutes les cartes</option><option value="favorites">Favoris uniquement</option><option value="duplicates">Doublons uniquement</option></select></label>
+          </div>
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[.07] pt-3">
+            <label class="flex items-center gap-2 text-xs text-white/70"><input id="select-visible-cards" type="checkbox" class="h-4 w-4 accent-violet-300"><span id="binder-visible-count">0 carte visible</span></label>
+            <div class="flex flex-wrap gap-2">
+              <button id="sell-selected" class="rounded-lg border border-rose-300/20 bg-rose-400/[.07] px-3 py-2 text-xs text-rose-100 disabled:opacity-40" disabled>Vendre la sélection</button>
+              <button id="sell-nonrare" class="rounded-lg border border-rose-300/20 bg-rose-400/[.07] px-3 py-2 text-xs text-rose-100 disabled:opacity-40" disabled>Vendre les non-rares</button>
+              <button id="sell-duplicates" class="rounded-lg border border-amber-200/20 bg-amber-100/[.06] px-3 py-2 text-xs text-amber-100 disabled:opacity-40" disabled>Vendre les doublons</button>
+              <button id="clear-selection" class="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/65 disabled:opacity-40" disabled>Désélectionner</button>
+            </div>
+          </div>
+        </div>
+        <div id="binder-grid" class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6"></div>
+      </section>
+      <section id="showcase-panel" class="tab-panel" hidden>
+        <div class="flex flex-wrap items-end justify-between gap-4 pt-8"><div><p class="mb-2 text-[10px] uppercase tracking-[.24em] text-violet-300">Collection mise en avant</p><h1 class="display text-4xl font-semibold">Ma vitrine</h1><p class="muted mt-2 text-sm">Vos trois cartes favorites à exposer. Par défaut, les plus précieuses sont mises en avant.</p></div><button id="showcase-auto" class="hidden rounded-lg border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/[.06]">Revenir aux 3 meilleures cartes</button></div>
+        <div id="showcase-grid" class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"></div>
+        <button id="showcase-manage" class="mt-6 rounded-lg border border-white/10 px-4 py-2.5 text-xs text-white/75 hover:bg-white/[.06]">Choisir mes cartes dans le classeur</button>
+      </section>
+      <section id="daily-panel" class="tab-panel" hidden>
+        <div class="grid gap-8 pt-8 lg:grid-cols-[minmax(0,1fr)_minmax(300px,420px)] lg:items-center">
+          <div>
+            <p class="mb-2 text-[10px] uppercase tracking-[.24em] text-violet-300">Votre rendez-vous quotidien</p>
+            <h1 class="display text-4xl font-semibold sm:text-5xl">La roue des <span class="gold">récompenses</span></h1>
+            <p class="muted mt-3 max-w-xl text-sm leading-6">Tournez une fois par jour pour gagner des crédits ou un booster gratuit aléatoire. Revenez chaque jour pour faire progresser votre série et viser la roue premium du jour 7.</p>
+            <div class="glass mt-6 rounded-2xl p-5">
+              <div class="flex flex-wrap items-end justify-between gap-3"><div><span class="muted text-[10px] uppercase tracking-wider">Série actuelle</span><div class="display mt-1 text-3xl font-semibold"><span id="streak-count">Jour 1</span><span class="muted text-base font-normal"> / 7</span></div></div><span id="daily-state-label" class="rounded-full border border-white/10 px-3 py-1.5 text-[10px] text-white/70">Une récompense vous attend</span></div>
+              <div id="streak-days" class="mt-5 grid grid-cols-7 gap-2"></div>
+              <div id="daily-result" class="mt-4 hidden rounded-xl border border-amber-200/20 bg-amber-100/[.06] px-4 py-3 text-sm"></div>
+            </div>
+            <div class="mt-5"><h2 class="display text-lg font-semibold">Boosters gratuits</h2><p class="muted mt-1 text-xs">Vos boosters gagnés attendent ici. Ouvrez-les quand vous voulez.</p><div id="free-booster-list" class="mt-3 grid gap-2"></div></div>
+          </div>
+          <div class="glass flex flex-col items-center rounded-3xl p-5 sm:p-7">
+            <div class="daily-wheel-wrap"><span class="wheel-pointer"></span><div id="daily-wheel" class="daily-wheel"></div><div class="wheel-spin">FREE<br>CARDS</div></div>
+            <button id="spin-daily" class="mt-7 w-full rounded-xl bg-gradient-to-r from-amber-200 to-amber-300 px-5 py-3.5 text-sm font-bold text-[#19140a] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"><i data-lucide="rotate-cw" class="mr-2 inline h-4 w-4"></i>Tourner la roue</button>
+            <p id="daily-wheel-caption" class="muted mt-3 text-center text-[10px] leading-4">Les récompenses s’améliorent jusqu’au jour 7. Une rotation par date locale.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="muted mt-14 border-t border-white/[.07] pt-5 text-center text-[10px]">FREE CARDS · Simulateur fan-made à but éducatif · Les prix de marché peuvent différer des valeurs réelles.</footer>
+  </div>
+
+  <div id="reveal-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-[#07080d]/95 p-4 backdrop-blur-xl">
+    <div class="mx-auto max-w-7xl py-3 sm:py-6">
+      <div class="mb-5 flex items-start justify-between gap-4"><div><p class="mb-1 text-[10px] uppercase tracking-[.23em] text-violet-300">Ouverture du booster</p><h2 id="reveal-title" class="display text-2xl font-semibold sm:text-3xl">Vos cartes</h2><p id="reveal-subtitle" class="muted mt-1 text-xs">10 cartes révélées</p></div><button id="close-reveal" aria-label="Fermer" class="rounded-lg border border-white/10 p-2 text-white/70 hover:bg-white/10"><i data-lucide="x" class="h-5 w-5"></i></button></div>
+      <div class="progress-line mb-3 rounded-full"><span id="reveal-progress"></span></div>
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2"><div id="reveal-price" class="reveal-price"><span class="muted block text-[9px] uppercase tracking-wider">Valeur révélée</span><strong id="reveal-total" class="display gold text-sm">$0.00</strong></div><span id="reveal-current-value" class="muted text-xs"></span></div>
+      <div id="opening-stage" class="opening-stage mb-5"><div id="reveal-stack" class="reveal-stack" aria-label="Pile de cartes à révéler"></div><div class="opening-copy"><p id="opening-message" class="display text-sm font-medium">Touchez la carte pour la révéler</p><p id="opening-hint" class="muted mt-1 text-[10px]">Cliquez ou balayez pour passer à la suivante</p></div></div>
+      <div id="reveal-cards" class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5"></div>
+      <div class="mt-3 flex justify-center"><div class="flex items-center gap-2"><button id="reveal-next" class="rounded-lg bg-gradient-to-r from-amber-200 to-amber-300 px-5 py-2.5 text-sm font-semibold text-black">Swiper cette carte</button><button id="reveal-done" class="hidden rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-black">Continuer</button></div></div>
+    </div>
+    <div id="account-modal" class="fixed inset-0 z-[55] hidden overflow-y-auto bg-[#07080d]/90 p-4 backdrop-blur-xl">
+      <div class="glass mx-auto my-6 max-w-xl rounded-2xl p-5 sm:p-7">
+        <div class="flex items-start justify-between gap-4"><div><p class="mb-1 text-[10px] uppercase tracking-[.23em] text-violet-300">Sauvegarde et identité</p><h2 class="display text-2xl font-semibold">Votre compte</h2></div><button id="account-close" aria-label="Fermer" class="rounded-lg border border-white/10 p-2 text-white/70 hover:bg-white/10"><i data-lucide="x" class="h-5 w-5"></i></button></div>
+        <p id="account-description" class="muted mt-3 text-xs leading-5">Configurez Supabase pour créer un compte accessible à vos amis et synchroniser votre progression entre appareils. L’URL du projet et la clé anon publique peuvent être utilisées dans le navigateur si les règles RLS sont activées.</p>
+        <div id="account-config" class="mt-5 space-y-3">
+          <label class="block text-xs text-white/70">URL du projet Supabase<input id="supabase-url" type="url" placeholder="https://votre-projet.supabase.co" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
+          <label class="block text-xs text-white/70">Clé anon / publishable publique<input id="supabase-key" type="password" placeholder="sb_publishable_… ou clé anon" autocomplete="off" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
+          <button id="supabase-connect" class="w-full rounded-lg bg-violet-300 px-4 py-2.5 text-sm font-semibold text-[#171321]">Connecter Supabase</button>
+          <details class="rounded-xl border border-white/[.08] p-3"><summary class="cursor-pointer text-xs font-semibold text-white/75">Configuration nécessaire dans Supabase</summary><p class="muted mt-2 text-[11px] leading-5">Créez un projet, puis exécutez le SQL fourni ci-dessous dans SQL Editor. Activez l’authentification par e-mail et ajoutez l’URL de votre site GitHub Pages aux URL autorisées. Pour que vos amis n’aient pas à saisir ces réglages, renseignez l’URL du projet et sa clé publique dans SUPABASE_PROJECT dans index.html avant publication. Seules les clés publiques sont acceptées ici ; ne mettez jamais une clé service_role dans cette page.</p><pre id="supabase-schema" class="mt-3 max-h-44 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-emerald-100"></pre></details>
+        </div>
+        <form id="account-form" class="mt-5 space-y-3" hidden>
+          <label id="account-username-field" class="block text-xs text-white/70">Pseudo<input id="account-username" type="text" minlength="3" maxlength="24" autocomplete="nickname" placeholder="Votre pseudo" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
+          <label class="block text-xs text-white/70">E-mail<input id="account-email" type="email" required autocomplete="email" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white"></label>
+          <label class="block text-xs text-white/70">Mot de passe<input id="account-password" type="password" required minlength="8" autocomplete="current-password" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white"></label>
+          <div class="flex flex-wrap gap-2"><button id="account-submit" type="submit" class="flex-1 rounded-lg bg-violet-300 px-4 py-2.5 text-sm font-semibold text-[#171321]">Créer mon compte</button><button id="account-mode" type="button" class="rounded-lg border border-white/10 px-4 py-2.5 text-xs text-white/70">Déjà inscrit ? Connexion</button></div>
+          <button id="account-signout" type="button" class="hidden w-full rounded-lg border border-white/10 px-4 py-2.5 text-xs text-white/70">Se déconnecter</button>
+        </form>
+        <p id="account-status" class="mt-4 min-h-5 text-xs text-white/65" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
+  <div id="toast-region" class="fixed bottom-4 right-4 z-[60] flex flex-col gap-2" aria-live="polite"></div>
+
+  <script>
+    "use strict";
+    const SETS = [
+      {id:"base1",name:"Set de Base",subtitle:"Wizards · 1999",releaseDate:"1999-01-09",price:300,colors:["#d7ab62","#513f82"]},
+      {id:"swsh7",name:"Évolution Céleste",subtitle:"Épée et Bouclier",releaseDate:"2021-08-27",price:12,colors:["#a866da","#344e87"]},
+      {id:"swsh12pt5",name:"Zénith Suprême",subtitle:"Épée et Bouclier",releaseDate:"2023-01-20",price:8,colors:["#e3ad63","#6a438e"]},
+      {id:"sv3pt5",name:"Écarlate et Violet : 151",subtitle:"Collection 151",releaseDate:"2023-09-22",price:6.5,colors:["#64bad5","#714984"]},
+      {id:"sv6",name:"Mascarade Crépusculaire",subtitle:"Écarlate et Violet",releaseDate:"2024-05-24",price:5,colors:["#55aa89","#304978"]},
+      {id:"swsh45",name:"Destinées Radieuses",subtitle:"Épée et Bouclier",releaseDate:"2021-02-19",price:7,colors:["#67a9db","#794b8c"]},
+      {id:"sv3",name:"Flammes Obsidiennes",subtitle:"Écarlate et Violet",releaseDate:"2023-08-11",price:4.5,colors:["#dc8250","#784269"]},
+      {id:"sv2",name:"Évolutions à Paldia",subtitle:"Écarlate et Violet",releaseDate:"2023-06-09",price:4.5,colors:["#6aa3d1","#664b9c"]},
+      {id:"g1",name:"Générations",subtitle:"XY · 2016",releaseDate:"2016-02-22",price:15,colors:["#e77a85","#7950a4"]},
+      {id:"sv7",name:"Couronne Stellaire",subtitle:"Écarlate et Violet",releaseDate:"2024-08-02",price:5,colors:["#8e9ce5","#3c477c"]},
+      {id:"M2a",name:"MEGA Dream ex · Japonais",subtitle:"Japonais · M2.5 · MEGA Dream ex",releaseDate:"2025-11-28",price:8,colors:["#cf6b9b","#503a79"],tcgdex:{language:"ja",setId:"M2a"}},
+      {id:"me02.5",name:"Ascended Heroes",subtitle:"International · M02.5 · anglais",releaseDate:"2026-01-30",price:8,colors:["#9972db","#394873"],tcgdex:{language:"en",setId:"me02.5"}},
+      {id:"M4",name:"Ninja Spinner · Japonais",subtitle:"Japonais · M4 · Ninja Spinner",releaseDate:"2026-03-13",price:6,colors:["#4a9da8","#293c72"],tcgdex:{language:"ja",setId:"M4"}},
+      {id:"me04",name:"Chaos Rising",subtitle:"International · M04 · anglais",releaseDate:"2026-05-22",price:6,colors:["#e18755","#593c77"],tcgdex:{language:"en",setId:"me04"}},
+      {id:"me5",name:"Pitch Black",subtitle:"Méga-Évolution · juillet 2026",releaseDate:"2026-07-17",price:8,colors:["#322b52","#16192e"]},
+      {id:"me3",name:"Perfect Order",subtitle:"Méga-Évolution · mars 2026",releaseDate:"2026-03-27",price:8,colors:["#84a06b","#263e49"]},
+      {id:"me2",name:"Phantasmal Flames",subtitle:"Méga-Évolution · novembre 2025",releaseDate:"2025-11-14",price:9,colors:["#e2764f","#44234f"]},
+      {id:"me1",name:"Mega Evolution",subtitle:"Méga-Évolution · septembre 2025",releaseDate:"2025-09-26",price:10,colors:["#e4b857","#493675"]},
+      {id:"sv8pt5",name:"Prismatic Evolutions",subtitle:"Écarlate et Violet · janvier 2025",releaseDate:"2025-01-17",price:12,colors:["#d7a8e9","#3d4f92"]},
+      {id:"sv8",name:"Surging Sparks",subtitle:"Écarlate et Violet · novembre 2024",releaseDate:"2024-11-08",price:8,colors:["#e6b548","#2d5993"]},
+      {id:"sv6pt5",name:"Shrouded Fable",subtitle:"Écarlate et Violet · août 2024",releaseDate:"2024-08-02",price:5,colors:["#8573c7","#292743"]},
+      {id:"sv5",name:"Temporal Forces",subtitle:"Écarlate et Violet · mars 2024",releaseDate:"2024-03-22",price:5,colors:["#6c9a8e","#44366e"]},
+      {id:"sv4",name:"Paradox Rift",subtitle:"Écarlate et Violet · novembre 2023",releaseDate:"2023-11-03",price:5,colors:["#bd7651","#3d527d"]},
+      {id:"sv1",name:"Scarlet & Violet",subtitle:"Écarlate et Violet · mars 2023",releaseDate:"2023-03-31",price:4.5,colors:["#df7156","#5476a2"]},
+      {id:"swsh12",name:"Silver Tempest",subtitle:"Épée et Bouclier · novembre 2022",releaseDate:"2022-11-11",price:5,colors:["#85c5e5","#5c4d91"]},
+      {id:"swsh10",name:"Astral Radiance",subtitle:"Épée et Bouclier · mai 2022",releaseDate:"2022-05-27",price:5,colors:["#95a6e2","#473d79"]},
+      {id:"swsh9",name:"Brilliant Stars",subtitle:"Épée et Bouclier · février 2022",releaseDate:"2022-02-25",price:7,colors:["#f0c875","#b45d61"]},
+      {id:"swsh2",name:"Rebel Clash",subtitle:"Épée et Bouclier · mai 2020",releaseDate:"2020-05-01",price:8,colors:["#d56f81","#463c77"]},
+      {id:"swsh5",name:"Battle Styles",subtitle:"Épée et Bouclier · mars 2021",releaseDate:"2021-03-19",price:5,colors:["#dc8250","#46527d"]},
+      {id:"sm12",name:"Cosmic Eclipse",subtitle:"Soleil et Lune · novembre 2019",releaseDate:"2019-11-01",price:20,colors:["#62a9cf","#7c4881"]},
+      {id:"sm9",name:"Team Up",subtitle:"Soleil et Lune · février 2019",releaseDate:"2019-02-01",price:50,colors:["#5c85d6","#c15b73"]},
+      {id:"xy12",name:"Evolutions",subtitle:"XY · novembre 2016",releaseDate:"2016-11-02",price:20,colors:["#dd8a59","#606ca3"]},
+      {id:"xy4",name:"Phantom Forces",subtitle:"XY · novembre 2014",releaseDate:"2014-11-05",price:35,colors:["#8a71bf","#293853"]},
+      {id:"xy2",name:"Flashfire",subtitle:"XY · mai 2014",releaseDate:"2014-05-07",price:25,colors:["#e28d46","#7c4d5b"]},
+      {id:"me55",name:"30th Celebration",subtitle:"Édition 30e anniversaire · septembre 2026",releaseDate:"2026-09-16",packSize:5,price:15,colors:["#e8cf83","#604b95"]},
+      {id:"xy6",name:"Roaring Skies · Emerald Break",subtitle:"Version internationale · équivalent japonais XY6",releaseDate:"2015-05-06",price:20,colors:["#70b9d0","#4764a0"]}
+    ];
+    const STORAGE_KEY = "crown-cards-save-v1";
+    const DAILY_KEY = "crown-cards-daily-v1";
+    const SUPABASE_CONFIG_KEY = "crown-cards-supabase-config-v1";
+    // Configure with the public project values before publishing; never use a service_role key here.
+    const SUPABASE_PROJECT = {url:"",anonKey:""};
+    const WHEEL_SEGMENT_COUNT = 8;
+    const DAILY_CASH = [[2,3,5,7,10,15,4,8],[4,6,8,10,15,20,25,5],[6,8,12,15,20,25,30,10],[8,12,15,20,25,30,40,10],[10,15,20,25,35,40,50,15],[15,20,30,40,50,60,75,25],[25,35,50,75,100,150,200,300]];
+    const currency = value => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(value || 0);
+    const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    const FALLBACKS = {common:.08,uncommon:.12,rare:.35,rare_holo:.65,double_rare:1.8,ultra_rare:2.5,illustration_rare:4,special_illustration_rare:12,hyper_rare:8,secret_rare:10,futuristic_rare:25};
+    let state = loadState();
+    let dailyState = loadDailyState();
+    let selectedSet = null;
+    let activeShopYear = null;
+    let setCards = new Map();
+    let loading = false;
+    let pendingReveal = null;
+    let dailySpinning = false;
+    let freeBoosterOpening = false;
+    let accountMode = "signup";
+    let supabaseClient = null;
+    let supabaseAuthSubscription = null;
+    let authUser = null;
+    let cloudSaveTimer = null;
+    let cloudLoadedUserId = null;
+    let restoringCloudState = false;
+    let refreshingMarketPrices = false;
+    const selectedCardKeys = new Set();
+    const preloadedImages = new Map();
+
+    function upgradeRarePriceEstimates(inventory){
+      let changed=false;
+      const cards=inventory.map(card=>{
+        const knownMew=String(card.id||"").toLowerCase()==="me55-158";
+        const futuristicRare=normalizeRarity(card.rarity)==="futuristic_rare";
+        if((!knownMew&&!futuristicRare)||Number(card.value)>FALLBACKS.common||(!knownMew&&card.priceSource==="tcgplayer"))return card;
+        changed=true;
+        return {...card,value:FALLBACKS.futuristic_rare,priceSource:"estimated"};
+      });
+      return {cards,changed};
+    }
+    function loadState(){
+      try{
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        if(saved && Number.isFinite(saved.cash) && Array.isArray(saved.inventory)){
+          const migration=upgradeRarePriceEstimates(saved.inventory);
+          if(migration.changed){
+            try{localStorage.setItem(STORAGE_KEY,JSON.stringify({...saved,inventory:migration.cards}));}
+            catch(error){console.error("Impossible d'enregistrer la correction de valeur de la carte rare.",error);}
+          }
+          return {cash:Math.max(0,saved.cash),inventory:migration.cards,freeBoosters:Array.isArray(saved.freeBoosters)?saved.freeBoosters:[],showcaseKeys:Array.isArray(saved.showcaseKeys)?saved.showcaseKeys:[],showcaseCustomized:Boolean(saved.showcaseCustomized),pricesUpdatedOn:typeof saved.pricesUpdatedOn==="string"?saved.pricesUpdatedOn:""};
+        }
+      }catch(error){console.warn("La sauvegarde locale n'a pas pu être lue.",error);}
+      return {cash:150,inventory:[],freeBoosters:[],showcaseKeys:[],showcaseCustomized:false,pricesUpdatedOn:""};
+    }
+    function loadDailyState(){
+      try{
+        const saved=JSON.parse(localStorage.getItem(DAILY_KEY)||"null");
+        if(saved&&typeof saved==="object")return {lastClaimDate:typeof saved.lastClaimDate==="string"?saved.lastClaimDate:"",streakDay:Number.isInteger(saved.streakDay)?Math.max(0,Math.min(7,saved.streakDay)):0,lastReward:saved.lastReward||null};
+      }catch(error){console.warn("La progression des récompenses quotidiennes n'a pas pu être lue.",error);}
+      return {lastClaimDate:"",streakDay:0,lastReward:null};
+    }
+    function saveState(){
+      try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+      catch(error){console.error("Impossible d'enregistrer la progression localement.",error);notify("Sauvegarde impossible : vérifiez l'espace disponible du navigateur.","error");}
+      scheduleCloudSave();
+    }
+    function saveDailyState(){
+      try{localStorage.setItem(DAILY_KEY,JSON.stringify(dailyState));}
+      catch(error){console.error("Impossible d'enregistrer les récompenses quotidiennes.",error);notify("La récompense n'a pas pu être sauvegardée localement.","error");}
+      scheduleCloudSave();
+    }
+    const SUPABASE_SCHEMA=`create table if not exists public.player_profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  username text not null check (char_length(username) between 3 and 24),
+  game_state jsonb not null default '{}'::jsonb,
+  daily_state jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+create unique index if not exists player_profiles_username_lower_idx
+  on public.player_profiles (lower(username));
+alter table public.player_profiles enable row level security;
+drop policy if exists "Players can read their own profile" on public.player_profiles;
+drop policy if exists "Players can create their own profile" on public.player_profiles;
+drop policy if exists "Players can update their own profile" on public.player_profiles;
+create policy "Players can read their own profile"
+  on public.player_profiles for select to authenticated
+  using (auth.uid() = user_id);
+create policy "Players can create their own profile"
+  on public.player_profiles for insert to authenticated
+  with check (auth.uid() = user_id);
+create policy "Players can update their own profile"
+  on public.player_profiles for update to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+grant select, insert, update on public.player_profiles to authenticated;`;
+    function accountStatus(message,isError=false){
+      const status=document.getElementById("account-status");
+      status.textContent=message;
+      status.className=`mt-4 min-h-5 text-xs ${isError?"text-rose-200":"text-white/65"}`;
+    }
+    function updateAccountUI(){
+      const signedIn=Boolean(authUser);
+      document.getElementById("account-label").textContent=signedIn?(authUser.user_metadata?.username||authUser.email?.split("@")[0]||"Compte"):"Compte";
+      document.getElementById("account-config").hidden=Boolean(supabaseClient);
+      document.getElementById("account-form").hidden=!supabaseClient;
+      document.getElementById("account-username-field").hidden=accountMode!=="signup"||signedIn;
+      document.getElementById("account-mode").hidden=signedIn;
+      document.getElementById("account-submit").hidden=signedIn;
+      document.getElementById("account-signout").classList.toggle("hidden",!signedIn);
+      document.getElementById("account-description").textContent=signedIn?`Connecté en tant que ${authUser.email}. La progression est synchronisée avec votre compte.`:"Configurez Supabase pour créer un compte accessible à vos amis et synchroniser votre progression entre appareils. L’URL du projet et la clé anon publique peuvent être utilisées dans le navigateur si les règles RLS sont activées.";
+    }
+    async function configureSupabase(url,key){
+      if(!window.supabase?.createClient)throw new Error("La bibliothèque Supabase n’a pas pu être chargée. Vérifiez votre connexion, puis rechargez la page.");
+      let parsed;
+      try{parsed=new URL(url);}catch{throw new Error("L’URL Supabase n’est pas valide.");}
+      if(!["https:"].includes(parsed.protocol)||!parsed.hostname.endsWith(".supabase.co"))throw new Error("Utilisez l’URL HTTPS officielle de votre projet, au format https://xxxx.supabase.co.");
+      if(!key.trim()||key.includes("service_role"))throw new Error("Utilisez la clé anon/publishable publique du projet, jamais une clé service_role.");
+      localStorage.setItem(SUPABASE_CONFIG_KEY,JSON.stringify({url:parsed.origin,key:key.trim()}));
+      if(supabaseAuthSubscription)supabaseAuthSubscription.unsubscribe();
+      supabaseClient=window.supabase.createClient(parsed.origin,key.trim());
+      const {data,error}=await supabaseClient.auth.getSession();
+      if(error)throw error;
+      authUser=data.session?.user||null;
+      updateAccountUI();
+      if(authUser)await handleAuthSession(authUser);
+      else accountStatus("Supabase configuré. Créez un compte ou connectez-vous.");
+      const {data:listener}=supabaseClient.auth.onAuthStateChange((_event,session)=>{
+        authUser=session?.user||null;
+        updateAccountUI();
+        window.setTimeout(()=>handleAuthSession(authUser),0);
+      });
+      supabaseAuthSubscription=listener.subscription;
+    }
+    async function handleAuthSession(user){
+      if(!user){cloudLoadedUserId=null;return;}
+      if(cloudLoadedUserId===user.id)return;
+      cloudLoadedUserId=user.id;
+      clearTimeout(cloudSaveTimer);
+      restoringCloudState=true;
+      let profileExists=false;
+      let migratedRarePrices=false;
+      try{
+        const {data,error}=await supabaseClient.from("player_profiles").select("username,game_state,daily_state").eq("user_id",user.id).maybeSingle();
+        if(error)throw error;
+        if(data){
+          profileExists=true;
+          const cloudState=data.game_state;
+          if(cloudState&&Number.isFinite(cloudState.cash)&&Array.isArray(cloudState.inventory)){
+            const migration=upgradeRarePriceEstimates(cloudState.inventory);
+            migratedRarePrices=migration.changed;
+            state={cash:Math.max(0,cloudState.cash),inventory:migration.cards,freeBoosters:Array.isArray(cloudState.freeBoosters)?cloudState.freeBoosters:[],showcaseKeys:Array.isArray(cloudState.showcaseKeys)?cloudState.showcaseKeys:[],showcaseCustomized:Boolean(cloudState.showcaseCustomized),pricesUpdatedOn:typeof cloudState.pricesUpdatedOn==="string"?cloudState.pricesUpdatedOn:""};
+          }
+          const cloudDaily=data.daily_state;
+          if(cloudDaily&&typeof cloudDaily==="object")dailyState={lastClaimDate:typeof cloudDaily.lastClaimDate==="string"?cloudDaily.lastClaimDate:"",streakDay:Number.isInteger(cloudDaily.streakDay)?Math.max(0,Math.min(7,cloudDaily.streakDay)):0,lastReward:cloudDaily.lastReward||null};
+          localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+          localStorage.setItem(DAILY_KEY,JSON.stringify(dailyState));
+          accountStatus(`Progression cloud chargée pour ${data.username}.`);
+        }else{
+          accountStatus("Nouveau profil : votre progression locale va être copiée dans le cloud.");
+        }
+        updateWallet();updateCollection();renderDaily();
+      }catch(error){
+        cloudLoadedUserId=null;
+        console.error("Chargement du compte cloud impossible.",error);
+        accountStatus(`Synchronisation impossible : ${error.message||error}. Vérifiez le SQL et les règles RLS.`,true);
+      }finally{
+        restoringCloudState=false;
+      }
+      if(!profileExists||migratedRarePrices)scheduleCloudSave();
+    }
+    function scheduleCloudSave(){
+      if(!supabaseClient||!authUser||restoringCloudState)return;
+      clearTimeout(cloudSaveTimer);
+      cloudSaveTimer=setTimeout(saveCloudState,700);
+    }
+    async function saveCloudState(){
+      if(!supabaseClient||!authUser||restoringCloudState)return;
+      return persistCloudState();
+    }
+    async function persistCloudState(){
+      const user=authUser;
+      const username=String(user.user_metadata?.username||user.email?.split("@")[0]||"Joueur").trim();
+      try{
+        const {error}=await supabaseClient.from("player_profiles").upsert({
+          user_id:user.id,username,game_state:state,daily_state:dailyState,updated_at:new Date().toISOString()
+        },{onConflict:"user_id"});
+        if(error)throw error;
+        if(authUser?.id!==user.id)return;
+        accountStatus(`Progression synchronisée · ${new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}.`);
+      }catch(error){
+        console.error("Synchronisation cloud impossible.",error);
+        accountStatus(`Sauvegarde cloud échouée : ${error.message||error}. Vérifiez le pseudo et les règles RLS.`,true);
+        notify("La sauvegarde cloud a échoué. La progression reste enregistrée sur cet appareil.","error");
+      }
+    }
+    async function submitAccount(event){
+      event.preventDefault();
+      if(!supabaseClient){accountStatus("Connectez d’abord votre projet Supabase.",true);return;}
+      const email=document.getElementById("account-email").value.trim();
+      const password=document.getElementById("account-password").value;
+      const username=document.getElementById("account-username").value.trim();
+      const submit=document.getElementById("account-submit");
+      submit.disabled=true;
+      try{
+        if(accountMode==="signup"){
+          if(!/^[\p{L}\p{N}_-]{3,24}$/u.test(username))throw new Error("Le pseudo doit contenir 3 à 24 lettres, chiffres, tirets ou tirets bas.");
+          const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{username}}});
+          if(error)throw error;
+          if(data.session){authUser=data.session.user;updateAccountUI();await handleAuthSession(authUser);}
+          else accountStatus("Compte créé. Confirmez votre adresse e-mail grâce au message envoyé, puis connectez-vous.");
+        }else{
+          const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+          if(error)throw error;
+          authUser=data.user;updateAccountUI();await handleAuthSession(authUser);
+        }
+      }catch(error){
+        console.error("Authentification Supabase échouée.",error);
+        accountStatus(error.message||"Impossible de créer le compte ou de se connecter.",true);
+      }finally{submit.disabled=false;}
+    }
+    function localDateKey(date=new Date()){
+      return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+    }
+    function dateKeyOffset(key,offset){
+      const [year,month,day]=key.split("-").map(Number);
+      const date=new Date(year,month-1,day+offset);
+      return localDateKey(date);
+    }
+    function dailyRewardDay(){
+      const today=localDateKey();
+      if(dailyState.lastClaimDate===today)return Math.max(1,dailyState.streakDay);
+      return dailyState.lastClaimDate===dateKeyOffset(today,-1)?(dailyState.streakDay%7)+1:1;
+    }
+    function dailyPrizes(day){
+      const prizes=DAILY_CASH[day-1].map(amount=>({type:"cash",amount}));
+      const boosterSlots=day===7?[1,5]:[3,7];
+      boosterSlots.forEach(index=>{prizes[index]={type:"booster"};});
+      return prizes;
+    }
+    function renderWheel(day){
+      const segments=dailyPrizes(day);
+      const colors=["#6c51a5","#282e50","#765995","#303d61","#956f48","#423764","#827044","#39436e"];
+      const stops=segments.map((_,index)=>`${colors[index]} ${index*45}deg ${(index+1)*45}deg`).join(",");
+      const wheel=document.getElementById("daily-wheel");
+      wheel.style.background=`conic-gradient(from -22.5deg,${stops})`;
+      wheel.innerHTML=segments.map((prize,index)=>`<span class="wheel-label" style="--wheel-angle:${index*45}deg">${prize.type==="booster"?"BOOSTER":currency(prize.amount)}</span>`).join("");
+    }
+    function formatReward(reward){
+      return reward.type==="booster"?`Booster offert · ${reward.setName}`:`${currency(reward.amount)} en crédits`;
+    }
+    function renderDaily(){
+      const today=localDateKey();
+      const claimed=dailyState.lastClaimDate===today;
+      const day=dailyRewardDay();
+      document.getElementById("streak-count").textContent=`Jour ${day}`;
+      document.getElementById("daily-state-label").textContent=claimed?"Récompense du jour récupérée":"Une récompense vous attend";
+      document.getElementById("spin-daily").disabled=claimed||dailySpinning;
+      document.getElementById("spin-daily").innerHTML=claimed?'<i data-lucide="calendar-check" class="mr-2 inline h-4 w-4"></i>Reviens demain':'<i data-lucide="rotate-cw" class="mr-2 inline h-4 w-4"></i>Tourner la roue';
+      document.getElementById("daily-wheel-caption").textContent=day===7?"Jour 7 · roue premium : gros crédits ou un booster gratuit.":"Jour "+day+" · les récompenses augmentent chaque jour jusqu'au jour 7.";
+      document.getElementById("daily-badge").classList.toggle("hidden",claimed);
+      document.getElementById("streak-days").innerHTML=Array.from({length:7},(_,index)=>{
+        const number=index+1;
+        const isClaimed=number<=dailyState.streakDay&&(claimed||number<day);
+        return `<div class="day-node ${number===day?"current":""} ${isClaimed?"claimed":""} rounded-lg p-2 text-center"><span class="block text-[9px] uppercase">Jour</span><strong class="display text-sm">${number}</strong>${isClaimed?'<i data-lucide="check" class="mx-auto mt-1 h-3 w-3"></i>':""}</div>`;
+      }).join("");
+      const result=document.getElementById("daily-result");
+      if(claimed&&dailyState.lastReward){
+        result.classList.remove("hidden");
+        result.innerHTML=`<span class="muted text-[10px] uppercase tracking-wider">Récompense du jour</span><strong class="mt-1 block">${escapeHtml(formatReward(dailyState.lastReward))}</strong>`;
+      }else result.classList.add("hidden");
+      renderFreeBoosters();
+      renderWheel(day);
+      lucide.createIcons();
+    }
+    function renderFreeBoosters(){
+      const list=document.getElementById("free-booster-list");
+      if(!state.freeBoosters.length){
+        list.innerHTML='<div class="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center"><p class="muted text-xs">Aucun booster offert pour le moment.</p></div>';
+        return;
+      }
+      list.innerHTML=state.freeBoosters.map((booster,index)=>{
+        const set=SETS.find(entry=>entry.id===booster.setId);
+        return `<div class="glass flex items-center justify-between gap-3 rounded-xl p-3"><div class="min-w-0"><strong class="block truncate text-xs">${escapeHtml(set?set.name:"Booster offert")}</strong><span class="muted text-[10px]">Booster gratuit · ${escapeHtml(set?set.subtitle:booster.setId)}</span></div><button data-open-free="${index}" class="shrink-0 rounded-lg bg-white px-3 py-2 text-[10px] font-semibold text-black" ${freeBoosterOpening?"disabled":""}>Ouvrir</button></div>`;
+      }).join("");
+      list.querySelectorAll("[data-open-free]").forEach(button=>button.addEventListener("click",()=>openFreeBooster(Number(button.dataset.openFree))));
+    }
+    function spinDailyWheel(){
+      if(dailySpinning||dailyState.lastClaimDate===localDateKey())return;
+      const day=dailyRewardDay();
+      const prizes=dailyPrizes(day);
+      const index=Math.floor(Math.random()*WHEEL_SEGMENT_COUNT);
+      const prize=prizes[index];
+      const wheel=document.getElementById("daily-wheel");
+      dailySpinning=true;
+      document.getElementById("spin-daily").disabled=true;
+      document.getElementById("spin-daily").textContent="La roue tourne…";
+      const currentRotation=Number(wheel.dataset.rotation)||0;
+      const turns=5+Math.floor(Math.random()*3);
+      const desiredRotation=(360-index*45%360)%360;
+      const alignment=(desiredRotation-currentRotation%360+360)%360;
+      const targetRotation=currentRotation+turns*360+alignment;
+      wheel.dataset.rotation=String(targetRotation);
+      wheel.style.transform=`rotate(${targetRotation}deg)`;
+      setTimeout(()=>{
+        if(prize.type==="cash"){
+          state.cash+=prize.amount;
+          dailyState.lastReward={type:"cash",amount:prize.amount};
+          saveState();
+          updateWallet();
+          notify(`${currency(prize.amount)} ajoutés à votre portefeuille.`);
+        }else{
+          const set=SETS[Math.floor(Math.random()*SETS.length)];
+          state.freeBoosters.push({setId:set.id,grantedAt:Date.now()});
+          dailyState.lastReward={type:"booster",setName:set.name,setId:set.id};
+          saveState();
+          notify(`Booster gratuit obtenu : ${set.name} !`);
+        }
+        dailyState.lastClaimDate=localDateKey();
+        dailyState.streakDay=day;
+        saveDailyState();
+        dailySpinning=false;
+        renderDaily();
+      },5100);
+    }
+    function cardValue(card){
+      const prices=card.tcgplayer && card.tcgplayer.prices;
+      const updatedAt=card.tcgplayer&&card.tcgplayer.updatedAt||"";
+      if(prices){
+        const preferred=["holofoil","normal","reverseHolofoil","1stEditionHolofoil","unlimitedHolofoil"];
+        for(const key of preferred){const entry=prices[key];if(entry){const market=Number(entry.market);if(Number.isFinite(market)&&market>=0)return {value:market,source:"tcgplayer",updatedAt};}}
+        for(const entry of Object.values(prices)){const market=entry&&Number(entry.market);if(Number.isFinite(market)&&market>=0)return {value:market,source:"tcgplayer",updatedAt};}
+        for(const key of preferred){const entry=prices[key];if(entry){const estimate=[entry.mid,entry.low].map(Number).find(value=>Number.isFinite(value)&&value>=0);if(estimate!==undefined)return {value:estimate,source:"tcgplayer_estimate",updatedAt};}}
+        for(const entry of Object.values(prices)){const estimate=entry&&[entry.mid,entry.low].map(Number).find(value=>Number.isFinite(value)&&value>=0);if(estimate!==undefined)return {value:estimate,source:"tcgplayer_estimate",updatedAt};}
+      }
+      const rarity=normalizeRarity(card.rarity);
+      const multiplier=rarity==="rare" && card.types && card.types.some(type=>["Pokémon ex","Pokémon V","Pokémon VMAX","Pokémon VSTAR"].includes(type)) ? 1.8 : (FALLBACKS[rarity] ?? .25);
+      return {value:multiplier,source:"estimated",updatedAt:""};
+    }
+    function formatMarketDate(value){
+      if(!value)return "";
+      const dateOnly=String(value).match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+      const parsed=new Date(dateOnly?`${dateOnly[1]}-${dateOnly[2]}-${dateOnly[3]}T12:00:00Z`:value);
+      return Number.isNaN(parsed.getTime())?String(value):new Intl.DateTimeFormat("fr-FR",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}).format(parsed);
+    }
+    function inventorySet(card){
+      if(card.setId){
+        const exact=SETS.find(set=>set.id===card.setId);
+        if(exact)return exact;
+      }
+      const id=String(card.id||"");
+      const prefixMatch=SETS.filter(set=>id.startsWith(`${set.id}-`)).sort((a,b)=>b.id.length-a.id.length)[0];
+      if(prefixMatch)return prefixMatch;
+      return SETS.find(set=>set.name===card.setName||String(card.setName||"").includes(set.name))||null;
+    }
+    function tcgdexPricingData(card){
+      const prices={};
+      for(const variant of card.variants_detailed||[]){
+        const marketPrices=variant.pricing&&variant.pricing.tcgplayer;
+        if(!marketPrices)continue;
+        for(const [variantName,entry] of Object.entries(marketPrices)){
+          const key=variantName==="reverse-holofoil"?"reverseHolofoil":variantName;
+          prices[key]={market:entry.marketPrice,mid:entry.midPrice,low:entry.lowPrice};
+        }
+      }
+      return Object.keys(prices).length?{prices}:null;
+    }
+    async function fetchFreshMarketCards(set){
+      if(set.tcgdex){
+        const inventoryCards=[...new Map(state.inventory.filter(card=>inventorySet(card)?.id===set.id).map(card=>[card.id,card])).values()];
+        const results=[];
+        for(let start=0;start<inventoryCards.length;start+=6){
+          const batch=inventoryCards.slice(start,start+6);
+          const details=await Promise.all(batch.map(async owned=>{
+            const response=await fetch(`https://api.tcgdex.net/v2/${set.tcgdex.language}/cards/${encodeURIComponent(owned.id)}`,{headers:{Accept:"application/json"}});
+            if(!response.ok)throw new Error(`TCGdex indisponible pour ${owned.id} (${response.status}).`);
+            const data=await response.json();
+            return {id:owned.id,tcgplayer:tcgdexPricingData(data),rarity:data.rarity};
+          }));
+          results.push(...details);
+          document.getElementById("price-refresh-status").textContent=`Actualisation TCGPlayer · ${Math.min(start+batch.length,inventoryCards.length)} / ${inventoryCards.length} cartes de ${set.name}…`;
+        }
+        return results;
+      }
+      const cards=[];
+      for(let page=1;page<=4;page++){
+        const url=`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(`set.id:${set.id}`)}&pageSize=250&page=${page}&select=id,rarity,types,tcgplayer`;
+        let response;
+        for(let attempt=0;attempt<3;attempt++){
+          response=await fetch(url,{headers:{Accept:"application/json"}});
+          if(response.ok)break;
+          if(attempt===2)throw new Error(`Prix indisponibles pour ${set.name} (${response.status}).`);
+          await new Promise(resolve=>setTimeout(resolve,400*(attempt+1)));
+        }
+        const data=await response.json();
+        if(!Array.isArray(data.data))throw new Error(`Réponse de prix invalide pour ${set.name}.`);
+        cards.push(...data.data);
+        if(data.data.length<250)break;
+      }
+      return cards;
+    }
+    async function refreshCollectionMarketPrices(){
+      if(refreshingMarketPrices||!state.inventory.length)return;
+      const today=localDateKey();
+      if(state.pricesUpdatedOn===today){
+        document.getElementById("price-refresh-status").textContent=`Prix du marché TCGPlayer consultés aujourd’hui · ${formatMarketDate(today)}.`;
+        return;
+      }
+      refreshingMarketPrices=true;
+      const status=document.getElementById("price-refresh-status");
+      status.textContent="Actualisation quotidienne des prix du marché TCGPlayer en USD…";
+      const groups=new Map();
+      state.inventory.forEach(card=>{
+        const set=inventorySet(card);
+        if(!set){return;}
+        if(!groups.has(set.id))groups.set(set.id,{set,cards:[]});
+        groups.get(set.id).cards.push(card);
+      });
+      let updated=0;
+      let unavailable=0;
+      const failures=[];
+      try{
+        for(const {set,cards:ownedCards} of groups.values()){
+          try{
+            const marketCards=await fetchFreshMarketCards(set);
+            const byId=new Map(marketCards.map(card=>[card.id,card]));
+            for(const owned of ownedCards){
+              const marketCard=byId.get(owned.id);
+              const quote=marketCard?cardValue(marketCard):null;
+              if(!quote||quote.source!=="tcgplayer"){unavailable++;continue;}
+              owned.value=quote.value;
+              owned.priceSource="tcgplayer";
+              if(quote.updatedAt)owned.priceUpdatedAt=quote.updatedAt;
+              updated++;
+            }
+          }catch(error){
+            failures.push(`${set.name}: ${error.message||error}`);
+            unavailable+=ownedCards.length;
+          }
+          status.textContent=`Actualisation du marché · ${updated} prix mis à jour${failures.length?` · ${failures.length} extension(s) indisponible(s)`:""}…`;
+        }
+        if(updated||!failures.length){
+          state.pricesUpdatedOn=today;
+          saveState();
+          updateCollection();
+        }
+        const dateLabel=formatMarketDate(today);
+        status.textContent=`${updated} prix TCGPlayer actualisé${updated===1?"":"s"} aujourd’hui (${dateLabel}) · ${unavailable} carte${unavailable===1?"":"s"} sans nouveau cours${failures.length?` · ${failures.length} erreur(s), derniers prix conservés`:""}.`;
+        if(failures.length)console.warn("Certaines extensions n’ont pas pu actualiser leurs prix.",failures);
+      }finally{
+        refreshingMarketPrices=false;
+      }
+    }
+    function normalizeRarity(rarity){
+      const value=String(rarity || "").toLowerCase();
+      if(value.includes("futuristic")||value.includes("future rare"))return "futuristic_rare";
+      if(value.includes("special illustration"))return "special_illustration_rare";
+      if(value.includes("illustration"))return "illustration_rare";
+      if(value.includes("hyper"))return "hyper_rare";
+      if(value.includes("secret"))return "secret_rare";
+      if(value.includes("double rare"))return "double_rare";
+      if(value.includes("ultra rare"))return "ultra_rare";
+      if(value.includes("rare"))return value.includes("holo") ? "rare_holo" : "rare";
+      if(value.includes("uncommon"))return "uncommon";
+      return "common";
+    }
+    function rarityScore(card){const order={common:1,uncommon:2,rare:3,rare_holo:4,double_rare:5,ultra_rare:6,secret_rare:7,futuristic_rare:8,hyper_rare:8,illustration_rare:9,special_illustration_rare:10};return order[normalizeRarity(card.rarity)] || 1;}
+    function setLabel(set){return `${set.name} · ${set.subtitle}`;}
+    function packSizeFor(set){return set.packSize|| (set.tcgdex&&set.tcgdex.language==="ja"?5:10);}
+    function packSlotsFor(set){
+      const count=packSizeFor(set);
+      return count===5?{common:3,reverse:1}: {common:count-3,reverse:2};
+    }
+    function formatReleaseDate(date){
+      return new Intl.DateTimeFormat("fr-FR",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}).format(new Date(`${date}T12:00:00Z`));
+    }
+    function boosterQuantity(){return Math.max(1,Math.min(10,Number(document.getElementById("booster-quantity").value)||1));}
+    function updatePurchaseButton(){
+      const button=document.getElementById("buy-button");
+      if(!selectedSet||loading)return;
+      if(!setCards.has(selectedSet.id)){
+        if(button.querySelector("span")?.textContent.includes("réessayer")){button.disabled=false;return;}
+        button.disabled=true;
+        return;
+      }
+      const quantity=boosterQuantity();
+      const total=selectedSet.price*quantity;
+      const affordable=state.cash>=total;
+      button.disabled=!affordable;
+      button.innerHTML=`<i data-lucide="${affordable?"package-open":"wallet"}" class="h-4 w-4"></i><span>${affordable?`Ouvrir ${quantity} booster${quantity>1?"s":""} · ${currency(total)}`:"Solde insuffisant · "+currency(total)}</span>`;
+      lucide.createIcons();
+    }
+    function updateTotalPrice(){
+      const total=document.getElementById("total-price");
+      total.textContent=selectedSet?currency(selectedSet.price*boosterQuantity()):"—";
+      updatePurchaseButton();
+    }
+    function renderSets(){
+      const parent=document.getElementById("set-list");
+      const search=(document.getElementById("set-search").value||"").trim().toLocaleLowerCase();
+      const groups=new Map();
+      SETS.forEach(set=>{
+        const year=set.releaseDate?set.releaseDate.slice(0,4):"Date inconnue";
+        if(!groups.has(year))groups.set(year,[]);
+        groups.get(year).push(set);
+      });
+      [...groups.values()].forEach(sets=>sets.sort((a,b)=>b.releaseDate.localeCompare(a.releaseDate)));
+      const filteredSets=SETS.filter(set=>`${set.name} ${set.subtitle} ${set.id} ${set.releaseDate}`.toLocaleLowerCase().includes(search)).sort((a,b)=>b.releaseDate.localeCompare(a.releaseDate));
+      const searching=Boolean(search);
+      const searchingYear=!activeShopYear&&searching&&/^\d{4}$/.test(search)&&groups.has(search);
+      const showSetResults=Boolean(activeShopYear)||searching&&!searchingYear;
+      const yearEntries=[...groups].filter(([year,sets])=>
+        (!search||year.toLocaleLowerCase().includes(search)||sets.some(set=>`${set.name} ${set.subtitle} ${set.id}`.toLocaleLowerCase().includes(search)))&&
+        (!searchingYear||year===search)
+      ).sort(([yearA],[yearB])=>yearB.localeCompare(yearA));
+      const currentSets=activeShopYear?(groups.get(activeShopYear)||[]).filter(set=>`${set.name} ${set.subtitle} ${set.id} ${set.releaseDate}`.toLocaleLowerCase().includes(search)):filteredSets;
+      const backButton=document.getElementById("shop-back-years");
+      backButton.classList.toggle("hidden",!showSetResults);
+      backButton.classList.toggle("inline-flex",showSetResults);
+      document.getElementById("shop-heading").textContent=activeShopYear?`Extensions · ${activeShopYear}`:searchingYear?`Extensions · ${search}`:searching?"Résultats de recherche":"Choisissez votre booster";
+      document.getElementById("set-count").textContent=showSetResults?`${currentSets.length} extension${currentSets.length===1?"":"s"}${activeShopYear?` en ${activeShopYear}`:""} · sélectionnez un booster pour l’ouvrir`:`${yearEntries.length} année${yearEntries.length===1?"":"s"} · ${SETS.length} extensions · cliquez sur une année`;
+      const renderSetCard=set=>`<button class="set-card ${selectedSet===set?"selected":""} flex min-h-[164px] min-w-0 flex-col justify-between gap-3 rounded-xl p-3 text-left sm:min-h-[174px] sm:p-4" data-set-id="${escapeHtml(set.id)}">
+        <span class="flex min-w-0 items-start gap-3"><span class="relative flex h-[62px] w-[46px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/15 shadow-lg" style="background:linear-gradient(155deg,${set.colors[0]},${set.colors[1]})"><span class="absolute inset-0 bg-gradient-to-br from-white/25 to-transparent"></span><i data-lucide="${set.special?"target":"sparkles"}" class="relative h-5 w-5 text-white/90"></i></span><span class="min-w-0 flex-1"><span class="block break-words text-sm font-semibold leading-snug">${escapeHtml(set.name)}</span><span class="muted mt-1 block break-words text-[10px] leading-relaxed">${escapeHtml(set.subtitle)}</span></span></span>
+        <span class="block min-w-0 border-t border-white/[.07] pt-2"><span class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"><span class="text-[10px] leading-relaxed text-white/60">${formatReleaseDate(set.releaseDate)} · ${packSizeFor(set)} cartes</span><span class="display shrink-0 text-sm font-semibold gold">${currency(set.price)}</span></span><span class="mt-1 block break-words text-[9px] leading-relaxed text-white/40">${set.tcgdex?`TCGdex ${set.tcgdex.language==="ja"?"japonais":"anglais"} · ${set.tcgdex.setId}`:`API set · ${set.id}`}</span></span>
+      </button>`;
+      parent.innerHTML=showSetResults?(currentSets.length?`<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2">${currentSets.map(renderSetCard).join("")}</div>`:'<div class="glass rounded-2xl p-8 text-center text-sm text-white/60">Aucune extension ne correspond à cette recherche.</div>'):yearEntries.length?`<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2">${yearEntries.map(([year,sets])=>`<button type="button" class="year-card flex min-w-0 items-center justify-between gap-3 rounded-2xl p-4 text-left sm:p-5" data-shop-year="${escapeHtml(year)}"><span class="min-w-0"><span class="display block text-3xl font-semibold tracking-tight sm:text-4xl">${escapeHtml(year)}</span><span class="muted mt-1 block text-xs">${sets.length} extension${sets.length===1?"":"s"}</span><span class="mt-2 block break-words text-[10px] leading-relaxed text-white/45">${escapeHtml(sets[0].name)}${sets.length>1?` · +${sets.length-1} autre${sets.length===2?"":"s"}`:""}</span></span><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[.04]"><i data-lucide="arrow-right" class="h-4 w-4"></i></span></button>`).join("")}</div>`:'<div class="glass rounded-2xl p-8 text-center text-sm text-white/60">Aucune année ni extension ne correspond à cette recherche.</div>';
+      parent.querySelectorAll("[data-shop-year]").forEach(button=>button.addEventListener("click",()=>{activeShopYear=button.dataset.shopYear;renderSets();window.scrollTo({top:0,behavior:"smooth"});}));
+      parent.querySelectorAll("[data-set-id]").forEach(button=>button.addEventListener("click",()=>selectSet(SETS.find(set=>set.id===button.dataset.setId))));
+      backButton.onclick=()=>{activeShopYear=null;document.getElementById("set-search").value="";renderSets();};
+      if(window.lucide)lucide.createIcons();
+    }
+    function notify(message,type="info"){
+      const el=document.createElement("div");
+      el.className=`toast glass max-w-sm rounded-xl px-4 py-3 text-sm ${type==="error"?"text-rose-200":"text-white"}`;
+      el.textContent=message;document.getElementById("toast-region").appendChild(el);setTimeout(()=>el.remove(),4000);
+    }
+    async function fetchCards(set){
+      if(setCards.has(set.id))return setCards.get(set.id);
+      if(set.tcgdex)return fetchTcgdexCards(set);
+      const cards=[];
+      for(let page=1;page<=4;page++){
+        const url=`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(`set.id:${set.id}`)}&pageSize=250&page=${page}`;
+        let response;
+        for(let attempt=0;attempt<3;attempt++){
+          try{
+            response=await fetch(url,{headers:{Accept:"application/json"}});
+            if(response.ok)break;
+            if(response.status<500&&response.status!==429)throw new Error(`API Pokémon TCG indisponible (${response.status}).`);
+            if(attempt===2)throw new Error(`API Pokémon TCG indisponible (${response.status}) après 3 tentatives.`);
+          }catch(error){
+            if(attempt===2||String(error.message).includes("indisponible (")&&!String(error.message).includes("après 3 tentatives"))throw error;
+          }
+          await new Promise(resolve=>setTimeout(resolve,400*(attempt+1)));
+        }
+        if(!response || !response.ok)throw new Error("Impossible de charger l'extension depuis l'API Pokémon TCG.");
+        const data=await response.json();
+        if(!Array.isArray(data.data))throw new Error("Réponse inattendue de l'API Pokémon TCG.");
+        cards.push(...data.data);
+        if(data.data.length<250)break;
+      }
+      if(!cards.length)throw new Error(`Aucune carte trouvée pour l'extension ${set.id}.`);
+      setCards.set(set.id,cards);
+      return cards;
+    }
+    async function fetchTcgdexCards(set){
+      const {language,setId}=set.tcgdex;
+      const base=`https://api.tcgdex.net/v2/${language}`;
+      const setResponse=await fetch(`${base}/sets/${encodeURIComponent(setId)}`,{headers:{Accept:"application/json"}});
+      if(!setResponse.ok)throw new Error(`TCGdex indisponible pour ${setId} (${setResponse.status}).`);
+      const setData=await setResponse.json();
+      if(!Array.isArray(setData.cards)||!setData.cards.length)throw new Error(`Aucune carte trouvée pour le set ${setId}.`);
+      const cards=[];
+      const batchSize=12;
+      for(let start=0;start<setData.cards.length;start+=batchSize){
+        if(selectedSet===set)setApiStatus(`TCGdex · cartes ${Math.min(start+batchSize,setData.cards.length)} / ${setData.cards.length}`,"loading");
+        const refs=setData.cards.slice(start,start+batchSize);
+        const details=await Promise.all(refs.map(async ref=>{
+          const response=await fetch(`${base}/cards/${encodeURIComponent(ref.id)}`,{headers:{Accept:"application/json"}});
+          if(!response.ok)throw new Error(`Impossible de charger la carte ${ref.id} depuis TCGdex (${response.status}).`);
+          return response.json();
+        }));
+        for(let index=0;index<details.length;index++){
+          const card=details[index];
+          const ref=refs[index];
+          const prices={};
+          for(const variant of card.variants_detailed||[]){
+            const marketPrices=variant.pricing && variant.pricing.tcgplayer;
+            if(!marketPrices)continue;
+            for(const [variantName,entry] of Object.entries(marketPrices)){
+              const key=variantName==="reverse-holofoil"?"reverseHolofoil":variantName;
+              prices[key]={market:entry.marketPrice,mid:entry.midPrice,low:entry.lowPrice};
+            }
+          }
+          const localId=card.localId||ref.localId;
+          const image=card.image?`${card.image}/high.webp`:`https://assets.tcgdex.net/${language}/M/${encodeURIComponent(setId)}/${encodeURIComponent(localId)}/high.webp`;
+          cards.push({
+            id:card.id,
+            name:card.name||ref.name,
+            number:card.localId||ref.localId,
+            category:card.category||"",
+            rarity:card.rarity||"Carte",
+            types:card.types||[],
+            set:{id:setId,name:card.set&&card.set.name||set.name},
+            images:{large:image,small:image},
+            image,
+            tcgplayer:Object.keys(prices).length?{prices}:undefined
+          });
+        }
+      }
+      if(!cards.length)throw new Error(`Aucune carte détaillée récupérée pour ${setId}.`);
+      setCards.set(set.id,cards);
+      return cards;
+    }
+    async function selectSet(set){
+      selectedSet=set;
+      renderSets();
+      const slots=packSlotsFor(set);
+      document.getElementById("selected-era").textContent=`${set.subtitle} · ${formatReleaseDate(set.releaseDate)}`;
+      document.getElementById("selected-name").textContent=set.name;
+      document.getElementById("selected-price").textContent=currency(set.price);
+      document.getElementById("pack-card-count").textContent=`${packSizeFor(set)} CARTES`;
+      document.getElementById("selected-pack-count").textContent=`${packSizeFor(set)} cartes`;
+      document.getElementById("selected-reverse-count").textContent=String(slots.reverse);
+      document.querySelector("#hit-pile-mode + span .muted").textContent=`Empile les 3 dernières cartes de chaque booster. Les ${packSizeFor(set)-3} premières restent dans le classeur.`;
+      updateTotalPrice();
+      const art=document.getElementById("pack-art");
+      art.style.background=`linear-gradient(145deg,${set.colors[0]}40,${set.colors[1]}70)`;
+      document.getElementById("buy-button").disabled=true;
+      document.getElementById("buy-button").innerHTML='<i data-lucide="loader-circle" class="h-4 w-4 animate-spin"></i><span>Chargement des cartes…</span>';
+      setApiStatus("Connexion à l'API publique…","loading");
+      lucide.createIcons();
+      try{
+        const cards=await fetchCards(set);
+        if(selectedSet!==set)return;
+        setApiStatus(`${cards.length} cartes chargées · prix disponibles ou estimation de secours`,"ok");
+        updatePurchaseButton();
+      }catch(error){
+        if(selectedSet!==set)return;
+        console.error("Chargement de l'extension impossible.",error);
+        setApiStatus("Échec du chargement — réessayez la sélection","error");
+        document.getElementById("buy-button").innerHTML='<i data-lucide="refresh-cw" class="h-4 w-4"></i><span>Réessayer le chargement</span>';
+        document.getElementById("buy-button").disabled=false;
+        lucide.createIcons();
+        notify(error.message,"error");
+      }
+    }
+    function setApiStatus(message,status){
+      const color=status==="ok"?"bg-emerald-400":status==="error"?"bg-rose-400":status==="loading"?"bg-amber-300 animate-pulse":"bg-slate-500";
+      document.getElementById("api-status").innerHTML=`<span class="h-1.5 w-1.5 rounded-full ${color}"></span>${escapeHtml(message)}`;
+    }
+    function chooseRandom(list){return list[Math.floor(Math.random()*list.length)];}
+    function getBuckets(cards){
+      const basic=cards.filter(card=>["common","uncommon"].includes(normalizeRarity(card.rarity)));
+      const rare=cards.filter(card=>rarityScore(card)>=3);
+      const normal=cards.filter(card=>rarityScore(card)<=4);
+      const reverse=cards.filter(card=>["common","uncommon","rare","rare_holo"].includes(normalizeRarity(card.rarity)));
+      return {basic:basic.length?basic:cards,rare:rare.length?rare:cards,normal:normal.length?normal:cards,reverse:reverse.length?reverse:cards};
+    }
+    function getHit(buckets){
+      const roll=Math.random();
+      if(roll<.70){const pool=buckets.normal.filter(card=>rarityScore(card)===3 || rarityScore(card)===4);return chooseRandom(pool.length?pool:buckets.rare);}
+      if(roll<.90){const pool=buckets.rare.filter(card=>rarityScore(card)>=5&&rarityScore(card)<=6);return chooseRandom(pool.length?pool:buckets.rare);}
+      const pool=buckets.rare.filter(card=>rarityScore(card)>=7);return chooseRandom(pool.length?pool:buckets.rare);
+    }
+    function makeBooster(cards){
+      const buckets=getBuckets(cards);
+      const slots=packSlotsFor(selectedSet);
+      const pulls=[];
+      for(let i=0;i<slots.common;i++)pulls.push({card:chooseRandom(buckets.basic),kind:"common"});
+      for(let i=0;i<slots.reverse;i++)pulls.push({card:chooseRandom(buckets.reverse),kind:"reverse"});
+      pulls.push({card:getHit(buckets),kind:"hit"});
+      return pulls.map(pull=>{
+        const pricing=cardValue(pull.card);
+        return {id:pull.card.id,setId:selectedSet.id,name:pull.card.name,number:pull.card.number,setName:pull.card.set && pull.card.set.name || selectedSet.name,category:pull.card.category||pull.card.supertype||"",rarity:pull.card.rarity||"Carte",image:pull.card.images && (pull.card.images.large||pull.card.images.small)||"",value:pricing.value,priceSource:pricing.source,priceUpdatedAt:pricing.updatedAt||"",kind:pull.kind,uniqueKey:`${Date.now()}-${Math.random().toString(36).slice(2)}`};
+      });
+    }
+    function updateWallet(){
+      const value=currency(state.cash);
+      document.getElementById("wallet").textContent=value;
+      document.getElementById("wallet-mobile").textContent=value;
+      if(selectedSet&&!loading)updatePurchaseButton();
+    }
+    function isFavorite(card){return card.favorite===true;}
+    function isFavoriteByKey(uniqueKey){return state.inventory.some(card=>card.uniqueKey===uniqueKey&&isFavorite(card));}
+    function cardIdentity(card){
+      return `${String(card.id||card.number||card.name||"").toLocaleLowerCase()}|${String(card.setName||"").toLocaleLowerCase()}`;
+    }
+    function getDuplicateGroups(){
+      const groups=new Map();
+      state.inventory.forEach(card=>{
+        const identity=cardIdentity(card);
+        if(!groups.has(identity))groups.set(identity,[]);
+        groups.get(identity).push(card);
+      });
+      return [...groups.values()].filter(group=>group.length>1);
+    }
+    function getDuplicateCardKeys(){return new Set(getDuplicateGroups().flatMap(group=>group.map(card=>card.uniqueKey)));}
+    function getDuplicateSaleKeys(){
+      return getDuplicateGroups().flatMap(group=>{
+        const unprotected=group.filter(card=>!isFavorite(card));
+        return unprotected.slice(group.some(isFavorite)?0:1).map(card=>card.uniqueKey);
+      });
+    }
+    function toggleFavorite(uniqueKey){
+      const card=state.inventory.find(entry=>entry.uniqueKey===uniqueKey);
+      if(!card)return;
+      card.favorite=!isFavorite(card);
+      if(card.favorite)selectedCardKeys.delete(uniqueKey);
+      saveState();updateCollection();
+      notify(card.favorite?`${card.name} ajoutée aux favoris et protégée contre la vente.`:`${card.name} retirée des favoris et de sa protection.`);
+    }
+    function updateCollection(){
+      const total=state.inventory.reduce((sum,card)=>sum+Number(card.value||0),0);
+      const count=state.inventory.length;
+      document.getElementById("collection-value").textContent=currency(total);
+      document.getElementById("collection-count").textContent=count;
+      document.getElementById("binder-count").textContent=count;
+      document.getElementById("binder-value").textContent=currency(total);
+      document.getElementById("binder-total").textContent=count;
+      document.getElementById("binder-unique").textContent=new Set(state.inventory.map(card=>card.id)).size;
+      document.getElementById("sell-all").disabled=!state.inventory.some(card=>!isFavorite(card));
+      document.getElementById("sell-nonrare").disabled=!state.inventory.some(card=>!isFavorite(card)&&rarityScore(card)<3);
+      document.getElementById("sell-duplicates").disabled=!getDuplicateSaleKeys().length;
+      selectedCardKeys.forEach(key=>{if(!state.inventory.some(card=>card.uniqueKey===key))selectedCardKeys.delete(key);});
+      renderShowcase();
+      renderBinder();
+    }
+    function imageUrl(card){return card.image || `https://images.pokemontcg.io/${encodeURIComponent(card.id)}/hires.png`;}
+    function preloadCardImage(card){
+      const url=imageUrl(card);
+      if(preloadedImages.has(url))return preloadedImages.get(url);
+      const image=new Image();
+      image.decoding="async";
+      const promise=new Promise(resolve=>{
+        image.onload=()=>resolve(true);
+        image.onerror=()=>resolve(false);
+      });
+      image.src=url;
+      preloadedImages.set(url,{image,promise});
+      return preloadedImages.get(url);
+    }
+    function preloadRevealWindow(){
+      if(!pendingReveal)return;
+      pendingReveal.queue.slice(pendingReveal.index,pendingReveal.index+3).forEach(preloadCardImage);
+    }
+    function renderBinder(){
+      const grid=document.getElementById("binder-grid");
+      const sort=document.getElementById("sort-select").value;
+      const search=document.getElementById("binder-search").value.trim().toLocaleLowerCase();
+      const setFilter=document.getElementById("binder-set-filter").value;
+      const rarityFilter=document.getElementById("binder-rarity-filter").value;
+      const typeFilter=document.getElementById("binder-type-filter").value;
+      const collectionFilter=document.getElementById("binder-collection-filter").value;
+      const duplicateKeys=getDuplicateCardKeys();
+      const allSets=[...new Set(state.inventory.map(card=>card.setName).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+      const setSelect=document.getElementById("binder-set-filter");
+      if(JSON.stringify(allSets)!==JSON.stringify([...setSelect.options].slice(1).map(option=>option.value))){
+        setSelect.innerHTML='<option value="">Toutes les extensions</option>'+allSets.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
+        if(allSets.includes(setFilter))setSelect.value=setFilter;
+      }
+      const cards=state.inventory.filter(card=>{
+        const rarity=normalizeRarity(card.rarity);
+        const category=String(card.category||"").toLowerCase();
+        const matchesSearch=!search||`${card.name} ${card.setName} ${card.rarity}`.toLocaleLowerCase().includes(search);
+        const matchesRarity=!rarityFilter||rarityFilter==="common"&&rarity==="common"||rarityFilter==="uncommon"&&rarity==="uncommon"||rarityFilter==="rare"&&["rare","rare_holo"].includes(rarity)||rarityFilter==="hit"&&rarityScore(card)>=5;
+        const matchesType=!typeFilter||typeFilter==="pokemon"&&category.includes("pokemon")||typeFilter==="trainer"&&category.includes("trainer")||typeFilter==="energy"&&category.includes("energy")||typeFilter==="foil"&&rarityScore(card)>=4||typeFilter==="unknown"&&!category;
+        const matchesCollection=!collectionFilter||collectionFilter==="favorites"&&isFavorite(card)||collectionFilter==="duplicates"&&duplicateKeys.has(card.uniqueKey);
+        return matchesSearch&&(!setFilter||card.setName===setFilter)&&matchesRarity&&matchesType&&matchesCollection;
+      });
+      if(sort==="value-desc")cards.sort((a,b)=>b.value-a.value);
+      if(sort==="value-asc")cards.sort((a,b)=>a.value-b.value);
+      if(sort==="rarity")cards.sort((a,b)=>rarityScore({rarity:b.rarity})-rarityScore({rarity:a.rarity})||b.value-a.value);
+      if(sort==="name")cards.sort((a,b)=>a.name.localeCompare(b.name));
+      if(sort==="set")cards.sort((a,b)=>(a.setName||"").localeCompare(b.setName||"")||a.name.localeCompare(b.name));
+      if(sort==="recent")cards.reverse();
+      document.getElementById("binder-visible-count").textContent=`${cards.length} carte${cards.length===1?"":"s"} visible${cards.length===1?"":"s"}`;
+      const visibleKeys=cards.filter(card=>!isFavorite(card)).map(card=>card.uniqueKey);
+      const selectedVisible=visibleKeys.filter(key=>selectedCardKeys.has(key)).length;
+      const selectVisible=document.getElementById("select-visible-cards");
+      selectVisible.checked=visibleKeys.length>0&&selectedVisible===visibleKeys.length;
+      selectVisible.indeterminate=selectedVisible>0&&selectedVisible<visibleKeys.length;
+      document.getElementById("sell-selected").disabled=!state.inventory.some(card=>selectedCardKeys.has(card.uniqueKey)&&!isFavorite(card));
+      document.getElementById("clear-selection").disabled=selectedCardKeys.size===0;
+      if(!cards.length){
+        grid.innerHTML=state.inventory.length?'<div class="glass col-span-full rounded-2xl px-5 py-12 text-center"><h3 class="display text-lg font-semibold">Aucune carte ne correspond</h3><p class="muted mt-2 text-sm">Modifiez ou effacez vos filtres.</p><button data-clear-filters class="mt-4 rounded-lg border border-white/10 px-4 py-2 text-xs text-white/70">Effacer les filtres</button></div>':'<div class="glass col-span-full rounded-2xl px-5 py-16 text-center"><i data-lucide="panels-top-left" class="mx-auto h-8 w-8 text-white/30"></i><h3 class="display mt-4 text-lg font-semibold">Votre classeur est encore vide</h3><p class="muted mt-2 text-sm">Ouvrez votre premier booster pour y ranger vos trouvailles.</p><button data-go-shop class="mt-5 rounded-lg bg-white px-4 py-2 text-xs font-semibold text-black">Découvrir la boutique</button></div>';
+        grid.querySelector("[data-go-shop]")?.addEventListener("click",()=>switchTab("shop"));
+        grid.querySelector("[data-clear-filters]")?.addEventListener("click",clearBinderFilters);
+        lucide.createIcons();return;
+      }
+      grid.innerHTML=cards.map((card,index)=>`<article class="glass card-tile overflow-hidden rounded-xl p-2 ${selectedCardKeys.has(card.uniqueKey)?"ring-1 ring-violet-300":""} ${isFavorite(card)?"favorite-card":""}" style="animation-delay:${Math.min(index,20)*25}ms" data-unique-card="${escapeHtml(card.uniqueKey)}"><div class="relative ${rarityScore(card)>=5?"foil":""}" data-card-name="${escapeHtml(card.name)}"><img class="card-image" src="${escapeHtml(imageUrl(card))}" alt="${escapeHtml(card.name)}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div><div class="px-1 pb-1 pt-2"><div class="mb-2 flex items-center justify-between gap-2"><label class="flex items-center gap-2 text-[10px] text-white/55"><input type="checkbox" data-select-card="${escapeHtml(card.uniqueKey)}" class="h-3.5 w-3.5 accent-violet-300" ${selectedCardKeys.has(card.uniqueKey)?"checked":""} ${isFavorite(card)?"disabled title='Les favoris sont protégés contre la vente'":""}>Sélectionner</label><button type="button" data-favorite="${escapeHtml(card.uniqueKey)}" aria-label="${isFavorite(card)?"Retirer des favoris":"Ajouter aux favoris"}" title="${isFavorite(card)?"Favori protégé contre la vente":"Ajouter aux favoris"}" class="rounded-md border border-amber-200/15 px-2 py-1 text-xs ${isFavorite(card)?"text-amber-200":"text-white/45 hover:text-amber-100"}">${isFavorite(card)?"★":"☆"}</button></div><div class="flex items-start justify-between gap-1"><span class="truncate text-xs font-semibold">${escapeHtml(card.name)}</span><span class="shrink-0 text-[10px] gold">${currency(card.value)}</span></div><p class="muted mt-1 truncate text-[9px]">${escapeHtml(card.rarity)} · ${escapeHtml(card.setName)}${card.priceSource==="estimated"?" · estimation":card.priceSource==="tcgplayer_estimate"?" · prix indicatif TCGPlayer":card.priceUpdatedAt?` · TCGPlayer ${formatMarketDate(card.priceUpdatedAt)}`:""}</p>${duplicateKeys.has(card.uniqueKey)?'<p class="mt-1 text-[9px] text-amber-200/80">Doublon</p>':""}<button data-showcase="${escapeHtml(card.uniqueKey)}" class="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-violet-300/15 py-1.5 text-[10px] text-violet-100/80">${state.showcaseKeys.includes(card.uniqueKey)?"Retirer de la vitrine":"Ajouter à la vitrine"}</button><button data-sell="${escapeHtml(card.uniqueKey)}" ${isFavorite(card)?"disabled title='Retirez des favoris pour vendre cette carte'":""} class="mt-1 flex w-full items-center justify-center gap-1 rounded-md border border-white/[.08] py-1.5 text-[10px] text-white/65 transition hover:border-rose-300/30 hover:text-rose-200 disabled:cursor-not-allowed disabled:opacity-40">${isFavorite(card)?'<i data-lucide="heart" class="h-3 w-3"></i>Favori · protégé':`<i data-lucide="circle-dollar-sign" class="h-3 w-3"></i>Vendre · ${currency(card.value)}`}</button></div></article>`).join("");
+      grid.querySelectorAll("[data-sell]").forEach(button=>button.addEventListener("click",()=>sellCard(button.dataset.sell)));
+      grid.querySelectorAll("[data-select-card]").forEach(input=>input.addEventListener("change",()=>{if(input.checked&&!isFavoriteByKey(input.dataset.selectCard))selectedCardKeys.add(input.dataset.selectCard);else selectedCardKeys.delete(input.dataset.selectCard);renderBinder();}));
+      grid.querySelectorAll("[data-favorite]").forEach(button=>button.addEventListener("click",()=>toggleFavorite(button.dataset.favorite)));
+      grid.querySelectorAll("[data-showcase]").forEach(button=>button.addEventListener("click",()=>toggleShowcase(button.dataset.showcase)));
+      lucide.createIcons();
+    }
+    function clearBinderFilters(){
+      document.getElementById("binder-search").value="";
+      document.getElementById("binder-set-filter").value="";
+      document.getElementById("binder-rarity-filter").value="";
+      document.getElementById("binder-type-filter").value="";
+      document.getElementById("binder-collection-filter").value="";
+      renderBinder();
+    }
+    function renderShowcase(){
+      const grid=document.getElementById("showcase-grid");
+      const pinned=state.showcaseKeys.map(key=>state.inventory.find(card=>card.uniqueKey===key)).filter(Boolean).slice(0,3);
+      const keys=new Set(pinned.map(card=>card.uniqueKey));
+      const featured=state.showcaseCustomized?pinned:[...state.inventory].sort((a,b)=>b.value-a.value).slice(0,3);
+      const autoButton=document.getElementById("showcase-auto");
+      autoButton.classList.toggle("hidden",!state.showcaseCustomized);
+      if(!featured.length){
+        grid.innerHTML=`<div class="glass col-span-full rounded-2xl px-5 py-16 text-center"><i data-lucide="sparkles" class="mx-auto h-8 w-8 text-amber-200/60"></i><h2 class="display mt-4 text-lg font-semibold">${state.showcaseCustomized?"Choisissez les cartes à exposer":"Votre vitrine attend ses premières cartes"}</h2><p class="muted mt-2 text-sm">${state.showcaseCustomized?"Ajoutez jusqu’à trois cartes depuis votre classeur.":"Les trois cartes les plus précieuses y apparaîtront automatiquement. Vous pouvez aussi en choisir dans le classeur."}</p><button data-go-binder class="mt-4 rounded-lg border border-white/10 px-4 py-2 text-xs text-white/75">Ouvrir le classeur</button></div>`;
+      }else{
+        grid.innerHTML=featured.map((card,index)=>`<article class="glass overflow-hidden rounded-2xl p-3 ${rarityScore(card)>=5?"foil":""}"><div class="relative mx-auto max-w-[280px]" data-card-name="${escapeHtml(card.name)}"><img class="card-image" src="${escapeHtml(imageUrl(card))}" alt="${escapeHtml(card.name)}" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div><div class="px-1 pb-1 pt-4 text-center"><p class="text-[9px] uppercase tracking-[.2em] text-violet-200">Carte mise en avant · ${index+1}</p><h2 class="display mt-1 truncate text-lg font-semibold">${escapeHtml(card.name)}</h2><p class="muted mt-1 text-xs">${escapeHtml(card.rarity)} · ${escapeHtml(card.setName)}</p><p class="gold mt-2 text-sm font-semibold">${currency(card.value)}</p><button data-unfeature="${escapeHtml(card.uniqueKey)}" class="mt-3 rounded-lg border border-white/10 px-3 py-2 text-[10px] text-white/65">${state.showcaseCustomized?"Retirer de la vitrine":"Personnaliser avec cette carte"}</button></div></article>`).join("");
+        if(state.showcaseCustomized){
+          grid.innerHTML+=Array.from({length:3-featured.length},(_,index)=>`<article class="glass grid min-h-[300px] place-items-center rounded-2xl border-dashed p-5 text-center"><div><i data-lucide="plus" class="mx-auto h-7 w-7 text-white/30"></i><p class="display mt-3 text-sm font-medium">Emplacement libre</p><p class="muted mt-1 text-[10px]">Ajoutez une carte depuis le classeur.</p><button data-go-binder class="mt-3 rounded-lg border border-white/10 px-3 py-2 text-[10px] text-white/70">Choisir une carte</button></div></article>`).join("");
+        }
+        grid.querySelectorAll("[data-unfeature]").forEach(button=>button.addEventListener("click",()=>{
+          if(state.showcaseCustomized)toggleShowcase(button.dataset.unfeature);
+          else{state.showcaseKeys=[button.dataset.unfeature];state.showcaseCustomized=true;saveState();renderShowcase();renderBinder();}
+        }));
+      }
+      grid.querySelectorAll("[data-go-binder]").forEach(button=>button.addEventListener("click",()=>switchTab("binder")));
+      lucide.createIcons();
+    }
+    function toggleShowcase(uniqueKey){
+      const existing=state.showcaseKeys.indexOf(uniqueKey);
+      if(existing>=0)state.showcaseKeys.splice(existing,1);
+      else if(state.showcaseKeys.length>=3){notify("La vitrine est limitée à trois cartes. Retirez-en une avant d’en ajouter une autre.","error");return;}
+      else state.showcaseKeys.push(uniqueKey);
+      state.showcaseCustomized=true;
+      saveState();renderShowcase();renderBinder();
+    }
+    function resetShowcase(){
+      state.showcaseKeys=[];
+      state.showcaseCustomized=false;
+      saveState();renderShowcase();renderBinder();
+    }
+    function renderRevealCard(){
+      if(!pendingReveal)return;
+      const {queue,index,hitPileMode}=pendingReveal;
+      const stack=document.getElementById("reveal-stack");
+      const nextButton=document.getElementById("reveal-next");
+      const doneButton=document.getElementById("reveal-done");
+      const current=queue[index];
+      document.getElementById("reveal-progress").style.width=`${index/queue.length*100}%`;
+      const revealedValue=queue.slice(0,Math.min(index+1,queue.length)).reduce((sum,card)=>sum+Number(card.value||0),0);
+      document.getElementById("reveal-total").textContent=currency(revealedValue);
+      const priceBadge=document.getElementById("reveal-price");
+      const currentValue=document.getElementById("reveal-current-value");
+      priceBadge.classList.remove("price-pop","price-hit","price-jackpot");
+      if(!current){
+        stack.innerHTML='<div class="glass absolute inset-0 grid place-items-center rounded-xl p-5 text-center"><div><i data-lucide="sparkles" class="mx-auto h-8 w-8 text-amber-200"></i><p class="display mt-3 font-semibold">Pile révélée !</p><p class="muted mt-1 text-xs">Toutes vos cartes sont dans le classeur.</p></div></div>';
+        document.getElementById("reveal-progress").style.width="100%";
+        document.getElementById("reveal-subtitle").textContent=`${queue.length} cartes révélées · collection complète ajoutée au classeur`;
+        document.getElementById("opening-message").textContent="C’est tout pour ce pack !";
+        document.getElementById("opening-hint").textContent="Votre collection a été mise à jour.";
+        currentValue.textContent="Toutes les cartes de la pile ont été révélées";
+        nextButton.classList.add("hidden");
+        doneButton.classList.remove("hidden");
+        lucide.createIcons();
+        return;
+      }
+      document.getElementById("reveal-subtitle").textContent=`${hitPileMode?"Hit Pile":"Booster "+current.packNumber} · carte ${index+1} sur ${queue.length}`;
+      document.getElementById("opening-message").textContent=hitPileMode?`Hit Pile · ${index+1} / ${queue.length}`:`Booster ${current.packNumber} · ${index+1} / ${queue.length}`;
+      document.getElementById("opening-hint").textContent=hitPileMode?"Les 3 dernières cartes de chaque booster · touchez pour swiper":"Touchez la carte ou balayez vers la gauche pour continuer";
+      currentValue.textContent=`Carte révélée : ${currency(current.value)}${current.priceSource==="estimated"?" · estimation":current.priceSource==="tcgplayer_estimate"?" · prix indicatif TCGPlayer":current.priceUpdatedAt?` · TCGPlayer ${formatMarketDate(current.priceUpdatedAt)}`:""}`;
+      if(current.value>=100)priceBadge.classList.add("price-jackpot");
+      else if(current.value>=20)priceBadge.classList.add("price-hit");
+      if(current.value>=5){
+        void priceBadge.offsetWidth;
+        priceBadge.classList.add("price-pop");
+      }
+      nextButton.classList.remove("hidden");
+      doneButton.classList.add("hidden");
+      const backs=queue.length-index-1;
+      const backCards=Array.from({length:backs},(_,layer)=>`<div class="stack-back" style="transform:translate(${(layer+1)*.45}px,${(layer+1)*.45}px) rotate(${(layer+1)*.025}deg);z-index:${layer}"></div>`).join("");
+      const foil=rarityScore({rarity:current.rarity})>=5;
+      const typeLabel=current.kind==="hit"?"HIT":current.kind==="reverse"?"REVERSE HOLO":"COMMON SLOT";
+      stack.innerHTML=`${backCards}<button type="button" class="stack-top ${foil?"foil":""}" data-card-name="${escapeHtml(current.name)}" style="z-index:${backs+1}" aria-label="Swiper ${escapeHtml(current.name)} et révéler la carte suivante"><img src="${escapeHtml(imageUrl(current))}" alt="${escapeHtml(current.name)}" draggable="false" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"><span class="stack-card-caption"><span class="flex items-center justify-between gap-2"><span class="truncate text-base font-semibold">${escapeHtml(current.name)}</span><span class="shrink-0 text-sm gold">${currency(current.value)}</span></span><span class="muted mt-1 block text-[10px]">${escapeHtml(current.rarity)}${current.priceSource==="estimated"?" · estimation":current.priceSource==="tcgplayer_estimate"?" · prix indicatif TCGPlayer":current.priceUpdatedAt?` · TCGPlayer ${formatMarketDate(current.priceUpdatedAt)}`:""} · ${typeLabel} · booster ${current.packNumber}</span></span></button>`;
+      preloadRevealWindow();
+      const top=stack.querySelector(".stack-top");
+      nextButton.textContent="Swiper cette carte";
+      top.addEventListener("click",()=>{
+        if(pendingReveal.ignoreClick){pendingReveal.ignoreClick=false;return;}
+        advanceReveal();
+      });
+      top.addEventListener("pointerdown",event=>{pendingReveal.pointerStart=event.clientX;});
+      top.addEventListener("pointerup",event=>{
+        if(pendingReveal.pointerStart!==undefined&&Math.abs(event.clientX-pendingReveal.pointerStart)>45){
+          event.preventDefault();
+          pendingReveal.ignoreClick=true;
+          advanceReveal();
+        }
+        pendingReveal.pointerStart=undefined;
+      });
+    }
+    function advanceReveal(){
+      if(!pendingReveal||pendingReveal.transitioning)return;
+      const top=document.querySelector(".stack-top");
+      if(!top)return;
+      pendingReveal.transitioning=true;
+      top.classList.add("swiping");
+      setTimeout(()=>{
+        if(!pendingReveal)return;
+        pendingReveal.index++;
+        pendingReveal.transitioning=false;
+        renderRevealCard();
+      },240);
+    }
+    function openReveal(pulls,hitPileMode){
+      const packs=[...new Set(pulls.map(card=>card.packNumber))];
+      const queue=hitPileMode?packs.flatMap(packNumber=>pulls.filter(card=>card.packNumber===packNumber).slice(-3)):pulls;
+      pendingReveal={pulls,queue,index:0,hitPileMode,transitioning:false};
+      const modal=document.getElementById("reveal-modal");
+      document.getElementById("reveal-title").textContent=`${selectedSet.name} — vos trouvailles`;
+      document.getElementById("reveal-progress").style.width="0";
+      document.getElementById("opening-stage").classList.remove("hidden");
+      document.getElementById("reveal-cards").innerHTML="";
+      document.getElementById("reveal-total").textContent=currency(0);
+      document.getElementById("reveal-current-value").textContent="";
+      modal.classList.remove("hidden");document.body.style.overflow="hidden";lucide.createIcons();
+      renderRevealCard();
+    }
+    function sellCard(uniqueKey){
+      const index=state.inventory.findIndex(card=>card.uniqueKey===uniqueKey);
+      if(index<0)return;
+      if(isFavorite(state.inventory[index])){notify("Cette carte est favorite et protégée. Retirez-la des favoris avant de la vendre.","error");return;}
+      const [card]=state.inventory.splice(index,1);
+      state.showcaseKeys=state.showcaseKeys.filter(key=>key!==uniqueKey);
+      selectedCardKeys.delete(uniqueKey);
+      const proceeds=Math.max(0,card.value);
+      state.cash+=proceeds;saveState();updateWallet();updateCollection();
+      notify(`${card.name} vendue pour ${currency(proceeds)} (100 % de la valeur estimée).`);
+    }
+    function sellAll(){
+      const cards=state.inventory.filter(card=>!isFavorite(card));
+      if(!cards.length){notify("Toutes vos cartes restantes sont favorites et protégées.");return;}
+      const proceeds=cards.reduce((sum,card)=>sum+Math.max(0,Number(card.value)||0),0);
+      const favoriteCount=state.inventory.length-cards.length;
+      if(!window.confirm(`Vendre ${cards.length} carte${cards.length===1?"":"s"} pour ${currency(proceeds)} ? ${favoriteCount} favori${favoriteCount===1?" sera":"s seront"} conservé${favoriteCount===1?"":"s"}.`))return;
+      sellCardsByKeys(cards.map(card=>card.uniqueKey));
+    }
+    function sellCardsByKeys(keys){
+      const keySet=new Set(keys);
+      const cards=state.inventory.filter(card=>keySet.has(card.uniqueKey)&&!isFavorite(card));
+      if(!cards.length)return;
+      const proceeds=cards.reduce((sum,card)=>sum+Math.max(0,Number(card.value)||0),0);
+      state.inventory=state.inventory.filter(card=>!keySet.has(card.uniqueKey));
+      state.showcaseKeys=state.showcaseKeys.filter(key=>!keySet.has(key));
+      cards.forEach(card=>selectedCardKeys.delete(card.uniqueKey));
+      state.cash+=proceeds;
+      saveState();updateWallet();updateCollection();
+      notify(`${cards.length} carte${cards.length===1?"":"s"} vendue${cards.length===1?"":"s"} pour ${currency(proceeds)} (100 % de la valeur estimée).`);
+    }
+    function sellSelectedCards(){
+      const count=state.inventory.filter(card=>selectedCardKeys.has(card.uniqueKey)&&!isFavorite(card)).length;
+      if(!count)return;
+      if(window.confirm(`Vendre ${count} carte${count===1?"":"s"} sélectionnée${count===1?"":"s"} pour leur valeur estimée ?`))sellCardsByKeys([...selectedCardKeys]);
+    }
+    function sellNonRareCards(){
+      const cards=state.inventory.filter(card=>!isFavorite(card)&&rarityScore(card)<3);
+      if(!cards.length){notify("Aucune carte commune ou peu commune non favorite à vendre.");return;}
+      const proceeds=cards.reduce((sum,card)=>sum+Math.max(0,Number(card.value)||0),0);
+      if(window.confirm(`Vendre ${cards.length} carte${cards.length===1?"":"s"} commune${cards.length===1?"":"s"} ou peu commune${cards.length===1?"":"s"} pour ${currency(proceeds)} ?`))sellCardsByKeys(cards.map(card=>card.uniqueKey));
+    }
+    function sellDuplicateCards(){
+      const keys=getDuplicateSaleKeys();
+      if(!keys.length){notify("Aucun doublon vendable trouvé. Une copie de chaque carte est conservée et les favoris sont protégés.");return;}
+      const cards=state.inventory.filter(card=>keys.includes(card.uniqueKey));
+      const proceeds=cards.reduce((sum,card)=>sum+Math.max(0,Number(card.value)||0),0);
+      if(window.confirm(`Vendre ${cards.length} carte${cards.length===1?"":"s"} en double pour ${currency(proceeds)} ? Les favoris sont conservés et une copie non favorite reste pour chaque carte sans favori.`))sellCardsByKeys(keys);
+    }
+    function switchTab(tab){
+      document.querySelectorAll(".nav-btn").forEach(button=>button.classList.toggle("active",button.dataset.tab===tab));
+      document.getElementById("shop-panel").hidden=tab!=="shop";
+      document.getElementById("binder-panel").hidden=tab!=="binder";
+      document.getElementById("showcase-panel").hidden=tab!=="showcase";
+      document.getElementById("daily-panel").hidden=tab!=="daily";
+      if(tab==="binder"){renderBinder();refreshCollectionMarketPrices().catch(error=>{console.error("Actualisation des prix du classeur impossible.",error);document.getElementById("price-refresh-status").textContent=`Échec de l’actualisation des prix : ${error.message||error}. Les dernières valeurs enregistrées sont conservées.`;});}
+      if(tab==="showcase")renderShowcase();
+      if(tab==="daily")renderDaily();
+      window.scrollTo({top:0,behavior:"smooth"});
+    }
+    async function startPackOpening(quantity,free=false){
+      if(!selectedSet||loading)return;
+      if(!setCards.has(selectedSet.id))throw new Error("Les cartes de cette extension ne sont pas encore chargées.");
+      const totalCost=selectedSet.price*quantity;
+      if(!free&&state.cash<totalCost)throw new Error(`Il vous faut ${currency(totalCost)}. Vendez des cartes de votre classeur pour continuer.`);
+      loading=true;
+      const button=document.getElementById("buy-button");
+      button.disabled=true;
+      button.innerHTML=`<i data-lucide="loader-circle" class="h-4 w-4 animate-spin"></i><span>Ouverture de ${quantity} booster${quantity>1?"s":""}…</span>`;
+      lucide.createIcons();
+      if(!free)state.cash-=totalCost;
+      const pulls=[];
+      for(let packNumber=1;packNumber<=quantity;packNumber++){
+        pulls.push(...makeBooster(setCards.get(selectedSet.id)).map(card=>({...card,packNumber})));
+      }
+      state.inventory.push(...pulls);
+      saveState();updateWallet();updateCollection();
+      const pack=document.querySelector(".booster");
+      pack.classList.add("tear");
+      await new Promise(resolve=>setTimeout(resolve,480));
+      pack.classList.remove("tear");
+      openReveal(pulls,document.getElementById("hit-pile-mode").checked);
+      loading=false;
+      updateTotalPrice();
+    }
+    async function openFreeBooster(index){
+      if(freeBoosterOpening)return;
+      const credit=state.freeBoosters[index];
+      if(!credit)return;
+      const set=SETS.find(entry=>entry.id===credit.setId);
+      if(!set){notify("Extension du booster gratuit introuvable.","error");return;}
+      freeBoosterOpening=true;
+      renderFreeBoosters();
+      switchTab("shop");
+      try{
+        await selectSet(set);
+        if(!setCards.has(set.id))throw new Error("Impossible de charger les cartes du booster gratuit. Le crédit est conservé.");
+        state.freeBoosters.splice(index,1);
+        saveState();
+        renderDaily();
+        await startPackOpening(1,true);
+      }catch(error){
+        console.error("Ouverture du booster gratuit impossible.",error);
+        notify(error.message,"error");
+      }finally{
+        freeBoosterOpening=false;
+        renderFreeBoosters();
+      }
+    }
+    document.querySelectorAll(".nav-btn").forEach(button=>button.addEventListener("click",()=>switchTab(button.dataset.tab)));
+    const quantitySelect=document.getElementById("booster-quantity");
+    quantitySelect.innerHTML=Array.from({length:10},(_,index)=>`<option value="${index+1}">${index+1} ${index===0?"booster":"boosters"}</option>`).join("");
+    document.getElementById("set-search").addEventListener("input",renderSets);
+    quantitySelect.addEventListener("change",updateTotalPrice);
+    document.getElementById("quantity-minus").addEventListener("click",()=>{quantitySelect.value=String(Math.max(1,boosterQuantity()-1));updateTotalPrice();});
+    document.getElementById("quantity-plus").addEventListener("click",()=>{quantitySelect.value=String(Math.min(10,boosterQuantity()+1));updateTotalPrice();});
+    document.getElementById("sort-select").addEventListener("change",renderBinder);
+    ["binder-search","binder-set-filter","binder-rarity-filter","binder-type-filter","binder-collection-filter"].forEach(id=>document.getElementById(id).addEventListener(id==="binder-search"?"input":"change",renderBinder));
+    document.getElementById("select-visible-cards").addEventListener("change",event=>{
+      const visible=[...document.querySelectorAll("#binder-grid [data-select-card]:not(:disabled)")].map(input=>input.dataset.selectCard);
+      visible.forEach(key=>event.target.checked?selectedCardKeys.add(key):selectedCardKeys.delete(key));
+      renderBinder();
+    });
+    document.getElementById("sell-selected").addEventListener("click",sellSelectedCards);
+    document.getElementById("sell-nonrare").addEventListener("click",sellNonRareCards);
+    document.getElementById("sell-duplicates").addEventListener("click",sellDuplicateCards);
+    document.getElementById("clear-selection").addEventListener("click",()=>{selectedCardKeys.clear();renderBinder();});
+    document.getElementById("sell-all").addEventListener("click",sellAll);
+    document.getElementById("showcase-manage").addEventListener("click",()=>switchTab("binder"));
+    document.getElementById("showcase-auto").addEventListener("click",resetShowcase);
+    document.getElementById("account-open").addEventListener("click",()=>{
+      document.getElementById("account-modal").classList.remove("hidden");
+      document.body.style.overflow="hidden";
+      updateAccountUI();lucide.createIcons();
+    });
+    function closeAccount(){document.getElementById("account-modal").classList.add("hidden");document.body.style.overflow="";}
+    document.getElementById("account-close").addEventListener("click",closeAccount);
+    document.getElementById("account-modal").addEventListener("click",event=>{if(event.target.id==="account-modal")closeAccount();});
+    document.getElementById("account-form").addEventListener("submit",submitAccount);
+    document.getElementById("account-mode").addEventListener("click",()=>{
+      accountMode=accountMode==="signup"?"login":"signup";
+      document.getElementById("account-submit").textContent=accountMode==="signup"?"Créer mon compte":"Se connecter";
+      document.getElementById("account-password").autocomplete=accountMode==="signup"?"new-password":"current-password";
+      document.getElementById("account-mode").textContent=accountMode==="signup"?"Déjà inscrit ? Connexion":"Créer un compte";
+      updateAccountUI();
+    });
+    document.getElementById("account-signout").addEventListener("click",async()=>{
+      if(!supabaseClient)return;
+      const {error}=await supabaseClient.auth.signOut();
+      if(error){accountStatus(`Déconnexion impossible : ${error.message}`,true);return;}
+      authUser=null;cloudLoadedUserId=null;updateAccountUI();accountStatus("Déconnecté. Cette progression reste sur cet appareil.");
+    });
+    document.getElementById("supabase-schema").textContent=SUPABASE_SCHEMA;
+    document.getElementById("supabase-connect").addEventListener("click",async()=>{
+      const button=document.getElementById("supabase-connect");
+      button.disabled=true;
+      try{await configureSupabase(document.getElementById("supabase-url").value.trim(),document.getElementById("supabase-key").value.trim());}
+      catch(error){console.error("Configuration Supabase impossible.",error);accountStatus(error.message||"Configuration Supabase impossible.",true);}
+      finally{button.disabled=false;}
+    });
+    document.getElementById("buy-button").addEventListener("click",async()=>{
+      if(!selectedSet)return;
+      if(!setCards.has(selectedSet.id)){
+        if(document.getElementById("buy-button").querySelector("span")?.textContent.includes("réessayer")){await selectSet(selectedSet);return;}
+        await selectSet(selectedSet);
+        return;
+      }
+      if(loading)return;
+      const quantity=boosterQuantity();
+      try{await startPackOpening(quantity);}
+      catch(error){notify(error.message,"error");}
+    });
+    document.getElementById("spin-daily").addEventListener("click",spinDailyWheel);
+    function closeReveal(){document.getElementById("reveal-modal").classList.add("hidden");document.body.style.overflow="";pendingReveal=null;}
+    document.getElementById("reveal-next").addEventListener("click",advanceReveal);
+    document.getElementById("close-reveal").addEventListener("click",closeReveal);
+    document.getElementById("reveal-done").addEventListener("click",closeReveal);
+    document.getElementById("reveal-modal").addEventListener("click",event=>{if(event.target.id==="reveal-modal")document.getElementById("reveal-done").click();});
+    window.addEventListener("keydown",event=>{
+      if(document.getElementById("reveal-modal").classList.contains("hidden"))return;
+      if(event.key==="Escape")document.getElementById("close-reveal").click();
+      if(event.key==="ArrowRight"||event.key===" "){event.preventDefault();if(!document.getElementById("reveal-next").classList.contains("hidden"))advanceReveal();}
+    });
+    renderSets();updateTotalPrice();updateWallet();updateCollection();renderDaily();lucide.createIcons();updateAccountUI();
+    try{
+      const config=SUPABASE_PROJECT.url&&SUPABASE_PROJECT.anonKey?{url:SUPABASE_PROJECT.url,key:SUPABASE_PROJECT.anonKey}:JSON.parse(localStorage.getItem(SUPABASE_CONFIG_KEY)||"null");
+      if(config?.url&&config?.key){
+        document.getElementById("supabase-url").value=config.url;
+        document.getElementById("supabase-key").value=config.key;
+        configureSupabase(config.url,config.key).catch(error=>{console.error("Connexion Supabase enregistrée impossible.",error);accountStatus(error.message||"Impossible de joindre Supabase.",true);});
+      }else accountStatus("Mode local actif. Connectez Supabase pour activer les comptes et la sauvegarde cloud.");
+    }catch(error){console.error("Configuration Supabase enregistrée invalide.",error);accountStatus("La configuration Supabase enregistrée n’a pas pu être lue.",true);}
+  </script>
+</body>
+</html>
