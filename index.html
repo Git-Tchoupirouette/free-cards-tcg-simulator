@@ -155,7 +155,7 @@
           <div class="flex flex-wrap items-center gap-2"><label class="sr-only" for="sort-select">Trier les cartes</label><select id="sort-select" class="rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs text-white"><option value="recent" selected>Récentes · plus récentes d’abord</option><option value="value-desc">Valeur · décroissante</option><option value="value-asc">Valeur · croissante</option><option value="rarity">Rareté · meilleure d’abord</option><option value="name">Nom · A–Z</option><option value="set">Extension · A–Z</option></select><button id="sell-all" class="flex items-center gap-2 rounded-lg border border-rose-300/20 bg-rose-400/[.07] px-3 py-2 text-xs text-rose-200 transition hover:bg-rose-400/[.14] disabled:opacity-40" disabled><i data-lucide="badge-dollar-sign" class="h-4 w-4"></i>Tout vendre (hors favoris)</button></div>
         </div>
         <div class="my-6 grid gap-3 sm:grid-cols-3"><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Valeur estimée</span><div id="binder-value" class="display mt-1 text-2xl font-semibold">$0.00</div></div><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes possédées</span><div id="binder-total" class="display mt-1 text-2xl font-semibold">0</div></div><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes uniques</span><div id="binder-unique" class="display mt-1 text-2xl font-semibold">0</div></div></div>
-        <p id="price-refresh-status" class="muted mb-4 text-xs" aria-live="polite">Prix du marché TCGPlayer en USD ; certaines cartes peuvent n’avoir qu’une estimation.</p>
+        <p id="price-refresh-status" class="muted mb-4 text-xs" aria-live="polite">Cardmarket (moyenne des ventes récentes en EUR, convertie en USD) en priorité ; TCGplayer sinon. Cardmarket ne fournit pas ici de prix par état NM/M.</p>
         <div class="glass mb-5 rounded-2xl p-4">
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <label class="text-[10px] uppercase tracking-wider text-white/55">Rechercher<input id="binder-search" type="search" placeholder="Nom d’une carte…" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs normal-case tracking-normal text-white placeholder:text-white/30"></label>
@@ -304,6 +304,9 @@
     let cloudLoadedUserId = null;
     let restoringCloudState = false;
     let refreshingMarketPrices = false;
+    let eurUsdRatePromise = null;
+    let marketPriceNotice = "";
+    const MARKET_PRICE_VERSION = 2;
     const selectedCardKeys = new Set();
     const preloadedImages = new Map();
 
@@ -312,7 +315,7 @@
       const cards=inventory.map(card=>{
         const knownMew=String(card.id||"").toLowerCase()==="me55-158";
         const futuristicRare=normalizeRarity(card.rarity)==="futuristic_rare";
-        if((!knownMew&&!futuristicRare)||Number(card.value)>FALLBACKS.common||(!knownMew&&card.priceSource==="tcgplayer"))return card;
+        if((!knownMew&&!futuristicRare)||Number(card.value)>FALLBACKS.common||["tcgplayer","tcgplayer_estimate","cardmarket"].includes(card.priceSource))return card;
         changed=true;
         return {...card,value:FALLBACKS.futuristic_rare,priceSource:"estimated"};
       });
@@ -327,10 +330,10 @@
             try{localStorage.setItem(STORAGE_KEY,JSON.stringify({...saved,inventory:migration.cards}));}
             catch(error){console.error("Impossible d'enregistrer la correction de valeur de la carte rare.",error);}
           }
-          return {cash:Math.max(0,saved.cash),inventory:migration.cards,freeBoosters:Array.isArray(saved.freeBoosters)?saved.freeBoosters:[],showcaseKeys:Array.isArray(saved.showcaseKeys)?saved.showcaseKeys:[],showcaseCustomized:Boolean(saved.showcaseCustomized),pricesUpdatedOn:typeof saved.pricesUpdatedOn==="string"?saved.pricesUpdatedOn:""};
+          return {cash:Math.max(0,saved.cash),inventory:migration.cards,freeBoosters:Array.isArray(saved.freeBoosters)?saved.freeBoosters:[],showcaseKeys:Array.isArray(saved.showcaseKeys)?saved.showcaseKeys:[],showcaseCustomized:Boolean(saved.showcaseCustomized),pricesUpdatedOn:typeof saved.pricesUpdatedOn==="string"?saved.pricesUpdatedOn:"",marketPriceVersion:Number.isInteger(saved.marketPriceVersion)?saved.marketPriceVersion:0};
         }
       }catch(error){console.warn("La sauvegarde locale n'a pas pu être lue.",error);}
-      return {cash:150,inventory:[],freeBoosters:[],showcaseKeys:[],showcaseCustomized:false,pricesUpdatedOn:""};
+      return {cash:150,inventory:[],freeBoosters:[],showcaseKeys:[],showcaseCustomized:false,pricesUpdatedOn:"",marketPriceVersion:0};
     }
     function loadDailyState(){
       try{
@@ -427,7 +430,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
           if(cloudState&&Number.isFinite(cloudState.cash)&&Array.isArray(cloudState.inventory)){
             const migration=upgradeRarePriceEstimates(cloudState.inventory);
             migratedRarePrices=migration.changed;
-            state={cash:Math.max(0,cloudState.cash),inventory:migration.cards,freeBoosters:Array.isArray(cloudState.freeBoosters)?cloudState.freeBoosters:[],showcaseKeys:Array.isArray(cloudState.showcaseKeys)?cloudState.showcaseKeys:[],showcaseCustomized:Boolean(cloudState.showcaseCustomized),pricesUpdatedOn:typeof cloudState.pricesUpdatedOn==="string"?cloudState.pricesUpdatedOn:""};
+            state={cash:Math.max(0,cloudState.cash),inventory:migration.cards,freeBoosters:Array.isArray(cloudState.freeBoosters)?cloudState.freeBoosters:[],showcaseKeys:Array.isArray(cloudState.showcaseKeys)?cloudState.showcaseKeys:[],showcaseCustomized:Boolean(cloudState.showcaseCustomized),pricesUpdatedOn:typeof cloudState.pricesUpdatedOn==="string"?cloudState.pricesUpdatedOn:"",marketPriceVersion:Number.isInteger(cloudState.marketPriceVersion)?cloudState.marketPriceVersion:0};
           }
           const cloudDaily=data.daily_state;
           if(cloudDaily&&typeof cloudDaily==="object")dailyState={lastClaimDate:typeof cloudDaily.lastClaimDate==="string"?cloudDaily.lastClaimDate:"",streakDay:Number.isInteger(cloudDaily.streakDay)?Math.max(0,Math.min(7,cloudDaily.streakDay)):0,lastReward:cloudDaily.lastReward||null};
@@ -602,6 +605,14 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       },5100);
     }
     function cardValue(card){
+      const cardmarket=card.cardmarket;
+      if(cardmarket){
+        const priceEur=Number(cardmarket.priceEur);
+        const eurUsdRate=Number(cardmarket.eurUsdRate);
+        if(Number.isFinite(priceEur)&&priceEur>0&&Number.isFinite(eurUsdRate)&&eurUsdRate>0){
+          return {value:priceEur*eurUsdRate,source:"cardmarket",updatedAt:cardmarket.updatedAt||"",eurValue:priceEur,exchangeRate:eurUsdRate,exchangeRateDate:cardmarket.exchangeRateDate||"",metric:cardmarket.metric||""};
+        }
+      }
       const prices=card.tcgplayer && card.tcgplayer.prices;
       const updatedAt=card.tcgplayer&&card.tcgplayer.updatedAt||"";
       if(prices){
@@ -621,6 +632,16 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       const parsed=new Date(dateOnly?`${dateOnly[1]}-${dateOnly[2]}-${dateOnly[3]}T12:00:00Z`:value);
       return Number.isNaN(parsed.getTime())?String(value):new Intl.DateTimeFormat("fr-FR",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}).format(parsed);
     }
+    function cardPriceLabel(card){
+      if(card.priceSource==="estimated")return " · estimation";
+      if(card.priceSource==="tcgplayer_estimate")return " · prix indicatif TCGplayer";
+      if(card.priceSource==="cardmarket"){
+        const metricLabels={avg7:"moyenne 7 j",trend:"tendance",avg30:"moyenne 30 j",avg:"moyenne",avg1:"moyenne 1 j"};
+        const metric=metricLabels[card.priceMetric]||"cours";
+        return ` · Cardmarket ${metric}${card.priceUpdatedAt?` · ${formatMarketDate(card.priceUpdatedAt)}`:""}${card.priceExchangeRateDate?` · EUR/USD ${formatMarketDate(card.priceExchangeRateDate)}`:""}`;
+      }
+      return card.priceUpdatedAt?` · TCGplayer ${formatMarketDate(card.priceUpdatedAt)}`:"";
+    }
     function inventorySet(card){
       if(card.setId){
         const exact=SETS.find(set=>set.id===card.setId);
@@ -631,20 +652,52 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       if(prefixMatch)return prefixMatch;
       return SETS.find(set=>set.name===card.setName||String(card.setName||"").includes(set.name))||null;
     }
-    function tcgdexPricingData(card){
+    async function fetchEurUsdRate(){
+      if(!eurUsdRatePromise){
+        eurUsdRatePromise=(async()=>{
+          const response=await fetch("https://api.frankfurter.dev/v1/latest?base=EUR&symbols=USD",{headers:{Accept:"application/json"},cache:"no-cache"});
+          if(!response.ok)throw new Error(`Taux EUR/USD indisponible (${response.status}).`);
+          const data=await response.json();
+          const rate=Number(data.rates&&data.rates.USD);
+          if(!Number.isFinite(rate)||rate<=0||typeof data.date!=="string")throw new Error("Réponse invalide du taux EUR/USD.");
+          return {rate,date:data.date};
+        })().catch(error=>{eurUsdRatePromise=null;throw error;});
+      }
+      return eurUsdRatePromise;
+    }
+    function tcgdexPricingData(card,exchangeRate){
       const prices={};
+      let cardmarket=null;
+      let tcgplayerUpdatedAt="";
       for(const variant of card.variants_detailed||[]){
         const marketPrices=variant.pricing&&variant.pricing.tcgplayer;
-        if(!marketPrices)continue;
-        for(const [variantName,entry] of Object.entries(marketPrices)){
-          const key=variantName==="reverse-holofoil"?"reverseHolofoil":variantName;
-          prices[key]={market:entry.marketPrice,mid:entry.midPrice,low:entry.lowPrice};
+        if(marketPrices){
+          tcgplayerUpdatedAt=marketPrices.updated||tcgplayerUpdatedAt;
+          for(const [variantName,entry] of Object.entries(marketPrices)){
+            if(!entry||typeof entry!=="object")continue;
+            const key=variantName==="reverse-holofoil"?"reverseHolofoil":variantName;
+            prices[key]={market:entry.marketPrice,mid:entry.midPrice,low:entry.lowPrice};
+          }
+        }
+        const euroPrices=variant.pricing&&variant.pricing.cardmarket;
+        if(!cardmarket&&exchangeRate&&euroPrices&&euroPrices.unit==="EUR"){
+          const metrics=["avg7","trend","avg30","avg","avg1"];
+          for(const metric of metrics){
+            const priceEur=Number(euroPrices[metric]);
+            if(Number.isFinite(priceEur)&&priceEur>0){
+              cardmarket={priceEur,metric,updatedAt:euroPrices.updated||"",eurUsdRate:exchangeRate.rate,exchangeRateDate:exchangeRate.date};
+              break;
+            }
+          }
         }
       }
-      return Object.keys(prices).length?{prices}:null;
+      return {tcgplayer:Object.keys(prices).length?{prices,updatedAt:tcgplayerUpdatedAt}:null,cardmarket};
     }
     async function fetchFreshMarketCards(set){
       if(set.tcgdex){
+        let exchangeRate=null;
+        try{exchangeRate=await fetchEurUsdRate();}
+        catch(error){marketPriceNotice="Taux EUR/USD indisponible ; Cardmarket temporairement ignoré.";console.warn("Conversion Cardmarket indisponible.",error);}
         const inventoryCards=[...new Map(state.inventory.filter(card=>inventorySet(card)?.id===set.id).map(card=>[card.id,card])).values()];
         const results=[];
         for(let start=0;start<inventoryCards.length;start+=6){
@@ -655,7 +708,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
             const response=await fetch(`https://api.tcgdex.net/v2/${set.tcgdex.language}/cards/${encodeURIComponent(tcgdexId)}`,{headers:{Accept:"application/json"}});
             if(!response.ok)throw new Error(`TCGdex indisponible pour ${tcgdexId} (${response.status}).`);
             const data=await response.json();
-            return {id:owned.id,tcgplayer:tcgdexPricingData(data),rarity:data.rarity};
+            return {id:owned.id,...tcgdexPricingData(data,exchangeRate),rarity:data.rarity,types:data.types||[]};
           }));
           results.push(...details);
           document.getElementById("price-refresh-status").textContent=`Actualisation TCGPlayer · ${Math.min(start+batch.length,inventoryCards.length)} / ${inventoryCards.length} cartes de ${set.name}…`;
@@ -682,13 +735,14 @@ grant select, insert, update on public.player_profiles to authenticated;`;
     async function refreshCollectionMarketPrices(){
       if(refreshingMarketPrices||!state.inventory.length)return;
       const today=localDateKey();
-      if(state.pricesUpdatedOn===today){
-        document.getElementById("price-refresh-status").textContent=`Prix du marché TCGPlayer consultés aujourd’hui · ${formatMarketDate(today)}.`;
+      if(state.pricesUpdatedOn===today&&state.marketPriceVersion===MARKET_PRICE_VERSION){
+        document.getElementById("price-refresh-status").textContent=`Prix du marché actualisés aujourd’hui · Cardmarket prioritaire, sinon TCGplayer · ${formatMarketDate(today)}.`;
         return;
       }
       refreshingMarketPrices=true;
       const status=document.getElementById("price-refresh-status");
-      status.textContent="Actualisation quotidienne des prix du marché TCGPlayer en USD…";
+      marketPriceNotice="";
+      status.textContent="Actualisation des cours Cardmarket en EUR, conversion en USD, puis repli TCGplayer…";
       const groups=new Map();
       state.inventory.forEach(card=>{
         const set=inventorySet(card);
@@ -707,10 +761,21 @@ grant select, insert, update on public.player_profiles to authenticated;`;
             for(const owned of ownedCards){
               const marketCard=byId.get(owned.id);
               const quote=marketCard?cardValue(marketCard):null;
-              if(!quote||quote.source!=="tcgplayer"){unavailable++;continue;}
+              if(!quote||!["cardmarket","tcgplayer"].includes(quote.source)){unavailable++;continue;}
               owned.value=quote.value;
-              owned.priceSource="tcgplayer";
+              owned.priceSource=quote.source;
               if(quote.updatedAt)owned.priceUpdatedAt=quote.updatedAt;
+              if(quote.source==="cardmarket"){
+                owned.priceOriginalValueEur=quote.eurValue;
+                owned.priceExchangeRate=quote.exchangeRate;
+                owned.priceExchangeRateDate=quote.exchangeRateDate;
+                owned.priceMetric=quote.metric;
+              }else{
+                delete owned.priceOriginalValueEur;
+                delete owned.priceExchangeRate;
+                delete owned.priceExchangeRateDate;
+                delete owned.priceMetric;
+              }
               updated++;
             }
           }catch(error){
@@ -721,11 +786,12 @@ grant select, insert, update on public.player_profiles to authenticated;`;
         }
         if(updated||!failures.length){
           state.pricesUpdatedOn=today;
+          state.marketPriceVersion=MARKET_PRICE_VERSION;
           saveState();
           updateCollection();
         }
         const dateLabel=formatMarketDate(today);
-        status.textContent=`${updated} prix TCGPlayer actualisé${updated===1?"":"s"} aujourd’hui (${dateLabel}) · ${unavailable} carte${unavailable===1?"":"s"} sans nouveau cours${failures.length?` · ${failures.length} erreur(s), derniers prix conservés`:""}.`;
+        status.textContent=`${updated} prix de marché actualisé${updated===1?"":"s"} aujourd’hui (${dateLabel}), Cardmarket prioritaire puis TCGplayer · ${unavailable} carte${unavailable===1?"":"s"} sans nouveau cours${marketPriceNotice?` · ${marketPriceNotice}`:""}${failures.length?` · ${failures.length} erreur(s), derniers prix conservés`:""}.`;
         if(failures.length)console.warn("Certaines extensions n’ont pas pu actualiser leurs prix.",failures);
       }finally{
         refreshingMarketPrices=false;
@@ -851,6 +917,8 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       if(!Array.isArray(setData.cards)||!setData.cards.length)throw new Error(`Aucune carte trouvée pour le set ${setId}.`);
       const cards=[];
       const batchSize=12;
+      let exchangeRate=null;
+      let exchangeRateChecked=false;
       for(let start=0;start<setData.cards.length;start+=batchSize){
         if(selectedSet===set)setApiStatus(`TCGdex · cartes ${Math.min(start+batchSize,setData.cards.length)} / ${setData.cards.length}`,"loading");
         const refs=setData.cards.slice(start,start+batchSize);
@@ -859,18 +927,15 @@ grant select, insert, update on public.player_profiles to authenticated;`;
           if(!response.ok)throw new Error(`Impossible de charger la carte ${ref.id} depuis TCGdex (${response.status}).`);
           return response.json();
         }));
+        if(!exchangeRateChecked&&details.some(card=>(card.variants_detailed||[]).some(variant=>variant.pricing&&variant.pricing.cardmarket))){
+          exchangeRateChecked=true;
+          try{exchangeRate=await fetchEurUsdRate();}
+          catch(error){marketPriceNotice="Taux EUR/USD indisponible ; Cardmarket temporairement ignoré.";console.warn("Conversion Cardmarket indisponible.",error);}
+        }
         for(let index=0;index<details.length;index++){
           const card=details[index];
           const ref=refs[index];
-          const prices={};
-          for(const variant of card.variants_detailed||[]){
-            const marketPrices=variant.pricing && variant.pricing.tcgplayer;
-            if(!marketPrices)continue;
-            for(const [variantName,entry] of Object.entries(marketPrices)){
-              const key=variantName==="reverse-holofoil"?"reverseHolofoil":variantName;
-              prices[key]={market:entry.marketPrice,mid:entry.midPrice,low:entry.lowPrice};
-            }
-          }
+          const pricing=tcgdexPricingData(card,exchangeRate);
           const localId=card.localId||ref.localId;
           const image=card.image?`${card.image}/high.webp`:`https://assets.tcgdex.net/${language}/M/${encodeURIComponent(setId)}/${encodeURIComponent(localId)}/high.webp`;
           cards.push({
@@ -883,7 +948,8 @@ grant select, insert, update on public.player_profiles to authenticated;`;
             set:{id:setId,name:card.set&&card.set.name||set.name},
             images:{large:image,small:image},
             image,
-            tcgplayer:Object.keys(prices).length?{prices}:undefined
+            tcgplayer:pricing.tcgplayer,
+            cardmarket:pricing.cardmarket
           });
         }
       }
@@ -903,6 +969,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       document.getElementById("selected-reverse-count").textContent=String(slots.reverse);
       document.querySelector("#hit-pile-mode + span .muted").textContent=`Empile les 3 dernières cartes de chaque booster. Les ${packSizeFor(set)-3} premières restent dans le classeur.`;
       updateTotalPrice();
+      marketPriceNotice="";
       const art=document.getElementById("pack-art");
       art.style.background=`linear-gradient(145deg,${set.colors[0]}40,${set.colors[1]}70)`;
       document.getElementById("buy-button").disabled=true;
@@ -912,7 +979,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       try{
         const cards=await fetchCards(set);
         if(selectedSet!==set)return;
-        setApiStatus(`${cards.length} cartes chargées · prix disponibles ou estimation de secours`,"ok");
+        setApiStatus(`${cards.length} cartes chargées · Cardmarket converti en USD, TCGplayer ou estimation${marketPriceNotice?` · ${marketPriceNotice}`:""}`,"ok");
         updatePurchaseButton();
       }catch(error){
         if(selectedSet!==set)return;
@@ -951,7 +1018,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       pulls.push({card:getHit(buckets),kind:"hit"});
       return pulls.map(pull=>{
         const pricing=cardValue(pull.card);
-        return {id:pull.card.id,setId:selectedSet.id,name:pull.card.name,number:pull.card.number,setName:pull.card.set && pull.card.set.name || selectedSet.name,category:pull.card.category||pull.card.supertype||"",rarity:pull.card.rarity||"Carte",image:pull.card.images && (pull.card.images.large||pull.card.images.small)||"",value:pricing.value,priceSource:pricing.source,priceUpdatedAt:pricing.updatedAt||"",kind:pull.kind,uniqueKey:`${Date.now()}-${Math.random().toString(36).slice(2)}`};
+        return {id:pull.card.id,setId:selectedSet.id,name:pull.card.name,number:pull.card.number,setName:pull.card.set && pull.card.set.name || selectedSet.name,category:pull.card.category||pull.card.supertype||"",rarity:pull.card.rarity||"Carte",image:pull.card.images && (pull.card.images.large||pull.card.images.small)||"",value:pricing.value,priceSource:pricing.source,priceUpdatedAt:pricing.updatedAt||"",priceOriginalValueEur:pricing.eurValue,priceExchangeRate:pricing.exchangeRate,priceExchangeRateDate:pricing.exchangeRateDate,priceMetric:pricing.metric,kind:pull.kind,uniqueKey:`${Date.now()}-${Math.random().toString(36).slice(2)}`};
       });
     }
     function updateWallet(){
@@ -1067,7 +1134,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
         grid.querySelector("[data-clear-filters]")?.addEventListener("click",clearBinderFilters);
         lucide.createIcons();return;
       }
-      grid.innerHTML=cards.map((card,index)=>`<article class="glass card-tile overflow-hidden rounded-xl p-2 ${selectedCardKeys.has(card.uniqueKey)?"ring-1 ring-violet-300":""} ${isFavorite(card)?"favorite-card":""}" style="animation-delay:${Math.min(index,20)*25}ms" data-unique-card="${escapeHtml(card.uniqueKey)}"><div class="relative ${rarityScore(card)>=5?"foil":""}" data-card-name="${escapeHtml(card.name)}"><img class="card-image" src="${escapeHtml(imageUrl(card))}" alt="${escapeHtml(card.name)}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div><div class="px-1 pb-1 pt-2"><div class="mb-2 flex items-center justify-between gap-2"><label class="flex items-center gap-2 text-[10px] text-white/55"><input type="checkbox" data-select-card="${escapeHtml(card.uniqueKey)}" class="h-3.5 w-3.5 accent-violet-300" ${selectedCardKeys.has(card.uniqueKey)?"checked":""} ${isFavorite(card)?"disabled title='Les favoris sont protégés contre la vente'":""}>Sélectionner</label><button type="button" data-favorite="${escapeHtml(card.uniqueKey)}" aria-label="${isFavorite(card)?"Retirer des favoris":"Ajouter aux favoris"}" title="${isFavorite(card)?"Favori protégé contre la vente":"Ajouter aux favoris"}" class="rounded-md border border-amber-200/15 px-2 py-1 text-xs ${isFavorite(card)?"text-amber-200":"text-white/45 hover:text-amber-100"}">${isFavorite(card)?"★":"☆"}</button></div><div class="flex items-start justify-between gap-1"><span class="truncate text-xs font-semibold">${escapeHtml(card.name)}</span><span class="shrink-0 text-[10px] gold">${currency(card.value)}</span></div><p class="muted mt-1 truncate text-[9px]">${escapeHtml(card.rarity)} · ${escapeHtml(card.setName)}${card.priceSource==="estimated"?" · estimation":card.priceSource==="tcgplayer_estimate"?" · prix indicatif TCGPlayer":card.priceUpdatedAt?` · TCGPlayer ${formatMarketDate(card.priceUpdatedAt)}`:""}</p>${duplicateKeys.has(card.uniqueKey)?'<p class="mt-1 text-[9px] text-amber-200/80">Doublon</p>':""}<button data-showcase="${escapeHtml(card.uniqueKey)}" class="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-violet-300/15 py-1.5 text-[10px] text-violet-100/80">${state.showcaseKeys.includes(card.uniqueKey)?"Retirer de la vitrine":"Ajouter à la vitrine"}</button><button data-sell="${escapeHtml(card.uniqueKey)}" ${isFavorite(card)?"disabled title='Retirez des favoris pour vendre cette carte'":""} class="mt-1 flex w-full items-center justify-center gap-1 rounded-md border border-white/[.08] py-1.5 text-[10px] text-white/65 transition hover:border-rose-300/30 hover:text-rose-200 disabled:cursor-not-allowed disabled:opacity-40">${isFavorite(card)?'<i data-lucide="heart" class="h-3 w-3"></i>Favori · protégé':`<i data-lucide="circle-dollar-sign" class="h-3 w-3"></i>Vendre · ${currency(card.value)}`}</button></div></article>`).join("");
+      grid.innerHTML=cards.map((card,index)=>`<article class="glass card-tile overflow-hidden rounded-xl p-2 ${selectedCardKeys.has(card.uniqueKey)?"ring-1 ring-violet-300":""} ${isFavorite(card)?"favorite-card":""}" style="animation-delay:${Math.min(index,20)*25}ms" data-unique-card="${escapeHtml(card.uniqueKey)}"><div class="relative ${rarityScore(card)>=5?"foil":""}" data-card-name="${escapeHtml(card.name)}"><img class="card-image" src="${escapeHtml(imageUrl(card))}" alt="${escapeHtml(card.name)}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div><div class="px-1 pb-1 pt-2"><div class="mb-2 flex items-center justify-between gap-2"><label class="flex items-center gap-2 text-[10px] text-white/55"><input type="checkbox" data-select-card="${escapeHtml(card.uniqueKey)}" class="h-3.5 w-3.5 accent-violet-300" ${selectedCardKeys.has(card.uniqueKey)?"checked":""} ${isFavorite(card)?"disabled title='Les favoris sont protégés contre la vente'":""}>Sélectionner</label><button type="button" data-favorite="${escapeHtml(card.uniqueKey)}" aria-label="${isFavorite(card)?"Retirer des favoris":"Ajouter aux favoris"}" title="${isFavorite(card)?"Favori protégé contre la vente":"Ajouter aux favoris"}" class="rounded-md border border-amber-200/15 px-2 py-1 text-xs ${isFavorite(card)?"text-amber-200":"text-white/45 hover:text-amber-100"}">${isFavorite(card)?"★":"☆"}</button></div><div class="flex items-start justify-between gap-1"><span class="truncate text-xs font-semibold">${escapeHtml(card.name)}</span><span class="shrink-0 text-[10px] gold">${currency(card.value)}</span></div><p class="muted mt-1 truncate text-[9px]">${escapeHtml(card.rarity)} · ${escapeHtml(card.setName)}${cardPriceLabel(card)}</p>${duplicateKeys.has(card.uniqueKey)?'<p class="mt-1 text-[9px] text-amber-200/80">Doublon</p>':""}<button data-showcase="${escapeHtml(card.uniqueKey)}" class="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-violet-300/15 py-1.5 text-[10px] text-violet-100/80">${state.showcaseKeys.includes(card.uniqueKey)?"Retirer de la vitrine":"Ajouter à la vitrine"}</button><button data-sell="${escapeHtml(card.uniqueKey)}" ${isFavorite(card)?"disabled title='Retirez des favoris pour vendre cette carte'":""} class="mt-1 flex w-full items-center justify-center gap-1 rounded-md border border-white/[.08] py-1.5 text-[10px] text-white/65 transition hover:border-rose-300/30 hover:text-rose-200 disabled:cursor-not-allowed disabled:opacity-40">${isFavorite(card)?'<i data-lucide="heart" class="h-3 w-3"></i>Favori · protégé':`<i data-lucide="circle-dollar-sign" class="h-3 w-3"></i>Vendre · ${currency(card.value)}`}</button></div></article>`).join("");
       grid.querySelectorAll("[data-sell]").forEach(button=>button.addEventListener("click",()=>sellCard(button.dataset.sell)));
       grid.querySelectorAll("[data-select-card]").forEach(input=>input.addEventListener("change",()=>{if(input.checked&&!isFavoriteByKey(input.dataset.selectCard))selectedCardKeys.add(input.dataset.selectCard);else selectedCardKeys.delete(input.dataset.selectCard);renderBinder();}));
       grid.querySelectorAll("[data-favorite]").forEach(button=>button.addEventListener("click",()=>toggleFavorite(button.dataset.favorite)));
