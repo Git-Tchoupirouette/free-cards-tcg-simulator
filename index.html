@@ -47,9 +47,13 @@
     .reveal-stack{position:relative;width:min(42vw,430px,calc((min(68vh,680px) - 85px)*.714));max-width:calc(100vw - 72px);aspect-ratio:2.5/3.5;perspective:1100px;touch-action:pan-y;user-select:none}
     .stack-back{position:absolute;inset:0;border:4px solid #d6c4a1;border-radius:14px;background:radial-gradient(circle at 50% 50%,#f2d783 0 8%,#db6f6a 9% 14%,#e6d1a6 15% 17%,transparent 18%),repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0 3px,transparent 3px 8px),linear-gradient(145deg,#2d72b1,#172950 56%,#5b4387);box-shadow:0 12px 32px rgba(0,0,0,.55),inset 0 0 0 2px rgba(28,37,74,.85);transition:transform .3s}
     .stack-back:after{content:"C";position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,239,190,.7);font:700 58px Outfit,sans-serif;text-shadow:0 2px 15px rgba(255,226,144,.65)}
-    .stack-top{position:absolute;inset:0;z-index:5;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:#111522;box-shadow:0 18px 42px rgba(0,0,0,.58);cursor:pointer;transform-origin:50% 75%;animation:topCardIn .3s cubic-bezier(.2,.8,.2,1) both}
+    .stack-next-preview{position:absolute;inset:0;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:#111522;box-shadow:0 12px 32px rgba(0,0,0,.5);transform:translateY(-5px) scale(.985)}
+    .stack-next-preview img{display:block;width:100%;height:100%;object-fit:contain;background:#10131c}
+    .stack-top{position:absolute;inset:0;z-index:5;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:#111522;box-shadow:0 18px 42px rgba(0,0,0,.58);cursor:grab;transform-origin:50% 75%;touch-action:none;animation:topCardIn .3s cubic-bezier(.2,.8,.2,1) both}
     .stack-top img{display:block;width:100%;height:100%;object-fit:contain;background:#10131c}
-    .stack-top.swiping{transition:transform .28s ease,opacity .28s ease;transform:translateX(-125%) rotate(-15deg);opacity:0}
+    .stack-top.dragging{animation:none;cursor:grabbing;transition:none}
+    .stack-top.returning{animation:none;cursor:grab;transition:transform 180ms ease-out}
+    .stack-top.swiping{animation:none;transition:transform 180ms cubic-bezier(.22,.75,.25,1),opacity 180ms ease;transform:translateY(-112%) rotate(2deg) scale(.97);opacity:.12}
     @keyframes topCardIn{from{opacity:.5;transform:translateY(8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
     .stack-card-caption{position:absolute;right:0;bottom:0;left:0;padding:30px 12px 11px;background:linear-gradient(0deg,rgba(4,6,11,.97),rgba(4,6,11,0));text-shadow:0 1px 4px #000}
     .image-unavailable{display:grid!important;place-items:center;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:radial-gradient(circle at 50% 25%,rgba(135,105,195,.27),transparent 45%),linear-gradient(150deg,#202438,#10131c)!important}
@@ -1366,6 +1370,12 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       state.showcaseCustomized=false;
       saveState();renderShowcase();renderBinder();
     }
+    function returnDraggedCard(top){
+      top.classList.remove("dragging");
+      top.classList.add("returning");
+      top.style.transform="";
+      setTimeout(()=>{if(top.isConnected){top.classList.remove("returning");top.style.transition="";}},200);
+    }
     function renderRevealCard(){
       if(!pendingReveal)return;
       const {queue,index,hitPileMode}=pendingReveal;
@@ -1393,7 +1403,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       }
       document.getElementById("reveal-subtitle").textContent=`${hitPileMode?"Hit Pile":"Booster "+current.packNumber} · carte ${index+1} sur ${queue.length}`;
       document.getElementById("opening-message").textContent=hitPileMode?`Hit Pile · ${index+1} / ${queue.length}`:`Booster ${current.packNumber} · ${index+1} / ${queue.length}`;
-      document.getElementById("opening-hint").textContent=hitPileMode?"Les 3 dernières cartes de chaque booster · touchez pour swiper":"Touchez la carte ou balayez vers la gauche pour continuer";
+      document.getElementById("opening-hint").textContent=hitPileMode?"Les 3 dernières cartes de chaque booster · glissez vers le haut":"Glissez vers le haut avec le doigt ou la souris";
       currentValue.textContent=`Carte révélée : ${currency(current.value)}${cardPriceLabel(current)}`;
       if(current.value>=100)priceBadge.classList.add("price-jackpot");
       else if(current.value>=20)priceBadge.classList.add("price-hit");
@@ -1407,28 +1417,61 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       const backCards=Array.from({length:backs},(_,layer)=>`<div class="stack-back" style="transform:translate(${(layer+1)*.45}px,${(layer+1)*.45}px) rotate(${(layer+1)*.025}deg);z-index:${layer}"></div>`).join("");
       const foil=rarityScore({rarity:current.rarity})>=5;
       const typeLabel=current.kind==="hit"?"HIT":current.kind==="reverse"?"REVERSE HOLO":"COMMON SLOT";
-      stack.innerHTML=`${backCards}<button type="button" class="stack-top ${foil?"foil":""}" data-card-name="${escapeHtml(current.name)}" style="z-index:${backs+1}" aria-label="Swiper ${escapeHtml(current.name)} et révéler la carte suivante"><img src="${escapeHtml(imageUrl(current))}" alt="${escapeHtml(current.name)}" draggable="false" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"><span class="stack-card-caption"><span class="flex items-center justify-between gap-2"><span class="truncate text-base font-semibold">${escapeHtml(current.name)}</span><span class="shrink-0 text-sm gold">${currency(current.value)}</span></span><span class="muted mt-1 block text-[10px]">${escapeHtml(current.rarity)}${cardPriceLabel(current)} · ${typeLabel} · booster ${current.packNumber}</span></span></button>`;
+      const nextCard=queue[index+1];
+      const nextPreview=nextCard?`<div class="stack-next-preview" style="z-index:${backs+1}" aria-hidden="true"><img src="${escapeHtml(imageUrl(nextCard))}" alt="" draggable="false" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div>`:"";
+      stack.innerHTML=`${backCards}${nextPreview}<button type="button" class="stack-top ${foil?"foil":""}" data-card-name="${escapeHtml(current.name)}" style="z-index:${backs+2}" aria-label="Swiper ${escapeHtml(current.name)} et révéler la carte suivante"><img src="${escapeHtml(imageUrl(current))}" alt="${escapeHtml(current.name)}" draggable="false" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"><span class="stack-card-caption"><span class="flex items-center justify-between gap-2"><span class="truncate text-base font-semibold">${escapeHtml(current.name)}</span><span class="shrink-0 text-sm gold">${currency(current.value)}</span></span><span class="muted mt-1 block text-[10px]">${escapeHtml(current.rarity)}${cardPriceLabel(current)} · ${typeLabel} · booster ${current.packNumber}</span></span></button>`;
       preloadRevealWindow();
       const top=stack.querySelector(".stack-top");
-      nextButton.textContent="Swiper cette carte";
+      nextButton.textContent="Glisser ou cliquer pour révéler";
       top.addEventListener("click",()=>{
         if(pendingReveal.ignoreClick){pendingReveal.ignoreClick=false;return;}
         advanceReveal();
       });
-      top.addEventListener("pointerdown",event=>{pendingReveal.pointerStart=event.clientX;});
-      top.addEventListener("pointerup",event=>{
-        if(pendingReveal.pointerStart!==undefined&&Math.abs(event.clientX-pendingReveal.pointerStart)>45){
-          event.preventDefault();
-          pendingReveal.ignoreClick=true;
-          advanceReveal();
+      top.addEventListener("pointerdown",event=>{
+        if(!event.isPrimary||event.button!==0||pendingReveal.transitioning)return;
+        pendingReveal.drag={pointerId:event.pointerId,startY:event.clientY,moved:false};
+        top.setPointerCapture(event.pointerId);
+      });
+      top.addEventListener("pointermove",event=>{
+        const drag=pendingReveal?.drag;
+        if(!drag||drag.pointerId!==event.pointerId)return;
+        const deltaY=Math.min(0,event.clientY-drag.startY);
+        if(Math.abs(deltaY)>6)drag.moved=true;
+        if(drag.moved){
+          top.classList.add("dragging");
+          top.style.transform=`translateY(${deltaY}px) rotate(${deltaY*.025}deg) scale(${Math.max(.94,1+deltaY/2500)})`;
         }
-        pendingReveal.pointerStart=undefined;
+      });
+      top.addEventListener("pointerup",event=>{
+        const drag=pendingReveal?.drag;
+        if(!drag||drag.pointerId!==event.pointerId)return;
+        pendingReveal.drag=null;
+        if(!drag.moved)return;
+        event.preventDefault();
+        pendingReveal.ignoreClick=true;
+        const deltaY=Math.min(0,event.clientY-drag.startY);
+        if(Math.abs(deltaY)>=Math.max(70,top.clientHeight*.2)){
+          top.style.transform=`translateY(${deltaY}px) rotate(${deltaY*.025}deg) scale(${Math.max(.94,1+deltaY/2500)})`;
+          advanceReveal(top);
+          setTimeout(()=>{if(pendingReveal)pendingReveal.ignoreClick=false;},0);
+        }else{
+          returnDraggedCard(top);
+          setTimeout(()=>{if(pendingReveal)pendingReveal.ignoreClick=false;},0);
+        }
+      });
+      top.addEventListener("pointercancel",event=>{
+        const drag=pendingReveal?.drag;
+        if(!drag||drag.pointerId!==event.pointerId)return;
+        pendingReveal.drag=null;
+        returnDraggedCard(top);
       });
     }
-    function advanceReveal(){
+    function advanceReveal(top=document.querySelector(".stack-top")){
       if(!pendingReveal||pendingReveal.transitioning)return;
-      const top=document.querySelector(".stack-top");
       if(!top)return;
+      top.classList.remove("dragging");
+      top.style.transform="";
+      top.style.transition="";
       pendingReveal.transitioning=true;
       top.classList.add("swiping");
       setTimeout(()=>{
@@ -1436,7 +1479,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
         pendingReveal.index++;
         pendingReveal.transitioning=false;
         renderRevealCard();
-      },240);
+      },180);
     }
     function openReveal(pulls,hitPileMode,batchLabel=""){
       const packs=[...new Set(pulls.map(card=>card.packNumber))];
