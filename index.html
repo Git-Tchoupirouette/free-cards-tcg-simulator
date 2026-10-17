@@ -160,7 +160,7 @@
           <div class="flex flex-wrap items-center gap-2"><label class="sr-only" for="sort-select">Trier les cartes</label><select id="sort-select" class="rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs text-white"><option value="recent" selected>Récentes · plus récentes d’abord</option><option value="value-desc">Valeur · décroissante</option><option value="value-asc">Valeur · croissante</option><option value="rarity">Rareté · meilleure d’abord</option><option value="name">Nom · A–Z</option><option value="set">Extension · A–Z</option></select><button id="sell-all" class="flex items-center gap-2 rounded-lg border border-rose-300/20 bg-rose-400/[.07] px-3 py-2 text-xs text-rose-200 transition hover:bg-rose-400/[.14] disabled:opacity-40" disabled><i data-lucide="badge-dollar-sign" class="h-4 w-4"></i>Tout vendre (hors favoris)</button></div>
         </div>
         <div class="my-6 grid gap-3 sm:grid-cols-3"><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Valeur estimée</span><div id="binder-value" class="display mt-1 text-2xl font-semibold">$0.00</div></div><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes possédées</span><div id="binder-total" class="display mt-1 text-2xl font-semibold">0</div></div><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes uniques</span><div id="binder-unique" class="display mt-1 text-2xl font-semibold">0</div></div></div>
-        <p id="price-refresh-status" class="muted mb-4 text-xs" aria-live="polite">Cardmarket (moyenne des ventes récentes en EUR, convertie en USD) en priorité ; TCGplayer sinon. Cardmarket ne fournit pas ici de prix par état NM/M.</p>
+        <p id="price-refresh-status" class="muted mb-4 text-xs" aria-live="polite">Cours TCGplayer USD par carte ; prix indicatif TCGplayer si le cours principal est indisponible. Les valeurs estimées sont signalées séparément.</p>
         <section id="sealed-section" class="glass mb-5 rounded-2xl p-4" hidden><div class="mb-3 flex items-center justify-between gap-3"><div><h2 class="display text-lg font-semibold">Produits scellés</h2><p class="muted mt-1 text-xs">Vos bundles et displays restent fermés jusqu’à leur ouverture.</p></div><span id="sealed-count" class="rounded-full bg-white/10 px-2.5 py-1 text-xs">0</span></div><div id="sealed-grid" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"></div></section>
         <div class="glass mb-5 rounded-2xl p-4">
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -318,9 +318,8 @@
     let cloudLoadedUserId = null;
     let restoringCloudState = false;
     let refreshingMarketPrices = false;
-    let eurUsdRatePromise = null;
-    let marketPriceNotice = "";
-    const MARKET_PRICE_VERSION = 2;
+    const MARKET_PRICE_VERSION = 7;
+    const TCGPLAYER_SET_IDS={swsh45:"swsh4pt5",me1:"me01",me2:"me02",me3:"me03",me5:"me05"};
     const setOffers = new Map();
     const offerRequests = new Map();
     const offersLoading = new Set();
@@ -624,22 +623,14 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       },5100);
     }
     function cardValue(card){
-      const cardmarket=card.cardmarket;
-      if(cardmarket){
-        const priceEur=Number(cardmarket.priceEur);
-        const eurUsdRate=Number(cardmarket.eurUsdRate);
-        if(Number.isFinite(priceEur)&&priceEur>0&&Number.isFinite(eurUsdRate)&&eurUsdRate>0){
-          return {value:priceEur*eurUsdRate,source:"cardmarket",updatedAt:cardmarket.updatedAt||"",eurValue:priceEur,exchangeRate:eurUsdRate,exchangeRateDate:cardmarket.exchangeRateDate||"",metric:cardmarket.metric||""};
-        }
-      }
       const prices=card.tcgplayer && card.tcgplayer.prices;
       const updatedAt=card.tcgplayer&&card.tcgplayer.updatedAt||"";
       if(prices){
         const preferred=["holofoil","normal","reverseHolofoil","1stEditionHolofoil","unlimitedHolofoil"];
-        for(const key of preferred){const entry=prices[key];if(entry){const market=Number(entry.market);if(Number.isFinite(market)&&market>=0)return {value:market,source:"tcgplayer",updatedAt};}}
-        for(const entry of Object.values(prices)){const market=entry&&Number(entry.market);if(Number.isFinite(market)&&market>=0)return {value:market,source:"tcgplayer",updatedAt};}
-        for(const key of preferred){const entry=prices[key];if(entry){const estimate=[entry.mid,entry.low].map(Number).find(value=>Number.isFinite(value)&&value>=0);if(estimate!==undefined)return {value:estimate,source:"tcgplayer_estimate",updatedAt};}}
-        for(const entry of Object.values(prices)){const estimate=entry&&[entry.mid,entry.low].map(Number).find(value=>Number.isFinite(value)&&value>=0);if(estimate!==undefined)return {value:estimate,source:"tcgplayer_estimate",updatedAt};}
+        for(const key of preferred){const entry=prices[key];if(entry){const market=Number(entry.market);if(Number.isFinite(market)&&market>0)return {value:market,source:"tcgplayer",updatedAt};}}
+        for(const entry of Object.values(prices)){const market=entry&&Number(entry.market);if(Number.isFinite(market)&&market>0)return {value:market,source:"tcgplayer",updatedAt};}
+        for(const key of preferred){const entry=prices[key];if(entry){const estimate=Number(entry.mid);if(Number.isFinite(estimate)&&estimate>0)return {value:estimate,source:"tcgplayer_estimate",updatedAt};}}
+        for(const entry of Object.values(prices)){const estimate=entry&&Number(entry.mid);if(Number.isFinite(estimate)&&estimate>0)return {value:estimate,source:"tcgplayer_estimate",updatedAt};}
       }
       const rarity=normalizeRarity(card.rarity);
       const multiplier=rarity==="rare" && card.types && card.types.some(type=>["Pokémon ex","Pokémon V","Pokémon VMAX","Pokémon VSTAR"].includes(type)) ? 1.8 : (FALLBACKS[rarity] ?? .25);
@@ -653,13 +644,9 @@ grant select, insert, update on public.player_profiles to authenticated;`;
     }
     function cardPriceLabel(card){
       if(card.priceSource==="estimated")return " · estimation";
-      if(card.priceSource==="tcgplayer_estimate")return " · prix indicatif TCGplayer";
-      if(card.priceSource==="cardmarket"){
-        const metricLabels={avg7:"moyenne 7 j",trend:"tendance",avg30:"moyenne 30 j",avg:"moyenne",avg1:"moyenne 1 j"};
-        const metric=metricLabels[card.priceMetric]||"cours";
-        return ` · Cardmarket ${metric}${card.priceUpdatedAt?` · ${formatMarketDate(card.priceUpdatedAt)}`:""}${card.priceExchangeRateDate?` · EUR/USD ${formatMarketDate(card.priceExchangeRateDate)}`:""}`;
-      }
-      return card.priceUpdatedAt?` · TCGplayer ${formatMarketDate(card.priceUpdatedAt)}`:"";
+      if(card.priceSource==="tcgplayer_estimate")return ` · prix indicatif TCGplayer${card.priceUpdatedAt?` · ${formatMarketDate(card.priceUpdatedAt)}`:""}`;
+      if(card.priceSource==="cardmarket")return " · ancienne valeur à actualiser";
+      return card.priceUpdatedAt?` · TCGplayer USD ${formatMarketDate(card.priceUpdatedAt)}`:" · TCGplayer USD";
     }
     function inventorySet(card){
       if(card.setId){
@@ -671,22 +658,8 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       if(prefixMatch)return prefixMatch;
       return SETS.find(set=>set.name===card.setName||String(card.setName||"").includes(set.name))||null;
     }
-    async function fetchEurUsdRate(){
-      if(!eurUsdRatePromise){
-        eurUsdRatePromise=(async()=>{
-          const response=await fetch("https://api.frankfurter.dev/v1/latest?base=EUR&symbols=USD",{headers:{Accept:"application/json"},cache:"no-cache"});
-          if(!response.ok)throw new Error(`Taux EUR/USD indisponible (${response.status}).`);
-          const data=await response.json();
-          const rate=Number(data.rates&&data.rates.USD);
-          if(!Number.isFinite(rate)||rate<=0||typeof data.date!=="string")throw new Error("Réponse invalide du taux EUR/USD.");
-          return {rate,date:data.date};
-        })().catch(error=>{eurUsdRatePromise=null;throw error;});
-      }
-      return eurUsdRatePromise;
-    }
-    function tcgdexPricingData(card,exchangeRate){
+    function tcgdexPricingData(card){
       const prices={};
-      let cardmarket=null;
       let tcgplayerUpdatedAt="";
       for(const variant of card.variants_detailed||[]){
         const marketPrices=variant.pricing&&variant.pricing.tcgplayer;
@@ -698,52 +671,29 @@ grant select, insert, update on public.player_profiles to authenticated;`;
             prices[key]={market:entry.marketPrice,mid:entry.midPrice,low:entry.lowPrice};
           }
         }
-        const euroPrices=variant.pricing&&variant.pricing.cardmarket;
-        if(!cardmarket&&exchangeRate&&euroPrices&&euroPrices.unit==="EUR"){
-          const metrics=["avg7","trend","avg30","avg","avg1"];
-          for(const metric of metrics){
-            const priceEur=Number(euroPrices[metric]);
-            if(Number.isFinite(priceEur)&&priceEur>0){
-              cardmarket={priceEur,metric,updatedAt:euroPrices.updated||"",eurUsdRate:exchangeRate.rate,exchangeRateDate:exchangeRate.date};
-              break;
-            }
-          }
-        }
       }
-      return {tcgplayer:Object.keys(prices).length?{prices,updatedAt:tcgplayerUpdatedAt}:null,cardmarket};
+      return {tcgplayer:Object.keys(prices).length?{prices,updatedAt:tcgplayerUpdatedAt}:null};
     }
-    async function fetchFreshMarketCards(set){
-      if(set.tcgdex){
-        let exchangeRate=null;
-        try{exchangeRate=await fetchEurUsdRate();}
-        catch(error){marketPriceNotice="Taux EUR/USD indisponible ; Cardmarket temporairement ignoré.";console.warn("Conversion Cardmarket indisponible.",error);}
-        const inventoryCards=[...new Map(state.inventory.filter(card=>inventorySet(card)?.id===set.id).map(card=>[card.id,card])).values()];
-        const results=[];
-        for(let start=0;start<inventoryCards.length;start+=6){
-          const batch=inventoryCards.slice(start,start+6);
-          const details=await Promise.all(batch.map(async owned=>{
-            const localId=owned.number||String(owned.id).slice(String(owned.id).lastIndexOf("-")+1);
-            const tcgdexId=`${set.tcgdex.setId}-${localId}`;
-            const response=await fetch(`https://api.tcgdex.net/v2/${set.tcgdex.language}/cards/${encodeURIComponent(tcgdexId)}`,{headers:{Accept:"application/json"}});
-            if(!response.ok)throw new Error(`TCGdex indisponible pour ${tcgdexId} (${response.status}).`);
-            const data=await response.json();
-            return {id:owned.id,...tcgdexPricingData(data,exchangeRate),rarity:data.rarity,types:data.types||[]};
-          }));
-          results.push(...details);
-          document.getElementById("price-refresh-status").textContent=`Actualisation TCGPlayer · ${Math.min(start+batch.length,inventoryCards.length)} / ${inventoryCards.length} cartes de ${set.name}…`;
-        }
-        return results;
-      }
+    function pokemonTcgCardNumber(number){return String(number||"").trim().replace(/^0+(?=\d)/,"").toLowerCase();}
+    async function fetchPokemonTcgSetCards(set){
       const cards=[];
+      const marketSetId=TCGPLAYER_SET_IDS[set.id]||set.id;
       for(let page=1;page<=4;page++){
-        const url=`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(`set.id:${set.id}`)}&pageSize=250&page=${page}&select=id,rarity,types,tcgplayer`;
+        const url=`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(`set.id:${marketSetId}`)}&pageSize=250&page=${page}&select=id,name,number,rarity,types,tcgplayer`;
         let response;
         for(let attempt=0;attempt<3;attempt++){
-          response=await fetch(url,{headers:{Accept:"application/json"}});
+          try{response=await fetch(url,{headers:{Accept:"application/json"},cache:"no-cache"});}
+          catch(error){
+            if(attempt===2)throw new Error(`Connexion à l’API des prix impossible pour ${set.name} : ${error.message||error}`);
+            await new Promise(resolve=>setTimeout(resolve,400*(attempt+1)));
+            continue;
+          }
           if(response.ok)break;
-          if(attempt===2)throw new Error(`Prix indisponibles pour ${set.name} (${response.status}).`);
+          if(response.status<500&&response.status!==429)throw new Error(`API des prix indisponible pour ${set.name} (${response.status}).`);
+          if(attempt===2)throw new Error(`API des prix indisponible pour ${set.name} (${response.status}) après 3 tentatives.`);
           await new Promise(resolve=>setTimeout(resolve,400*(attempt+1)));
         }
+        if(!response?.ok)throw new Error(`Impossible de charger les prix TCGplayer pour ${set.name}.`);
         const data=await response.json();
         if(!Array.isArray(data.data))throw new Error(`Réponse de prix invalide pour ${set.name}.`);
         cards.push(...data.data);
@@ -751,17 +701,29 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       }
       return cards;
     }
+    async function fetchFreshMarketCards(set){
+      if(set.tcgdex){
+        const ownedCards=[...new Map(state.inventory.filter(card=>inventorySet(card)?.id===set.id).map(card=>[card.id,card])).values()];
+        const marketCards=await fetchPokemonTcgSetCards(set);
+        const byNumber=new Map(marketCards.map(card=>[pokemonTcgCardNumber(card.number),card]));
+        return ownedCards.map(owned=>{
+          const localId=owned.number||String(owned.id).slice(String(owned.id).lastIndexOf("-")+1);
+          const marketCard=byNumber.get(pokemonTcgCardNumber(localId));
+          return marketCard?{...marketCard,id:owned.id}:null;
+        }).filter(Boolean);
+      }
+      return fetchPokemonTcgSetCards(set);
+    }
     async function refreshCollectionMarketPrices(){
       if(refreshingMarketPrices||!state.inventory.length)return;
       const today=localDateKey();
       if(state.pricesUpdatedOn===today&&state.marketPriceVersion===MARKET_PRICE_VERSION){
-        document.getElementById("price-refresh-status").textContent=`Prix du marché actualisés aujourd’hui · Cardmarket prioritaire, sinon TCGplayer · ${formatMarketDate(today)}.`;
+        document.getElementById("price-refresh-status").textContent=`Prix TCGplayer actualisés aujourd’hui · ${formatMarketDate(today)}.`;
         return;
       }
       refreshingMarketPrices=true;
       const status=document.getElementById("price-refresh-status");
-      marketPriceNotice="";
-      status.textContent="Actualisation des cours Cardmarket en EUR, conversion en USD, puis repli TCGplayer…";
+      status.textContent="Actualisation des cours de marché TCGplayer en USD…";
       const groups=new Map();
       state.inventory.forEach(card=>{
         const set=inventorySet(card);
@@ -771,46 +733,65 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       });
       let updated=0;
       let unavailable=0;
+      let changed=false;
       const failures=[];
       try{
-        for(const {set,cards:ownedCards} of groups.values()){
-          try{
-            const marketCards=await fetchFreshMarketCards(set);
+        const setGroups=[...groups.values()];
+        for(let start=0;start<setGroups.length;start+=4){
+          const batchResults=await Promise.all(setGroups.slice(start,start+4).map(async group=>{
+            try{return {group,marketCards:await fetchFreshMarketCards(group.set)};}
+            catch(error){return {group,error};}
+          }));
+          for(const result of batchResults){
+            const {set,cards:ownedCards}=result.group;
+            if(result.error){
+              failures.push(`${set.name}: ${result.error.message||result.error}`);
+              unavailable+=ownedCards.length;
+              continue;
+            }
+            const marketCards=result.marketCards;
             const byId=new Map(marketCards.map(card=>[card.id,card]));
             for(const owned of ownedCards){
               const marketCard=byId.get(owned.id);
               const quote=marketCard?cardValue(marketCard):null;
-              if(!quote||!["cardmarket","tcgplayer"].includes(quote.source)){unavailable++;continue;}
+              if(!quote||!["tcgplayer","tcgplayer_estimate"].includes(quote.source)){
+                unavailable++;
+                if(owned.priceSource==="cardmarket"){
+                  const estimate=cardValue({rarity:owned.rarity});
+                  owned.value=estimate.value;
+                  owned.priceSource=estimate.source;
+                  delete owned.priceUpdatedAt;
+                  delete owned.priceOriginalValueEur;
+                  delete owned.priceExchangeRate;
+                  delete owned.priceExchangeRateDate;
+                  delete owned.priceMetric;
+                  changed=true;
+                }
+                continue;
+              }
               owned.value=quote.value;
               owned.priceSource=quote.source;
               if(quote.updatedAt)owned.priceUpdatedAt=quote.updatedAt;
-              if(quote.source==="cardmarket"){
-                owned.priceOriginalValueEur=quote.eurValue;
-                owned.priceExchangeRate=quote.exchangeRate;
-                owned.priceExchangeRateDate=quote.exchangeRateDate;
-                owned.priceMetric=quote.metric;
-              }else{
-                delete owned.priceOriginalValueEur;
-                delete owned.priceExchangeRate;
-                delete owned.priceExchangeRateDate;
-                delete owned.priceMetric;
-              }
+              delete owned.priceOriginalValueEur;
+              delete owned.priceExchangeRate;
+              delete owned.priceExchangeRateDate;
+              delete owned.priceMetric;
               updated++;
+              changed=true;
             }
-          }catch(error){
-            failures.push(`${set.name}: ${error.message||error}`);
-            unavailable+=ownedCards.length;
           }
-          status.textContent=`Actualisation du marché · ${updated} prix mis à jour${failures.length?` · ${failures.length} extension(s) indisponible(s)`:""}…`;
+          status.textContent=`Actualisation TCGplayer · ${Math.min(start+4,setGroups.length)} / ${setGroups.length} extensions · ${updated} prix mis à jour…`;
         }
-        if(updated||!failures.length){
-          state.pricesUpdatedOn=today;
-          state.marketPriceVersion=MARKET_PRICE_VERSION;
+        if(updated||changed||!failures.length){
+          if(!failures.length){
+            state.pricesUpdatedOn=today;
+            state.marketPriceVersion=MARKET_PRICE_VERSION;
+          }
           saveState();
           updateCollection();
         }
         const dateLabel=formatMarketDate(today);
-        status.textContent=`${updated} prix de marché actualisé${updated===1?"":"s"} aujourd’hui (${dateLabel}), Cardmarket prioritaire puis TCGplayer · ${unavailable} carte${unavailable===1?"":"s"} sans nouveau cours${marketPriceNotice?` · ${marketPriceNotice}`:""}${failures.length?` · ${failures.length} erreur(s), derniers prix conservés`:""}.`;
+        status.textContent=`${updated} prix TCGplayer actualisé${updated===1?"":"s"} aujourd’hui (${dateLabel}) · ${unavailable} carte${unavailable===1?"":"s"} sans cours exploitable${failures.length?` · ${failures.length} extension(s) indisponible(s), dernières valeurs conservées`:""}.`;
         if(failures.length)console.warn("Certaines extensions n’ont pas pu actualiser leurs prix.",failures);
       }finally{
         refreshingMarketPrices=false;
@@ -1064,8 +1045,13 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       if(!Array.isArray(setData.cards)||!setData.cards.length)throw new Error(`Aucune carte trouvée pour le set ${setId}.`);
       const cards=[];
       const batchSize=12;
-      let exchangeRate=null;
-      let exchangeRateChecked=false;
+      let marketPriceUnavailable=false;
+      let marketCards=[];
+      if(language==="en"){
+        try{marketCards=await fetchPokemonTcgSetCards(set);}
+        catch(error){marketPriceUnavailable=true;console.warn(`Cours TCGplayer indisponibles pour ${set.name}.`,error);}
+      }
+      const marketCardsByNumber=new Map(marketCards.map(card=>[pokemonTcgCardNumber(card.number),card]));
       for(let start=0;start<setData.cards.length;start+=batchSize){
         if(selectedSet===set)setApiStatus(`TCGdex · cartes ${Math.min(start+batchSize,setData.cards.length)} / ${setData.cards.length}`,"loading");
         const refs=setData.cards.slice(start,start+batchSize);
@@ -1074,16 +1060,13 @@ grant select, insert, update on public.player_profiles to authenticated;`;
           if(!response.ok)throw new Error(`Impossible de charger la carte ${ref.id} depuis TCGdex (${response.status}).`);
           return response.json();
         }));
-        if(!exchangeRateChecked&&details.some(card=>(card.variants_detailed||[]).some(variant=>variant.pricing&&variant.pricing.cardmarket))){
-          exchangeRateChecked=true;
-          try{exchangeRate=await fetchEurUsdRate();}
-          catch(error){marketPriceNotice="Taux EUR/USD indisponible ; Cardmarket temporairement ignoré.";console.warn("Conversion Cardmarket indisponible.",error);}
-        }
         for(let index=0;index<details.length;index++){
           const card=details[index];
           const ref=refs[index];
-          const pricing=tcgdexPricingData(card,exchangeRate);
           const localId=card.localId||ref.localId;
+          const marketCard=marketCardsByNumber.get(pokemonTcgCardNumber(localId));
+          const marketQuote=marketCard?cardValue(marketCard):null;
+          const pricing=marketQuote&&marketQuote.source!=="estimated"?{tcgplayer:marketCard.tcgplayer}:tcgdexPricingData(card);
           const image=card.image?`${card.image}/high.webp`:`https://assets.tcgdex.net/${language}/M/${encodeURIComponent(setId)}/${encodeURIComponent(localId)}/high.webp`;
           cards.push({
             id:card.id,
@@ -1095,12 +1078,12 @@ grant select, insert, update on public.player_profiles to authenticated;`;
             set:{id:setId,name:card.set&&card.set.name||set.name},
             images:{large:image,small:image},
             image,
-            tcgplayer:pricing.tcgplayer,
-            cardmarket:pricing.cardmarket
+            tcgplayer:pricing.tcgplayer
           });
         }
       }
       if(!cards.length)throw new Error(`Aucune carte détaillée récupérée pour ${setId}.`);
+      if(selectedSet===set&&marketPriceUnavailable)setApiStatus(`${cards.length} cartes chargées · TCGplayer indisponible, estimations signalées`,"ok");
       setCards.set(set.id,cards);
       return cards;
     }
@@ -1118,7 +1101,6 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       document.querySelector("#hit-pile-mode + span .muted").textContent=`Empile les 3 dernières cartes de chaque booster. Les ${packSizeFor(set)-3} premières restent dans le classeur.`;
       renderProductOptions(set);
       document.getElementById("product-price-note").textContent="Chargement des cours TCGplayer des produits scellés…";
-      marketPriceNotice="";
       const art=document.getElementById("pack-art");
       art.style.background=`linear-gradient(145deg,${set.colors[0]}40,${set.colors[1]}70)`;
       document.getElementById("buy-button").disabled=true;
@@ -1128,7 +1110,8 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       try{
         const [cards]=await Promise.all([fetchCards(set),loadSetOffers(set)]);
         if(selectedSet!==set)return;
-        setApiStatus(`${cards.length} cartes chargées · Cardmarket converti en USD, TCGplayer ou estimation${marketPriceNotice?` · ${marketPriceNotice}`:""}`,"ok");
+        const estimatedCount=cards.filter(card=>cardValue(card).source==="estimated").length;
+        setApiStatus(`${cards.length} cartes chargées · ${estimatedCount} sans cours TCGplayer${estimatedCount?" (estimations signalées)":""}`,"ok");
         updatePurchaseButton();
       }catch(error){
         if(selectedSet!==set)return;
@@ -1168,7 +1151,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       pulls.push({card:getHit(buckets),kind:"hit"});
       return pulls.map(pull=>{
         const pricing=cardValue(pull.card);
-        return {id:pull.card.id,setId:selectedSet.id,name:pull.card.name,number:pull.card.number,setName:pull.card.set && pull.card.set.name || selectedSet.name,category:pull.card.category||pull.card.supertype||"",rarity:pull.card.rarity||"Carte",image:pull.card.images && (pull.card.images.large||pull.card.images.small)||"",value:pricing.value,priceSource:pricing.source,priceUpdatedAt:pricing.updatedAt||"",priceOriginalValueEur:pricing.eurValue,priceExchangeRate:pricing.exchangeRate,priceExchangeRateDate:pricing.exchangeRateDate,priceMetric:pricing.metric,kind:pull.kind,uniqueKey:`${Date.now()}-${Math.random().toString(36).slice(2)}`};
+        return {id:pull.card.id,setId:selectedSet.id,name:pull.card.name,number:pull.card.number,setName:pull.card.set && pull.card.set.name || selectedSet.name,category:pull.card.category||pull.card.supertype||"",rarity:pull.card.rarity||"Carte",image:pull.card.images && (pull.card.images.large||pull.card.images.small)||"",value:pricing.value,priceSource:pricing.source,priceUpdatedAt:pricing.updatedAt||"",kind:pull.kind,uniqueKey:`${Date.now()}-${Math.random().toString(36).slice(2)}`};
       });
     }
     function updateWallet(){
