@@ -101,7 +101,7 @@
       <div class="flex h-[76px] items-center justify-between">
         <a href="#" class="flex items-center gap-3" aria-label="Free Cards accueil">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[.08] text-amber-200"><i data-lucide="crown" class="h-5 w-5"></i></span>
-          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.7.1</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
+          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.7.2</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
         </a>
         <nav class="flex items-center gap-1 rounded-xl border border-white/[.07] bg-white/[.025] p-1">
           <button class="nav-btn active flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="shop"><i data-lucide="store" class="h-4 w-4"></i><span class="hidden lg:inline">Boutique</span></button>
@@ -122,7 +122,7 @@
             <h1 class="display max-w-2xl text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl">Ouvrez un pack.<br><span class="bg-gradient-to-r from-amber-100 via-amber-300 to-violet-300 bg-clip-text text-transparent">Trouvez votre légende.</span></h1>
             <p class="muted mt-4 max-w-xl text-sm leading-6">Explorez les extensions emblématiques, révélez vos cartes une à une et construisez votre collection. Une simulation, sans achats réels.</p>
           </div>
-          <div class="glass grid grid-cols-2 gap-3 rounded-2xl p-4"><div><span class="muted text-[10px] uppercase tracking-wider">Collection</span><div id="collection-value" class="display mt-1 text-xl font-semibold">$0.00</div></div><div class="border-l border-white/10 pl-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes trouvées</span><div id="collection-count" class="display mt-1 text-xl font-semibold">0</div></div></div>
+          <div class="glass grid grid-cols-2 gap-3 rounded-2xl p-4"><div><span class="muted text-[10px] uppercase tracking-wider">Valeur connue</span><div id="collection-value" class="display mt-1 text-xl font-semibold">$0.00</div></div><div class="border-l border-white/10 pl-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes trouvées</span><div id="collection-count" class="display mt-1 text-xl font-semibold">0</div></div></div>
         </div>
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -159,7 +159,7 @@
         <div class="flex flex-col justify-between gap-4 pt-8 sm:flex-row sm:items-end"><div><p class="mb-2 text-[10px] uppercase tracking-[.24em] text-violet-300">Votre collection personnelle</p><h1 class="display text-4xl font-semibold">Mon classeur</h1><p class="muted mt-2 text-sm">Toutes vos trouvailles, réunies au même endroit.</p></div>
           <div class="flex flex-wrap items-center gap-2"><label class="sr-only" for="sort-select">Trier les cartes</label><select id="sort-select" class="rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs text-white"><option value="recent" selected>Récentes · plus récentes d’abord</option><option value="value-desc">Valeur · décroissante</option><option value="value-asc">Valeur · croissante</option><option value="rarity">Rareté · meilleure d’abord</option><option value="name">Nom · A–Z</option><option value="set">Extension · A–Z</option></select><button id="sell-all" class="flex items-center gap-2 rounded-lg border border-rose-300/20 bg-rose-400/[.07] px-3 py-2 text-xs text-rose-200 transition hover:bg-rose-400/[.14] disabled:opacity-40" disabled><i data-lucide="badge-dollar-sign" class="h-4 w-4"></i>Tout vendre (hors favoris)</button></div>
         </div>
-        <div class="my-6 grid gap-3 sm:grid-cols-3"><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Valeur estimée</span><div id="binder-value" class="display mt-1 text-2xl font-semibold">$0.00</div></div><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes possédées</span><div id="binder-total" class="display mt-1 text-2xl font-semibold">0</div></div><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes uniques</span><div id="binder-unique" class="display mt-1 text-2xl font-semibold">0</div></div></div>
+        <div class="my-6 grid gap-3 sm:grid-cols-3"><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Valeur connue</span><div id="binder-value" class="display mt-1 text-2xl font-semibold">$0.00</div></div><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes possédées</span><div id="binder-total" class="display mt-1 text-2xl font-semibold">0</div></div><div class="glass rounded-xl p-4"><span class="muted text-[10px] uppercase tracking-wider">Cartes uniques</span><div id="binder-unique" class="display mt-1 text-2xl font-semibold">0</div></div></div>
         <p id="price-refresh-status" class="muted mb-4 text-xs" aria-live="polite">Cours TCGplayer USD par carte ; prix indicatif TCGplayer si le cours principal est indisponible. Les valeurs estimées sont signalées séparément.</p>
         <section id="sealed-section" class="glass mb-5 rounded-2xl p-4" hidden><div class="mb-3 flex items-center justify-between gap-3"><div><h2 class="display text-lg font-semibold">Produits scellés</h2><p class="muted mt-1 text-xs">Vos bundles et displays restent fermés jusqu’à leur ouverture.</p></div><span id="sealed-count" class="rounded-full bg-white/10 px-2.5 py-1 text-xs">0</span></div><div id="sealed-grid" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"></div></section>
         <div class="glass mb-5 rounded-2xl p-4">
@@ -301,7 +301,6 @@
     const DAILY_CASH = [[2,3,5,7,10,15,4,8],[4,6,8,10,15,20,25,5],[6,8,12,15,20,25,30,10],[8,12,15,20,25,30,40,10],[10,15,20,25,35,40,50,15],[15,20,30,40,50,60,75,25],[25,35,50,75,100,150,200,300]];
     const currency = value => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(value || 0);
     const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-    const FALLBACKS = {common:.08,uncommon:.12,rare:.35,rare_holo:.65,double_rare:1.8,ultra_rare:2.5,illustration_rare:4,special_illustration_rare:12,hyper_rare:8,secret_rare:10,futuristic_rare:25};
     let state = loadState();
     let dailyState = loadDailyState();
     let selectedSet = null;
@@ -319,7 +318,7 @@
     let cloudLoadedUserId = null;
     let restoringCloudState = false;
     let refreshingMarketPrices = false;
-    const MARKET_PRICE_VERSION = 7;
+    const MARKET_PRICE_VERSION = 8;
     const TCGPLAYER_SET_IDS={swsh45:"swsh4pt5",me1:"me01",me2:"me02",me3:"me03",me5:"me05"};
     const setOffers = new Map();
     const offerRequests = new Map();
@@ -330,14 +329,20 @@
     const selectedCardKeys = new Set();
     const preloadedImages = new Map();
 
-    function upgradeRarePriceEstimates(inventory){
+    function invalidateLegacyPriceEstimates(inventory){
       let changed=false;
       const cards=inventory.map(card=>{
-        const knownMew=String(card.id||"").toLowerCase()==="me55-158";
-        const futuristicRare=normalizeRarity(card.rarity)==="futuristic_rare";
-        if((!knownMew&&!futuristicRare)||Number(card.value)>FALLBACKS.common||["tcgplayer","tcgplayer_estimate","cardmarket"].includes(card.priceSource))return card;
+        const hasTrustedQuote=["tcgplayer","tcgplayer_estimate"].includes(card.priceSource)&&Number.isFinite(Number(card.value))&&Number(card.value)>0;
+        const alreadyUnavailable=card.priceSource==="unavailable"&&(card.value===null||card.value===undefined||card.value==="");
+        if(hasTrustedQuote||alreadyUnavailable)return card;
         changed=true;
-        return {...card,value:FALLBACKS.futuristic_rare,priceSource:"estimated"};
+        const updated={...card,value:null,priceSource:"unavailable"};
+        delete updated.priceUpdatedAt;
+        delete updated.priceOriginalValueEur;
+        delete updated.priceExchangeRate;
+        delete updated.priceExchangeRateDate;
+        delete updated.priceMetric;
+        return updated;
       });
       return {cards,changed};
     }
@@ -345,12 +350,12 @@
       try{
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
         if(saved && Number.isFinite(saved.cash) && Array.isArray(saved.inventory)){
-          const migration=upgradeRarePriceEstimates(saved.inventory);
+          const migration=invalidateLegacyPriceEstimates(saved.inventory);
           if(migration.changed){
-            try{localStorage.setItem(STORAGE_KEY,JSON.stringify({...saved,inventory:migration.cards}));}
-            catch(error){console.error("Impossible d'enregistrer la correction de valeur de la carte rare.",error);}
+            try{localStorage.setItem(STORAGE_KEY,JSON.stringify({...saved,inventory:migration.cards,pricesUpdatedOn:"",marketPriceVersion:0}));}
+            catch(error){console.error("Impossible d'enregistrer la migration des cours de cartes.",error);}
           }
-          return {cash:Math.max(0,saved.cash),inventory:migration.cards,freeBoosters:Array.isArray(saved.freeBoosters)?saved.freeBoosters:[],sealedProducts:Array.isArray(saved.sealedProducts)?saved.sealedProducts:[],showcaseKeys:Array.isArray(saved.showcaseKeys)?saved.showcaseKeys:[],showcaseCustomized:Boolean(saved.showcaseCustomized),pricesUpdatedOn:typeof saved.pricesUpdatedOn==="string"?saved.pricesUpdatedOn:"",marketPriceVersion:Number.isInteger(saved.marketPriceVersion)?saved.marketPriceVersion:0};
+          return {cash:Math.max(0,saved.cash),inventory:migration.cards,freeBoosters:Array.isArray(saved.freeBoosters)?saved.freeBoosters:[],sealedProducts:Array.isArray(saved.sealedProducts)?saved.sealedProducts:[],showcaseKeys:Array.isArray(saved.showcaseKeys)?saved.showcaseKeys:[],showcaseCustomized:Boolean(saved.showcaseCustomized),pricesUpdatedOn:migration.changed?"":typeof saved.pricesUpdatedOn==="string"?saved.pricesUpdatedOn:"",marketPriceVersion:migration.changed?0:Number.isInteger(saved.marketPriceVersion)?saved.marketPriceVersion:0};
         }
       }catch(error){console.warn("La sauvegarde locale n'a pas pu être lue.",error);}
       return {cash:150,inventory:[],freeBoosters:[],sealedProducts:[],showcaseKeys:[],showcaseCustomized:false,pricesUpdatedOn:"",marketPriceVersion:0};
@@ -450,7 +455,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       clearTimeout(cloudSaveTimer);
       restoringCloudState=true;
       let profileExists=false;
-      let migratedRarePrices=false;
+      let migratedLegacyPrices=false;
       try{
         const {data,error}=await supabaseClient.from("player_profiles").select("username,game_state,daily_state").eq("user_id",user.id).maybeSingle();
         if(error)throw error;
@@ -458,9 +463,9 @@ grant select, insert, update on public.player_profiles to authenticated;`;
           profileExists=true;
           const cloudState=data.game_state;
           if(cloudState&&Number.isFinite(cloudState.cash)&&Array.isArray(cloudState.inventory)){
-            const migration=upgradeRarePriceEstimates(cloudState.inventory);
-            migratedRarePrices=migration.changed;
-            state={cash:Math.max(0,cloudState.cash),inventory:migration.cards,freeBoosters:Array.isArray(cloudState.freeBoosters)?cloudState.freeBoosters:[],sealedProducts:Array.isArray(cloudState.sealedProducts)?cloudState.sealedProducts:[],showcaseKeys:Array.isArray(cloudState.showcaseKeys)?cloudState.showcaseKeys:[],showcaseCustomized:Boolean(cloudState.showcaseCustomized),pricesUpdatedOn:typeof cloudState.pricesUpdatedOn==="string"?cloudState.pricesUpdatedOn:"",marketPriceVersion:Number.isInteger(cloudState.marketPriceVersion)?cloudState.marketPriceVersion:0};
+            const migration=invalidateLegacyPriceEstimates(cloudState.inventory);
+            migratedLegacyPrices=migration.changed;
+            state={cash:Math.max(0,cloudState.cash),inventory:migration.cards,freeBoosters:Array.isArray(cloudState.freeBoosters)?cloudState.freeBoosters:[],sealedProducts:Array.isArray(cloudState.sealedProducts)?cloudState.sealedProducts:[],showcaseKeys:Array.isArray(cloudState.showcaseKeys)?cloudState.showcaseKeys:[],showcaseCustomized:Boolean(cloudState.showcaseCustomized),pricesUpdatedOn:migration.changed?"":typeof cloudState.pricesUpdatedOn==="string"?cloudState.pricesUpdatedOn:"",marketPriceVersion:migration.changed?0:Number.isInteger(cloudState.marketPriceVersion)?cloudState.marketPriceVersion:0};
           }
           const cloudDaily=data.daily_state;
           if(cloudDaily&&typeof cloudDaily==="object")dailyState={lastClaimDate:typeof cloudDaily.lastClaimDate==="string"?cloudDaily.lastClaimDate:"",streakDay:Number.isInteger(cloudDaily.streakDay)?Math.max(0,Math.min(7,cloudDaily.streakDay)):0,lastReward:cloudDaily.lastReward||null};
@@ -478,7 +483,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       }finally{
         restoringCloudState=false;
       }
-      if(!profileExists||migratedRarePrices)scheduleCloudSave();
+      if(!profileExists||migratedLegacyPrices)scheduleCloudSave();
     }
     function scheduleCloudSave(){
       if(!supabaseClient||!authUser||restoringCloudState)return;
@@ -668,9 +673,35 @@ grant select, insert, update on public.player_profiles to authenticated;`;
         for(const key of preferred){const entry=prices[key];if(entry){const estimate=Number(entry.mid);if(Number.isFinite(estimate)&&estimate>0)return {value:estimate,source:"tcgplayer_estimate",updatedAt};}}
         for(const entry of Object.values(prices)){const estimate=entry&&Number(entry.mid);if(Number.isFinite(estimate)&&estimate>0)return {value:estimate,source:"tcgplayer_estimate",updatedAt};}
       }
-      const rarity=normalizeRarity(card.rarity);
-      const multiplier=rarity==="rare" && card.types && card.types.some(type=>["Pokémon ex","Pokémon V","Pokémon VMAX","Pokémon VSTAR"].includes(type)) ? 1.8 : (FALLBACKS[rarity] ?? .25);
-      return {value:multiplier,source:"estimated",updatedAt:""};
+      return {value:null,source:"unavailable",updatedAt:""};
+    }
+    function hasCardMarketValue(card){return ["tcgplayer","tcgplayer_estimate"].includes(card.priceSource)&&Number.isFinite(Number(card.value))&&Number(card.value)>0;}
+    function cardPriceText(card){return hasCardMarketValue(card)?currency(card.value):"—";}
+    function synchronizeDuplicateCardPrices(){
+      const bestPrices=new Map();
+      const sourceRank={tcgplayer:2,tcgplayer_estimate:1};
+      for(const card of state.inventory){
+        if(!hasCardMarketValue(card))continue;
+        const identity=`${String(card.setId||"").toLowerCase()}|${String(card.id||card.number||card.name||"").toLowerCase()}`;
+        const current=bestPrices.get(identity);
+        if(!current||(sourceRank[card.priceSource]||0)>(sourceRank[current.priceSource]||0))bestPrices.set(identity,card);
+      }
+      let changed=false;
+      for(const card of state.inventory){
+        const identity=`${String(card.setId||"").toLowerCase()}|${String(card.id||card.number||card.name||"").toLowerCase()}`;
+        const quote=bestPrices.get(identity);
+        if(!quote||card===quote)continue;
+        if(card.value===quote.value&&card.priceSource===quote.priceSource&&card.priceUpdatedAt===quote.priceUpdatedAt)continue;
+        card.value=quote.value;
+        card.priceSource=quote.priceSource;
+        card.priceUpdatedAt=quote.priceUpdatedAt||"";
+        delete card.priceOriginalValueEur;
+        delete card.priceExchangeRate;
+        delete card.priceExchangeRateDate;
+        delete card.priceMetric;
+        changed=true;
+      }
+      return changed;
     }
     function formatMarketDate(value){
       if(!value)return "";
@@ -679,9 +710,8 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       return Number.isNaN(parsed.getTime())?String(value):new Intl.DateTimeFormat("fr-FR",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}).format(parsed);
     }
     function cardPriceLabel(card){
-      if(card.priceSource==="estimated")return " · estimation";
+      if(!hasCardMarketValue(card))return " · cours indisponible";
       if(card.priceSource==="tcgplayer_estimate")return ` · prix indicatif TCGplayer${card.priceUpdatedAt?` · ${formatMarketDate(card.priceUpdatedAt)}`:""}`;
-      if(card.priceSource==="cardmarket")return " · ancienne valeur à actualiser";
       return card.priceUpdatedAt?` · TCGplayer USD ${formatMarketDate(card.priceUpdatedAt)}`:" · TCGplayer USD";
     }
     function inventorySet(card){
@@ -752,8 +782,11 @@ grant select, insert, update on public.player_profiles to authenticated;`;
     }
     async function refreshCollectionMarketPrices(){
       if(refreshingMarketPrices||!state.inventory.length)return;
+      const duplicatesUpdated=synchronizeDuplicateCardPrices();
+      if(duplicatesUpdated){saveState();updateCollection();}
       const today=localDateKey();
-      if(state.pricesUpdatedOn===today&&state.marketPriceVersion===MARKET_PRICE_VERSION){
+      const hasUntrustedPrices=state.inventory.some(card=>card.priceSource!=="unavailable"&&!hasCardMarketValue(card));
+      if(!hasUntrustedPrices&&state.pricesUpdatedOn===today&&state.marketPriceVersion===MARKET_PRICE_VERSION){
         document.getElementById("price-refresh-status").textContent=`Prix TCGplayer actualisés aujourd’hui · ${formatMarketDate(today)}.`;
         return;
       }
@@ -769,7 +802,6 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       });
       let updated=0;
       let unavailable=0;
-      let changed=false;
       const failures=[];
       try{
         const setGroups=[...groups.values()];
@@ -792,16 +824,14 @@ grant select, insert, update on public.player_profiles to authenticated;`;
               const quote=marketCard?cardValue(marketCard):null;
               if(!quote||!["tcgplayer","tcgplayer_estimate"].includes(quote.source)){
                 unavailable++;
-                if(owned.priceSource==="cardmarket"){
-                  const estimate=cardValue({rarity:owned.rarity});
-                  owned.value=estimate.value;
-                  owned.priceSource=estimate.source;
+                if(!hasCardMarketValue(owned)){
+                  owned.value=null;
+                  owned.priceSource="unavailable";
                   delete owned.priceUpdatedAt;
                   delete owned.priceOriginalValueEur;
                   delete owned.priceExchangeRate;
                   delete owned.priceExchangeRateDate;
                   delete owned.priceMetric;
-                  changed=true;
                 }
                 continue;
               }
@@ -813,21 +843,16 @@ grant select, insert, update on public.player_profiles to authenticated;`;
               delete owned.priceExchangeRateDate;
               delete owned.priceMetric;
               updated++;
-              changed=true;
             }
           }
           status.textContent=`Actualisation TCGplayer · ${Math.min(start+4,setGroups.length)} / ${setGroups.length} extensions · ${updated} prix mis à jour…`;
         }
-        if(updated||changed||!failures.length){
-          if(!failures.length){
-            state.pricesUpdatedOn=today;
-            state.marketPriceVersion=MARKET_PRICE_VERSION;
-          }
-          saveState();
-          updateCollection();
-        }
+        state.pricesUpdatedOn=failures.length?"":today;
+        state.marketPriceVersion=failures.length?0:MARKET_PRICE_VERSION;
+        saveState();
+        updateCollection();
         const dateLabel=formatMarketDate(today);
-        status.textContent=`${updated} prix TCGplayer actualisé${updated===1?"":"s"} aujourd’hui (${dateLabel}) · ${unavailable} carte${unavailable===1?"":"s"} sans cours exploitable${failures.length?` · ${failures.length} extension(s) indisponible(s), dernières valeurs conservées`:""}.`;
+        status.textContent=`${updated} prix TCGplayer actualisé${updated===1?"":"s"} aujourd’hui (${dateLabel}) · ${unavailable} carte${unavailable===1?"":"s"} sans cours (valeur laissée vide)${failures.length?` · ${failures.length} extension(s) indisponible(s), nouvelle tentative à la prochaine ouverture`:""}.`;
         if(failures.length)console.warn("Certaines extensions n’ont pas pu actualiser leurs prix.",failures);
       }finally{
         refreshingMarketPrices=false;
@@ -1188,8 +1213,8 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       try{
         const [cards]=await Promise.all([fetchCards(set),loadSetOffers(set)]);
         if(selectedSet!==set)return;
-        const estimatedCount=cards.filter(card=>cardValue(card).source==="estimated").length;
-        setApiStatus(`${cards.length} cartes chargées · ${estimatedCount} sans cours TCGplayer${estimatedCount?" (estimations signalées)":""}`,"ok");
+        const unavailableCount=cards.filter(card=>cardValue(card).source==="unavailable").length;
+        setApiStatus(`${cards.length} cartes chargées · ${unavailableCount} sans cours TCGplayer`,"ok");
         updatePurchaseButton();
       }catch(error){
         if(selectedSet!==set)return;
@@ -1255,7 +1280,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
     function getDuplicateCardKeys(){return new Set(getDuplicateGroups().flatMap(group=>group.map(card=>card.uniqueKey)));}
     function getDuplicateSaleKeys(){
       return getDuplicateGroups().flatMap(group=>{
-        const unprotected=group.filter(card=>!isFavorite(card));
+        const unprotected=group.filter(card=>!isFavorite(card)&&hasCardMarketValue(card));
         return unprotected.slice(group.some(isFavorite)?0:1).map(card=>card.uniqueKey);
       });
     }
@@ -1276,8 +1301,8 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       document.getElementById("binder-value").textContent=currency(total);
       document.getElementById("binder-total").textContent=count;
       document.getElementById("binder-unique").textContent=new Set(state.inventory.map(card=>card.id)).size;
-      document.getElementById("sell-all").disabled=!state.inventory.some(card=>!isFavorite(card));
-      document.getElementById("sell-nonrare").disabled=!state.inventory.some(card=>!isFavorite(card)&&rarityScore(card)<3);
+      document.getElementById("sell-all").disabled=!state.inventory.some(card=>!isFavorite(card)&&hasCardMarketValue(card));
+      document.getElementById("sell-nonrare").disabled=!state.inventory.some(card=>!isFavorite(card)&&hasCardMarketValue(card)&&rarityScore(card)<3);
       document.getElementById("sell-duplicates").disabled=!getDuplicateSaleKeys().length;
       selectedCardKeys.forEach(key=>{if(!state.inventory.some(card=>card.uniqueKey===key))selectedCardKeys.delete(key);});
       renderSealedProducts();
@@ -1372,7 +1397,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       const selectVisible=document.getElementById("select-visible-cards");
       selectVisible.checked=visibleKeys.length>0&&selectedVisible===visibleKeys.length;
       selectVisible.indeterminate=selectedVisible>0&&selectedVisible<visibleKeys.length;
-      document.getElementById("sell-selected").disabled=!state.inventory.some(card=>selectedCardKeys.has(card.uniqueKey)&&!isFavorite(card));
+      document.getElementById("sell-selected").disabled=!state.inventory.some(card=>selectedCardKeys.has(card.uniqueKey)&&!isFavorite(card)&&hasCardMarketValue(card));
       document.getElementById("clear-selection").disabled=selectedCardKeys.size===0;
       if(!cards.length){
         grid.innerHTML=state.inventory.length?'<div class="glass col-span-full rounded-2xl px-5 py-12 text-center"><h3 class="display text-lg font-semibold">Aucune carte ne correspond</h3><p class="muted mt-2 text-sm">Modifiez ou effacez vos filtres.</p><button data-clear-filters class="mt-4 rounded-lg border border-white/10 px-4 py-2 text-xs text-white/70">Effacer les filtres</button></div>':'<div class="glass col-span-full rounded-2xl px-5 py-16 text-center"><i data-lucide="panels-top-left" class="mx-auto h-8 w-8 text-white/30"></i><h3 class="display mt-4 text-lg font-semibold">Votre classeur est encore vide</h3><p class="muted mt-2 text-sm">Ouvrez votre premier booster pour y ranger vos trouvailles.</p><button data-go-shop class="mt-5 rounded-lg bg-white px-4 py-2 text-xs font-semibold text-black">Découvrir la boutique</button></div>';
@@ -1380,7 +1405,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
         grid.querySelector("[data-clear-filters]")?.addEventListener("click",clearBinderFilters);
         lucide.createIcons();return;
       }
-      grid.innerHTML=displayedCards.map((card,index)=>`<article class="glass card-tile overflow-hidden rounded-xl p-2 ${selectedCardKeys.has(card.uniqueKey)?"ring-1 ring-violet-300":""} ${isFavorite(card)?"favorite-card":""}" style="animation-delay:${Math.min(index,20)*25}ms" data-unique-card="${escapeHtml(card.uniqueKey)}"><div class="relative ${rarityScore(card)>=5?"foil":""}" data-card-name="${escapeHtml(card.name)}"><img class="card-image" src="${escapeHtml(imageUrl(card))}" alt="${escapeHtml(card.name)}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div><div class="px-1 pb-1 pt-2"><div class="mb-2 flex items-center justify-between gap-2"><label class="flex items-center gap-2 text-[10px] text-white/55"><input type="checkbox" data-select-card="${escapeHtml(card.uniqueKey)}" class="h-3.5 w-3.5 accent-violet-300" ${selectedCardKeys.has(card.uniqueKey)?"checked":""} ${isFavorite(card)?"disabled title='Les favoris sont protégés contre la vente'":""}>Sélectionner</label><button type="button" data-favorite="${escapeHtml(card.uniqueKey)}" aria-label="${isFavorite(card)?"Retirer des favoris":"Ajouter aux favoris"}" title="${isFavorite(card)?"Favori protégé contre la vente":"Ajouter aux favoris"}" class="rounded-md border border-amber-200/15 px-2 py-1 text-xs ${isFavorite(card)?"text-amber-200":"text-white/45 hover:text-amber-100"}">${isFavorite(card)?"★":"☆"}</button></div><div class="flex items-start justify-between gap-1"><span class="truncate text-xs font-semibold">${escapeHtml(card.name)}</span><span class="shrink-0 text-[10px] gold">${currency(card.value)}</span></div><p class="muted mt-1 truncate text-[9px]">${escapeHtml(card.rarity)} · ${escapeHtml(card.setName)}${cardPriceLabel(card)}</p>${duplicateKeys.has(card.uniqueKey)?'<p class="mt-1 text-[9px] text-amber-200/80">Doublon</p>':""}<button data-showcase="${escapeHtml(card.uniqueKey)}" class="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-violet-300/15 py-1.5 text-[10px] text-violet-100/80">${state.showcaseKeys.includes(card.uniqueKey)?"Retirer de la vitrine":"Ajouter à la vitrine"}</button><button data-sell="${escapeHtml(card.uniqueKey)}" ${isFavorite(card)?"disabled title='Retirez des favoris pour vendre cette carte'":""} class="mt-1 flex w-full items-center justify-center gap-1 rounded-md border border-white/[.08] py-1.5 text-[10px] text-white/65 transition hover:border-rose-300/30 hover:text-rose-200 disabled:cursor-not-allowed disabled:opacity-40">${isFavorite(card)?'<i data-lucide="heart" class="h-3 w-3"></i>Favori · protégé':`<i data-lucide="circle-dollar-sign" class="h-3 w-3"></i>Vendre · ${currency(card.value)}`}</button></div></article>`).join("")+(cards.length>displayedCards.length?`<button type="button" data-show-more-cards class="glass col-span-full rounded-xl px-4 py-3 text-xs text-violet-100">Afficher ${Math.min(120,cards.length-displayedCards.length)} cartes supplémentaires · ${cards.length-displayedCards.length} restantes</button>`:"");
+      grid.innerHTML=displayedCards.map((card,index)=>`<article class="glass card-tile overflow-hidden rounded-xl p-2 ${selectedCardKeys.has(card.uniqueKey)?"ring-1 ring-violet-300":""} ${isFavorite(card)?"favorite-card":""}" style="animation-delay:${Math.min(index,20)*25}ms" data-unique-card="${escapeHtml(card.uniqueKey)}"><div class="relative ${rarityScore(card)>=5?"foil":""}" data-card-name="${escapeHtml(card.name)}"><img class="card-image" src="${escapeHtml(imageUrl(card))}" alt="${escapeHtml(card.name)}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div><div class="px-1 pb-1 pt-2"><div class="mb-2 flex items-center justify-between gap-2"><label class="flex items-center gap-2 text-[10px] text-white/55"><input type="checkbox" data-select-card="${escapeHtml(card.uniqueKey)}" class="h-3.5 w-3.5 accent-violet-300" ${selectedCardKeys.has(card.uniqueKey)?"checked":""} ${isFavorite(card)?"disabled title='Les favoris sont protégés contre la vente'":""}>Sélectionner</label><button type="button" data-favorite="${escapeHtml(card.uniqueKey)}" aria-label="${isFavorite(card)?"Retirer des favoris":"Ajouter aux favoris"}" title="${isFavorite(card)?"Favori protégé contre la vente":"Ajouter aux favoris"}" class="rounded-md border border-amber-200/15 px-2 py-1 text-xs ${isFavorite(card)?"text-amber-200":"text-white/45 hover:text-amber-100"}">${isFavorite(card)?"★":"☆"}</button></div><div class="flex items-start justify-between gap-1"><span class="truncate text-xs font-semibold">${escapeHtml(card.name)}</span><span class="shrink-0 text-[10px] gold">${cardPriceText(card)}</span></div><p class="muted mt-1 truncate text-[9px]">${escapeHtml(card.rarity)} · ${escapeHtml(card.setName)}${cardPriceLabel(card)}</p>${duplicateKeys.has(card.uniqueKey)?'<p class="mt-1 text-[9px] text-amber-200/80">Doublon</p>':""}<button data-showcase="${escapeHtml(card.uniqueKey)}" class="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-violet-300/15 py-1.5 text-[10px] text-violet-100/80">${state.showcaseKeys.includes(card.uniqueKey)?"Retirer de la vitrine":"Ajouter à la vitrine"}</button><button data-sell="${escapeHtml(card.uniqueKey)}" ${isFavorite(card)||!hasCardMarketValue(card)?"disabled":""} title="${isFavorite(card)?"Retirez des favoris pour vendre cette carte":!hasCardMarketValue(card)?"Vente indisponible sans cours de marché":"Vendre au cours TCGplayer connu"}" class="mt-1 flex w-full items-center justify-center gap-1 rounded-md border border-white/[.08] py-1.5 text-[10px] text-white/65 transition hover:border-rose-300/30 hover:text-rose-200 disabled:cursor-not-allowed disabled:opacity-40">${isFavorite(card)?'<i data-lucide="heart" class="h-3 w-3"></i>Favori · protégé':!hasCardMarketValue(card)?'<i data-lucide="circle-dollar-sign" class="h-3 w-3"></i>Cours indisponible':`<i data-lucide="circle-dollar-sign" class="h-3 w-3"></i>Vendre · ${cardPriceText(card)}`}</button></div></article>`).join("")+(cards.length>displayedCards.length?`<button type="button" data-show-more-cards class="glass col-span-full rounded-xl px-4 py-3 text-xs text-violet-100">Afficher ${Math.min(120,cards.length-displayedCards.length)} cartes supplémentaires · ${cards.length-displayedCards.length} restantes</button>`:"");
       grid.querySelector("[data-show-more-cards]")?.addEventListener("click",()=>{binderVisibleLimit+=120;renderBinder();});
       grid.querySelectorAll("[data-sell]").forEach(button=>button.addEventListener("click",()=>sellCard(button.dataset.sell)));
       grid.querySelectorAll("[data-select-card]").forEach(input=>input.addEventListener("change",()=>{if(input.checked&&!isFavoriteByKey(input.dataset.selectCard))selectedCardKeys.add(input.dataset.selectCard);else selectedCardKeys.delete(input.dataset.selectCard);renderBinder();}));
@@ -1406,7 +1431,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       if(!featured.length){
         grid.innerHTML=`<div class="glass col-span-full rounded-2xl px-5 py-16 text-center"><i data-lucide="sparkles" class="mx-auto h-8 w-8 text-amber-200/60"></i><h2 class="display mt-4 text-lg font-semibold">${state.showcaseCustomized?"Choisissez les cartes à exposer":"Votre vitrine attend ses premières cartes"}</h2><p class="muted mt-2 text-sm">${state.showcaseCustomized?"Ajoutez jusqu’à trois cartes depuis votre classeur.":"Les trois cartes les plus précieuses y apparaîtront automatiquement. Vous pouvez aussi en choisir dans le classeur."}</p><button data-go-binder class="mt-4 rounded-lg border border-white/10 px-4 py-2 text-xs text-white/75">Ouvrir le classeur</button></div>`;
       }else{
-        grid.innerHTML=featured.map((card,index)=>`<article class="glass overflow-hidden rounded-2xl p-3 ${rarityScore(card)>=5?"foil":""}"><div class="relative mx-auto max-w-[280px]" data-card-name="${escapeHtml(card.name)}"><img class="card-image" src="${escapeHtml(imageUrl(card))}" alt="${escapeHtml(card.name)}" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div><div class="px-1 pb-1 pt-4 text-center"><p class="text-[9px] uppercase tracking-[.2em] text-violet-200">Carte mise en avant · ${index+1}</p><h2 class="display mt-1 truncate text-lg font-semibold">${escapeHtml(card.name)}</h2><p class="muted mt-1 text-xs">${escapeHtml(card.rarity)} · ${escapeHtml(card.setName)}</p><p class="gold mt-2 text-sm font-semibold">${currency(card.value)}</p><button data-unfeature="${escapeHtml(card.uniqueKey)}" class="mt-3 rounded-lg border border-white/10 px-3 py-2 text-[10px] text-white/65">${state.showcaseCustomized?"Retirer de la vitrine":"Personnaliser avec cette carte"}</button></div></article>`).join("");
+        grid.innerHTML=featured.map((card,index)=>`<article class="glass overflow-hidden rounded-2xl p-3 ${rarityScore(card)>=5?"foil":""}"><div class="relative mx-auto max-w-[280px]" data-card-name="${escapeHtml(card.name)}"><img class="card-image" src="${escapeHtml(imageUrl(card))}" alt="${escapeHtml(card.name)}" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div><div class="px-1 pb-1 pt-4 text-center"><p class="text-[9px] uppercase tracking-[.2em] text-violet-200">Carte mise en avant · ${index+1}</p><h2 class="display mt-1 truncate text-lg font-semibold">${escapeHtml(card.name)}</h2><p class="muted mt-1 text-xs">${escapeHtml(card.rarity)} · ${escapeHtml(card.setName)}</p><p class="gold mt-2 text-sm font-semibold">${cardPriceText(card)}</p><button data-unfeature="${escapeHtml(card.uniqueKey)}" class="mt-3 rounded-lg border border-white/10 px-3 py-2 text-[10px] text-white/65">${state.showcaseCustomized?"Retirer de la vitrine":"Personnaliser avec cette carte"}</button></div></article>`).join("");
         if(state.showcaseCustomized){
           grid.innerHTML+=Array.from({length:3-featured.length},(_,index)=>`<article class="glass grid min-h-[300px] place-items-center rounded-2xl border-dashed p-5 text-center"><div><i data-lucide="plus" class="mx-auto h-7 w-7 text-white/30"></i><p class="display mt-3 text-sm font-medium">Emplacement libre</p><p class="muted mt-1 text-[10px]">Ajoutez une carte depuis le classeur.</p><button data-go-binder class="mt-3 rounded-lg border border-white/10 px-3 py-2 text-[10px] text-white/70">Choisir une carte</button></div></article>`).join("");
         }
@@ -1465,7 +1490,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       document.getElementById("reveal-subtitle").textContent=`${hitPileMode?"Hit Pile":"Booster "+current.packNumber} · carte ${index+1} sur ${queue.length}`;
       document.getElementById("opening-message").textContent=hitPileMode?`Hit Pile · ${index+1} / ${queue.length}`:`Booster ${current.packNumber} · ${index+1} / ${queue.length}`;
       document.getElementById("opening-hint").textContent=hitPileMode?"Les 3 dernières cartes de chaque booster · glissez vers le haut":"Glissez vers le haut avec le doigt ou la souris";
-      currentValue.textContent=`Carte révélée : ${currency(current.value)}${cardPriceLabel(current)}`;
+      currentValue.textContent=`Carte révélée : ${cardPriceText(current)}${cardPriceLabel(current)}`;
       if(current.value>=100)priceBadge.classList.add("price-jackpot");
       else if(current.value>=20)priceBadge.classList.add("price-hit");
       if(current.value>=5){
@@ -1480,7 +1505,7 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       const typeLabel=current.kind==="hit"?"HIT":current.kind==="reverse"?"REVERSE HOLO":"COMMON SLOT";
       const nextCard=queue[index+1];
       const nextPreview=nextCard?`<div class="stack-next-preview" style="z-index:${backs+1}" aria-hidden="true"><img src="${escapeHtml(imageUrl(nextCard))}" alt="" draggable="false" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div>`:"";
-      stack.innerHTML=`${backCards}${nextPreview}<button type="button" class="stack-top ${foil?"foil":""}" data-card-name="${escapeHtml(current.name)}" style="z-index:${backs+2}" aria-label="Swiper ${escapeHtml(current.name)} et révéler la carte suivante"><img src="${escapeHtml(imageUrl(current))}" alt="${escapeHtml(current.name)}" draggable="false" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"><span class="stack-card-caption"><span class="flex items-center justify-between gap-2"><span class="truncate text-base font-semibold">${escapeHtml(current.name)}</span><span class="shrink-0 text-sm gold">${currency(current.value)}</span></span><span class="muted mt-1 block text-[10px]">${escapeHtml(current.rarity)}${cardPriceLabel(current)} · ${typeLabel} · booster ${current.packNumber}</span></span></button>`;
+      stack.innerHTML=`${backCards}${nextPreview}<button type="button" class="stack-top ${foil?"foil":""}" data-card-name="${escapeHtml(current.name)}" style="z-index:${backs+2}" aria-label="Swiper ${escapeHtml(current.name)} et révéler la carte suivante"><img src="${escapeHtml(imageUrl(current))}" alt="${escapeHtml(current.name)}" draggable="false" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"><span class="stack-card-caption"><span class="flex items-center justify-between gap-2"><span class="truncate text-base font-semibold">${escapeHtml(current.name)}</span><span class="shrink-0 text-sm gold">${cardPriceText(current)}</span></span><span class="muted mt-1 block text-[10px]">${escapeHtml(current.rarity)}${cardPriceLabel(current)} · ${typeLabel} · booster ${current.packNumber}</span></span></button>`;
       preloadRevealWindow();
       const top=stack.querySelector(".stack-top");
       nextButton.textContent="Glisser ou cliquer pour révéler";
@@ -1560,50 +1585,59 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       const index=state.inventory.findIndex(card=>card.uniqueKey===uniqueKey);
       if(index<0)return;
       if(isFavorite(state.inventory[index])){notify("Cette carte est favorite et protégée. Retirez-la des favoris avant de la vendre.","error");return;}
+      if(!hasCardMarketValue(state.inventory[index])){notify("Vente impossible : aucun cours de marché fiable n’est disponible pour cette carte.","error");return;}
       const [card]=state.inventory.splice(index,1);
       state.showcaseKeys=state.showcaseKeys.filter(key=>key!==uniqueKey);
       selectedCardKeys.delete(uniqueKey);
-      const proceeds=Math.max(0,card.value);
+      const proceeds=card.value;
       state.cash+=proceeds;saveState();updateWallet();updateCollection();
-      notify(`${card.name} vendue pour ${currency(proceeds)} (100 % de la valeur estimée).`);
+      notify(`${card.name} vendue pour ${currency(proceeds)} (cours TCGplayer).`);
     }
     function sellAll(){
-      const cards=state.inventory.filter(card=>!isFavorite(card));
-      if(!cards.length){notify("Toutes vos cartes restantes sont favorites et protégées.");return;}
-      const proceeds=cards.reduce((sum,card)=>sum+Math.max(0,Number(card.value)||0),0);
-      const favoriteCount=state.inventory.length-cards.length;
-      if(!window.confirm(`Vendre ${cards.length} carte${cards.length===1?"":"s"} pour ${currency(proceeds)} ? ${favoriteCount} favori${favoriteCount===1?" sera":"s seront"} conservé${favoriteCount===1?"":"s"}.`))return;
+      const cards=state.inventory.filter(card=>!isFavorite(card)&&hasCardMarketValue(card));
+      if(!cards.length){notify("Aucune carte non favorite n’a de cours de marché disponible à la vente.");return;}
+      const proceeds=cards.reduce((sum,card)=>sum+card.value,0);
+      const favoriteCount=state.inventory.filter(isFavorite).length;
+      const unavailableCount=state.inventory.filter(card=>!isFavorite(card)&&!hasCardMarketValue(card)).length;
+      if(!window.confirm(`Vendre ${cards.length} carte${cards.length===1?"":"s"} cotée${cards.length===1?"":"s"} pour ${currency(proceeds)} ? ${favoriteCount} favori${favoriteCount===1?" sera":"s seront"} conservé${favoriteCount===1?"":"s"}${unavailableCount?` · ${unavailableCount} sans cours conservée${unavailableCount===1?"":"s"}`:""}.`))return;
       sellCardsByKeys(cards.map(card=>card.uniqueKey));
     }
     function sellCardsByKeys(keys){
       const keySet=new Set(keys);
-      const cards=state.inventory.filter(card=>keySet.has(card.uniqueKey)&&!isFavorite(card));
-      if(!cards.length)return;
-      const proceeds=cards.reduce((sum,card)=>sum+Math.max(0,Number(card.value)||0),0);
-      state.inventory=state.inventory.filter(card=>!keySet.has(card.uniqueKey));
-      state.showcaseKeys=state.showcaseKeys.filter(key=>!keySet.has(key));
+      const matchingCards=state.inventory.filter(card=>keySet.has(card.uniqueKey)&&!isFavorite(card));
+      const cards=matchingCards.filter(hasCardMarketValue);
+      if(!cards.length){
+        if(matchingCards.length)notify("Aucune carte sélectionnée n’a de cours de marché disponible ; elles ont été conservées.","error");
+        return;
+      }
+      const proceeds=cards.reduce((sum,card)=>sum+card.value,0);
+      const soldKeys=new Set(cards.map(card=>card.uniqueKey));
+      state.inventory=state.inventory.filter(card=>!soldKeys.has(card.uniqueKey));
+      state.showcaseKeys=state.showcaseKeys.filter(key=>!soldKeys.has(key));
       cards.forEach(card=>selectedCardKeys.delete(card.uniqueKey));
       state.cash+=proceeds;
       saveState();updateWallet();updateCollection();
-      notify(`${cards.length} carte${cards.length===1?"":"s"} vendue${cards.length===1?"":"s"} pour ${currency(proceeds)} (100 % de la valeur estimée).`);
+      const unavailableCount=matchingCards.length-cards.length;
+      notify(`${cards.length} carte${cards.length===1?"":"s"} vendue${cards.length===1?"":"s"} pour ${currency(proceeds)} (cours TCGplayer)${unavailableCount?` · ${unavailableCount} sans cours conservée${unavailableCount===1?"":"s"}`:""}.`);
     }
     function sellSelectedCards(){
-      const count=state.inventory.filter(card=>selectedCardKeys.has(card.uniqueKey)&&!isFavorite(card)).length;
-      if(!count)return;
-      if(window.confirm(`Vendre ${count} carte${count===1?"":"s"} sélectionnée${count===1?"":"s"} pour leur valeur estimée ?`))sellCardsByKeys([...selectedCardKeys]);
+      const cards=state.inventory.filter(card=>selectedCardKeys.has(card.uniqueKey)&&!isFavorite(card)&&hasCardMarketValue(card));
+      if(!cards.length){notify("Aucune carte sélectionnée n’a de cours de marché disponible à la vente.");return;}
+      const proceeds=cards.reduce((sum,card)=>sum+card.value,0);
+      if(window.confirm(`Vendre ${cards.length} carte${cards.length===1?"":"s"} sélectionnée${cards.length===1?"":"s"} et cotée${cards.length===1?"":"s"} pour ${currency(proceeds)} ? Les cartes sans cours seront conservées.`))sellCardsByKeys([...selectedCardKeys]);
     }
     function sellNonRareCards(){
-      const cards=state.inventory.filter(card=>!isFavorite(card)&&rarityScore(card)<3);
-      if(!cards.length){notify("Aucune carte commune ou peu commune non favorite à vendre.");return;}
-      const proceeds=cards.reduce((sum,card)=>sum+Math.max(0,Number(card.value)||0),0);
-      if(window.confirm(`Vendre ${cards.length} carte${cards.length===1?"":"s"} commune${cards.length===1?"":"s"} ou peu commune${cards.length===1?"":"s"} pour ${currency(proceeds)} ?`))sellCardsByKeys(cards.map(card=>card.uniqueKey));
+      const cards=state.inventory.filter(card=>!isFavorite(card)&&hasCardMarketValue(card)&&rarityScore(card)<3);
+      if(!cards.length){notify("Aucune carte commune ou peu commune non favorite n’a de cours disponible à la vente.");return;}
+      const proceeds=cards.reduce((sum,card)=>sum+card.value,0);
+      if(window.confirm(`Vendre ${cards.length} carte${cards.length===1?"":"s"} commune${cards.length===1?"":"s"} ou peu commune${cards.length===1?"":"s"} cotée${cards.length===1?"":"s"} pour ${currency(proceeds)} ? Les cartes sans cours seront conservées.`))sellCardsByKeys(cards.map(card=>card.uniqueKey));
     }
     function sellDuplicateCards(){
       const keys=getDuplicateSaleKeys();
-      if(!keys.length){notify("Aucun doublon vendable trouvé. Une copie de chaque carte est conservée et les favoris sont protégés.");return;}
+      if(!keys.length){notify("Aucun doublon coté vendable trouvé. Les cartes sans cours, les favoris et une copie de chaque carte sont conservés.");return;}
       const cards=state.inventory.filter(card=>keys.includes(card.uniqueKey));
-      const proceeds=cards.reduce((sum,card)=>sum+Math.max(0,Number(card.value)||0),0);
-      if(window.confirm(`Vendre ${cards.length} carte${cards.length===1?"":"s"} en double pour ${currency(proceeds)} ? Les favoris sont conservés et une copie non favorite reste pour chaque carte sans favori.`))sellCardsByKeys(keys);
+      const proceeds=cards.reduce((sum,card)=>sum+card.value,0);
+      if(window.confirm(`Vendre ${cards.length} doublon${cards.length===1?"":"s"} coté${cards.length===1?"":"s"} pour ${currency(proceeds)} ? Les favoris, les cartes sans cours et une copie de chaque carte sont conservés.`))sellCardsByKeys(keys);
     }
     function switchTab(tab){
       document.querySelectorAll(".nav-btn").forEach(button=>button.classList.toggle("active",button.dataset.tab===tab));
