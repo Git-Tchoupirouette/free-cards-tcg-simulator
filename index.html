@@ -101,7 +101,7 @@
       <div class="flex h-[76px] items-center justify-between">
         <a href="#" class="flex items-center gap-3" aria-label="Free Cards accueil">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[.08] text-amber-200"><i data-lucide="crown" class="h-5 w-5"></i></span>
-          <span><span class="display block text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span></span><span class="muted block text-[9px] tracking-[.28em]">TCG COLLECTION SIMULATOR</span></span>
+          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.7.1</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
         </a>
         <nav class="flex items-center gap-1 rounded-xl border border-white/[.07] bg-white/[.025] p-1">
           <button class="nav-btn active flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="shop"><i data-lucide="store" class="h-4 w-4"></i><span class="hidden lg:inline">Boutique</span></button>
@@ -229,13 +229,14 @@
           <label class="block text-xs text-white/70">URL du projet Supabase<input id="supabase-url" type="url" placeholder="https://votre-projet.supabase.co" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
           <label class="block text-xs text-white/70">Clé anon / publishable publique<input id="supabase-key" type="password" placeholder="sb_publishable_… ou clé anon" autocomplete="off" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
           <button id="supabase-connect" class="w-full rounded-lg bg-violet-300 px-4 py-2.5 text-sm font-semibold text-[#171321]">Connecter Supabase</button>
-          <details class="rounded-xl border border-white/[.08] p-3"><summary class="cursor-pointer text-xs font-semibold text-white/75">Configuration nécessaire dans Supabase</summary><p class="muted mt-2 text-[11px] leading-5">Créez un projet, puis exécutez le SQL fourni ci-dessous dans SQL Editor. Activez l’authentification par e-mail et ajoutez l’URL de votre site GitHub Pages aux URL autorisées. Pour que vos amis n’aient pas à saisir ces réglages, renseignez l’URL du projet et sa clé publique dans SUPABASE_PROJECT dans index.html avant publication. Seules les clés publiques sont acceptées ici ; ne mettez jamais une clé service_role dans cette page.</p><pre id="supabase-schema" class="mt-3 max-h-44 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-emerald-100"></pre></details>
+          <details class="rounded-xl border border-white/[.08] p-3"><summary class="cursor-pointer text-xs font-semibold text-white/75">Configuration nécessaire dans Supabase</summary><p class="muted mt-2 text-[11px] leading-5">Créez un projet, puis exécutez le SQL fourni ci-dessous dans SQL Editor. Activez l’authentification par e-mail et ajoutez l’URL de votre site GitHub Pages aux URL du site et de redirection autorisées (dont la récupération du mot de passe). Pour que vos amis n’aient pas à saisir ces réglages, renseignez l’URL du projet et sa clé publique dans SUPABASE_PROJECT dans index.html avant publication. Seules les clés publiques sont acceptées ici ; ne mettez jamais une clé service_role dans cette page.</p><pre id="supabase-schema" class="mt-3 max-h-44 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-emerald-100"></pre></details>
         </div>
         <form id="account-form" class="mt-5 space-y-3" hidden>
           <label id="account-username-field" class="block text-xs text-white/70">Pseudo<input id="account-username" type="text" minlength="3" maxlength="24" autocomplete="nickname" placeholder="Votre pseudo" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
           <label class="block text-xs text-white/70">E-mail<input id="account-email" type="email" required autocomplete="email" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white"></label>
-          <label class="block text-xs text-white/70">Mot de passe<input id="account-password" type="password" required minlength="8" autocomplete="current-password" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white"></label>
+          <label id="account-password-label" class="block text-xs text-white/70">Mot de passe<input id="account-password" type="password" required minlength="8" autocomplete="current-password" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white"></label>
           <div class="flex flex-wrap gap-2"><button id="account-submit" type="submit" class="flex-1 rounded-lg bg-violet-300 px-4 py-2.5 text-sm font-semibold text-[#171321]">Créer mon compte</button><button id="account-mode" type="button" class="rounded-lg border border-white/10 px-4 py-2.5 text-xs text-white/70">Déjà inscrit ? Connexion</button></div>
+          <button id="account-forgot-password" type="button" class="hidden text-xs text-violet-200 underline underline-offset-4 hover:text-white">Mot de passe oublié ? Recevoir un lien par e-mail</button>
           <button id="account-signout" type="button" class="hidden w-full rounded-lg border border-white/10 px-4 py-2.5 text-xs text-white/70">Se déconnecter</button>
         </form>
         <p id="account-status" class="mt-4 min-h-5 text-xs text-white/65" aria-live="polite"></p>
@@ -323,6 +324,7 @@
     const setOffers = new Map();
     const offerRequests = new Map();
     const offersLoading = new Set();
+    const offersQueued = new Set();
     const offerErrors = new Map();
     let binderVisibleLimit = 120;
     const selectedCardKeys = new Set();
@@ -400,14 +402,20 @@ grant select, insert, update on public.player_profiles to authenticated;`;
     }
     function updateAccountUI(){
       const signedIn=Boolean(authUser);
+      const resettingPassword=accountMode==="reset";
       document.getElementById("account-label").textContent=signedIn?(authUser.user_metadata?.username||authUser.email?.split("@")[0]||"Compte"):"Compte";
       document.getElementById("account-config").hidden=Boolean(supabaseClient);
       document.getElementById("account-form").hidden=!supabaseClient;
       document.getElementById("account-username-field").hidden=accountMode!=="signup"||signedIn;
-      document.getElementById("account-mode").hidden=signedIn;
-      document.getElementById("account-submit").hidden=signedIn;
-      document.getElementById("account-signout").classList.toggle("hidden",!signedIn);
-      document.getElementById("account-description").textContent=signedIn?`Connecté en tant que ${authUser.email}. La progression est synchronisée avec votre compte.`:"Configurez Supabase pour créer un compte accessible à vos amis et synchroniser votre progression entre appareils. L’URL du projet et la clé anon publique peuvent être utilisées dans le navigateur si les règles RLS sont activées.";
+      document.getElementById("account-password-label").firstChild.textContent=resettingPassword?"Nouveau mot de passe":"Mot de passe";
+      document.getElementById("account-password").autocomplete=resettingPassword?"new-password":accountMode==="signup"?"new-password":"current-password";
+      document.getElementById("account-email").readOnly=resettingPassword;
+      document.getElementById("account-mode").hidden=signedIn||resettingPassword;
+      document.getElementById("account-submit").hidden=signedIn&&!resettingPassword;
+      document.getElementById("account-submit").textContent=resettingPassword?"Changer mon mot de passe":accountMode==="signup"?"Créer mon compte":"Se connecter";
+      document.getElementById("account-forgot-password").classList.toggle("hidden",signedIn||accountMode!=="login");
+      document.getElementById("account-signout").classList.toggle("hidden",!signedIn||resettingPassword);
+      document.getElementById("account-description").textContent=resettingPassword?"Choisissez un nouveau mot de passe pour votre compte.":signedIn?`Connecté en tant que ${authUser.email}. La progression est synchronisée avec votre compte.`:"Configurez Supabase pour créer un compte accessible à vos amis et synchroniser votre progression entre appareils. L’URL du projet et la clé anon publique peuvent être utilisées dans le navigateur si les règles RLS sont activées.";
     }
     async function configureSupabase(url,key){
       if(!window.supabase?.createClient)throw new Error("La bibliothèque Supabase n’a pas pu être chargée. Vérifiez votre connexion, puis rechargez la page.");
@@ -424,10 +432,14 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       updateAccountUI();
       if(authUser)await handleAuthSession(authUser);
       else accountStatus("Supabase configuré. Créez un compte ou connectez-vous.");
-      const {data:listener}=supabaseClient.auth.onAuthStateChange((_event,session)=>{
+      const {data:listener}=supabaseClient.auth.onAuthStateChange((event,session)=>{
         authUser=session?.user||null;
+        if(event==="PASSWORD_RECOVERY")accountMode="reset";
         updateAccountUI();
-        window.setTimeout(()=>handleAuthSession(authUser),0);
+        window.setTimeout(async()=>{
+          await handleAuthSession(authUser);
+          if(event==="PASSWORD_RECOVERY")accountStatus("Lien de récupération vérifié. Choisissez votre nouveau mot de passe.");
+        },0);
       });
       supabaseAuthSubscription=listener.subscription;
     }
@@ -502,7 +514,14 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       const submit=document.getElementById("account-submit");
       submit.disabled=true;
       try{
-        if(accountMode==="signup"){
+        if(accountMode==="reset"){
+          const {error}=await supabaseClient.auth.updateUser({password});
+          if(error)throw error;
+          accountMode="login";
+          updateAccountUI();
+          document.getElementById("account-password").value="";
+          accountStatus("Mot de passe modifié. Vous êtes connecté à votre compte.");
+        }else if(accountMode==="signup"){
           if(!/^[\p{L}\p{N}_-]{3,24}$/u.test(username))throw new Error("Le pseudo doit contenir 3 à 24 lettres, chiffres, tirets ou tirets bas.");
           const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{username}}});
           if(error)throw error;
@@ -517,6 +536,23 @@ grant select, insert, update on public.player_profiles to authenticated;`;
         console.error("Authentification Supabase échouée.",error);
         accountStatus(error.message||"Impossible de créer le compte ou de se connecter.",true);
       }finally{submit.disabled=false;}
+    }
+    async function sendPasswordRecovery(){
+      if(!supabaseClient){accountStatus("Connectez d’abord votre projet Supabase.",true);return;}
+      const email=document.getElementById("account-email").value.trim();
+      if(!email){document.getElementById("account-email").focus();accountStatus("Saisissez votre adresse e-mail pour recevoir le lien de récupération.",true);return;}
+      const button=document.getElementById("account-forgot-password");
+      button.disabled=true;
+      try{
+        const redirectTo=window.location.protocol==="https:"?window.location.href.split("#")[0]:undefined;
+        const options=redirectTo?{redirectTo}:{};
+        const {error}=await supabaseClient.auth.resetPasswordForEmail(email,options);
+        if(error)throw error;
+        accountStatus("Si cette adresse correspond à un compte, un lien de récupération vient d’être envoyé. Vérifiez aussi vos courriers indésirables.");
+      }catch(error){
+        console.error("Envoi du lien de récupération impossible.",error);
+        accountStatus(error.message||"Impossible d’envoyer le lien de récupération.",true);
+      }finally{button.disabled=false;}
     }
     function localDateKey(date=new Date()){
       return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
@@ -892,8 +928,8 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       }
       if(selectedSet===set){
         renderProductOptions(set);
-        renderSets();
       }
+      renderSets();
       return offers;
     }
     function selectedSetOffers(){
@@ -906,6 +942,13 @@ grant select, insert, update on public.player_profiles to authenticated;`;
     function renderProductOptions(set){
       const select=document.getElementById("product-type");
       const previous=select.value;
+      if(offersLoading.has(set.id)&&!setOffers.has(set.id)){
+        select.innerHTML='<option value="">Chargement des cours du marché…</option>';
+        select.disabled=true;
+        updateTotalPrice();
+        return;
+      }
+      select.disabled=false;
       const offers=setOffers.get(set.id)||fallbackSetOffers(set);
       select.innerHTML=offers.map(offer=>`<option value="${offer.type}">${escapeHtml(offer.label)} · ${currency(offer.price)}${offer.source==="estimated"?" · estimé":""}</option>`).join("");
       select.value=offers.some(offer=>offer.type===previous)?previous:"booster";
@@ -951,6 +994,15 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       lucide.createIcons();
     }
     function updateTotalPrice(){
+      if(selectedSet&&offersLoading.has(selectedSet.id)&&!setOffers.has(selectedSet.id)){
+        document.getElementById("total-price").textContent="—";
+        document.getElementById("selected-price").textContent="—";
+        document.getElementById("selected-price-label").textContent="Prix en cours de chargement";
+        document.getElementById("product-price-note").textContent="Chargement du cours actuel des produits scellés…";
+        updateQuantityOptions();
+        updatePurchaseButton();
+        return;
+      }
       const offer=currentOffer();
       const quantity=boosterQuantity();
       const total=document.getElementById("total-price");
@@ -992,16 +1044,42 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       backButton.classList.toggle("hidden",!showSetResults);
       backButton.classList.toggle("inline-flex",showSetResults);
       document.getElementById("shop-heading").textContent=activeShopYear?`Extensions · ${activeShopYear}`:searchingYear?`Extensions · ${search}`:searching?"Résultats de recherche":"Choisissez votre booster";
-      document.getElementById("set-count").textContent=showSetResults?`${currentSets.length} extension${currentSets.length===1?"":"s"}${activeShopYear?` en ${activeShopYear}`:""} · sélectionnez un booster pour l’ouvrir`:`${yearEntries.length} année${yearEntries.length===1?"":"s"} · ${SETS.length} extensions · cliquez sur une année`;
-      const renderSetCard=set=>`<button class="set-card ${selectedSet===set?"selected":""} flex min-h-[164px] min-w-0 flex-col justify-between gap-3 rounded-xl p-3 text-left sm:min-h-[174px] sm:p-4" data-set-id="${escapeHtml(set.id)}">
+      document.getElementById("set-count").textContent=showSetResults?`${currentSets.length} extension${currentSets.length===1?"":"s"}${activeShopYear?` en ${activeShopYear}`:""} · prix du marché`:`${yearEntries.length} année${yearEntries.length===1?"":"s"} · ${SETS.length} extensions · cliquez sur une année pour actualiser les cours`;
+      const renderSetCard=set=>{
+        const offer=setOffers.get(set.id)?.find(entry=>entry.type==="booster");
+        const isLoading=offersLoading.has(set.id)||offersQueued.has(set.id);
+        const price=offer?currency(offer.price):isLoading?"Chargement…":offerErrors.has(set.id)||setOffers.has(set.id)?"—":"À actualiser";
+        const priceSource=offer?.source==="tcgplayer"?"Cours TCGplayer · booster":offerErrors.has(set.id)?"Cours indisponible · prix estimé":setOffers.has(set.id)?"Prix booster estimé":isLoading?"Mise à jour du cours…":"Cours à charger";
+        return `<button class="set-card ${selectedSet===set?"selected":""} flex min-h-[164px] min-w-0 flex-col justify-between gap-3 rounded-xl p-3 text-left sm:min-h-[174px] sm:p-4" data-set-id="${escapeHtml(set.id)}">
         <span class="flex min-w-0 items-start gap-3"><span class="relative flex h-[62px] w-[46px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/15 shadow-lg" style="background:linear-gradient(155deg,${set.colors[0]},${set.colors[1]})"><span class="absolute inset-0 bg-gradient-to-br from-white/25 to-transparent"></span><i data-lucide="${set.special?"target":"sparkles"}" class="relative h-5 w-5 text-white/90"></i></span><span class="min-w-0 flex-1"><span class="block break-words text-sm font-semibold leading-snug">${escapeHtml(set.name)}</span><span class="muted mt-1 block break-words text-[10px] leading-relaxed">${escapeHtml(set.subtitle)}</span></span></span>
-        <span class="block min-w-0 border-t border-white/[.07] pt-2"><span class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"><span class="text-[10px] leading-relaxed text-white/60">${formatReleaseDate(set.releaseDate)} · ${packSizeFor(set)} cartes</span><span class="display shrink-0 text-sm font-semibold gold">${currency(set.price)}</span></span><span class="mt-1 block break-words text-[9px] leading-relaxed text-white/40">${set.marketPriceSource==="tcgplayer"?"Cours TCGplayer · booster":"Prix booster estimé"} · ${set.tcgdex?`TCGdex ${set.tcgdex.language==="ja"?"japonais":"anglais"} · ${set.tcgdex.setId}`:`API set · ${set.id}`}</span></span>
+        <span class="block min-w-0 border-t border-white/[.07] pt-2"><span class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"><span class="text-[10px] leading-relaxed text-white/60">${formatReleaseDate(set.releaseDate)} · ${packSizeFor(set)} cartes</span><span class="display shrink-0 text-sm font-semibold gold">${price}</span></span><span class="mt-1 block break-words text-[9px] leading-relaxed text-white/40">${priceSource} · ${set.tcgdex?`TCGdex ${set.tcgdex.language==="ja"?"japonais":"anglais"} · ${set.tcgdex.setId}`:`API set · ${set.id}`}</span></span>
       </button>`;
+      };
       parent.innerHTML=showSetResults?(currentSets.length?`<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2">${currentSets.map(renderSetCard).join("")}</div>`:'<div class="glass rounded-2xl p-8 text-center text-sm text-white/60">Aucune extension ne correspond à cette recherche.</div>'):yearEntries.length?`<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2">${yearEntries.map(([year,sets])=>`<button type="button" class="year-card flex min-w-0 items-center justify-between gap-3 rounded-2xl p-4 text-left sm:p-5" data-shop-year="${escapeHtml(year)}"><span class="min-w-0"><span class="display block text-3xl font-semibold tracking-tight sm:text-4xl">${escapeHtml(year)}</span><span class="muted mt-1 block text-xs">${sets.length} extension${sets.length===1?"":"s"}</span><span class="mt-2 block break-words text-[10px] leading-relaxed text-white/45">${escapeHtml(sets[0].name)}${sets.length>1?` · +${sets.length-1} autre${sets.length===2?"":"s"}`:""}</span></span><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[.04]"><i data-lucide="arrow-right" class="h-4 w-4"></i></span></button>`).join("")}</div>`:'<div class="glass rounded-2xl p-8 text-center text-sm text-white/60">Aucune année ni extension ne correspond à cette recherche.</div>';
-      parent.querySelectorAll("[data-shop-year]").forEach(button=>button.addEventListener("click",()=>{activeShopYear=button.dataset.shopYear;renderSets();window.scrollTo({top:0,behavior:"smooth"});}));
+      parent.querySelectorAll("[data-shop-year]").forEach(button=>button.addEventListener("click",()=>{activeShopYear=button.dataset.shopYear;renderSets();loadVisibleSetOffers();window.scrollTo({top:0,behavior:"smooth"});}));
       parent.querySelectorAll("[data-set-id]").forEach(button=>button.addEventListener("click",()=>selectSet(SETS.find(set=>set.id===button.dataset.setId))));
       backButton.onclick=()=>{activeShopYear=null;document.getElementById("set-search").value="";renderSets();};
       if(window.lucide)lucide.createIcons();
+    }
+    async function loadVisibleSetOffers(){
+      const search=(document.getElementById("set-search").value||"").trim().toLocaleLowerCase();
+      const sets=activeShopYear
+        ?SETS.filter(set=>set.releaseDate.startsWith(activeShopYear)&&`${set.name} ${set.subtitle} ${set.id} ${set.releaseDate}`.toLocaleLowerCase().includes(search))
+        :search?SETS.filter(set=>`${set.name} ${set.subtitle} ${set.id} ${set.releaseDate}`.toLocaleLowerCase().includes(search)):[];
+      const pending=sets.filter(set=>!setOffers.has(set.id));
+      pending.forEach(set=>offersQueued.add(set.id));
+      if(pending.length)renderSets();
+      let nextIndex=0;
+      const workers=Array.from({length:Math.min(4,pending.length)},async()=>{
+        while(nextIndex<pending.length){
+          const set=pending[nextIndex++];
+          offersQueued.delete(set.id);
+          const request=loadSetOffers(set);
+          renderSets();
+          await request;
+        }
+      });
+      await Promise.all(workers);
     }
     function notify(message,type="info"){
       const el=document.createElement("div");
@@ -1646,11 +1724,11 @@ grant select, insert, update on public.player_profiles to authenticated;`;
     document.getElementById("account-form").addEventListener("submit",submitAccount);
     document.getElementById("account-mode").addEventListener("click",()=>{
       accountMode=accountMode==="signup"?"login":"signup";
-      document.getElementById("account-submit").textContent=accountMode==="signup"?"Créer mon compte":"Se connecter";
-      document.getElementById("account-password").autocomplete=accountMode==="signup"?"new-password":"current-password";
       document.getElementById("account-mode").textContent=accountMode==="signup"?"Déjà inscrit ? Connexion":"Créer un compte";
       updateAccountUI();
+      accountStatus(accountMode==="login"?"Connectez-vous ou demandez un lien pour réinitialiser votre mot de passe.":"Créez votre compte avec une adresse e-mail valide.");
     });
+    document.getElementById("account-forgot-password").addEventListener("click",sendPasswordRecovery);
     document.getElementById("account-signout").addEventListener("click",async()=>{
       if(!supabaseClient)return;
       const {error}=await supabaseClient.auth.signOut();
