@@ -231,14 +231,26 @@
           <button id="supabase-connect" class="w-full rounded-lg bg-violet-300 px-4 py-2.5 text-sm font-semibold text-[#171321]">Connecter Supabase</button>
           <details class="rounded-xl border border-white/[.08] p-3"><summary class="cursor-pointer text-xs font-semibold text-white/75">Configuration nécessaire dans Supabase</summary><p class="muted mt-2 text-[11px] leading-5">Créez un projet, puis exécutez le SQL fourni ci-dessous dans SQL Editor. Activez l’authentification par e-mail et ajoutez l’URL de votre site GitHub Pages aux URL du site et de redirection autorisées (dont la récupération du mot de passe). Pour que vos amis n’aient pas à saisir ces réglages, renseignez l’URL du projet et sa clé publique dans SUPABASE_PROJECT dans index.html avant publication. Seules les clés publiques sont acceptées ici ; ne mettez jamais une clé service_role dans cette page.</p><pre id="supabase-schema" class="mt-3 max-h-44 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-emerald-100"></pre></details>
         </div>
+        <details class="mt-4 rounded-xl border border-amber-200/15 p-3"><summary class="cursor-pointer text-xs font-semibold text-amber-100">Installation facultative du panneau admin</summary><p class="muted mt-2 text-[11px] leading-5">Cette migration ne supprime aucun profil ni aucune carte. Elle ajoute des fonctions SQL sécurisées et un journal d’actions; les commandes du panneau ne lisent pas le JSON complet de game_state. Exécutez ce script une seule fois après le schéma principal, remplacez ADMIN_EMAIL_HERE à la fin par l’adresse utilisée dans Supabase, puis actualisez l’application. Ne collez jamais de clé service_role ici.</p><button id="copy-admin-sql" type="button" class="mt-3 rounded-lg border border-amber-200/20 px-3 py-2 text-[10px] text-amber-100">Copier le SQL avec l’e-mail du compte connecté</button><pre id="supabase-admin-schema" class="mt-3 max-h-72 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-amber-100"></pre></details>
         <form id="account-form" class="mt-5 space-y-3" hidden>
           <label id="account-username-field" class="block text-xs text-white/70">Pseudo<input id="account-username" type="text" minlength="3" maxlength="24" autocomplete="nickname" placeholder="Votre pseudo" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
           <label class="block text-xs text-white/70">E-mail<input id="account-email" type="email" required autocomplete="email" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white"></label>
           <label id="account-password-label" class="block text-xs text-white/70">Mot de passe<input id="account-password" type="password" required minlength="8" autocomplete="current-password" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white"></label>
           <div class="flex flex-wrap gap-2"><button id="account-submit" type="submit" class="flex-1 rounded-lg bg-violet-300 px-4 py-2.5 text-sm font-semibold text-[#171321]">Créer mon compte</button><button id="account-mode" type="button" class="rounded-lg border border-white/10 px-4 py-2.5 text-xs text-white/70">Déjà inscrit ? Connexion</button></div>
           <button id="account-forgot-password" type="button" class="hidden text-xs text-violet-200 underline underline-offset-4 hover:text-white">Mot de passe oublié ? Recevoir un lien par e-mail</button>
+          <button id="admin-open" type="button" class="hidden w-full rounded-lg border border-amber-200/20 bg-amber-100/[.06] px-4 py-2.5 text-xs font-semibold text-amber-100">Ouvrir le panneau admin</button>
           <button id="account-signout" type="button" class="hidden w-full rounded-lg border border-white/10 px-4 py-2.5 text-xs text-white/70">Se déconnecter</button>
         </form>
+        <section id="admin-panel" class="mt-5 space-y-4 rounded-xl border border-amber-200/15 bg-amber-100/[.035] p-4" hidden>
+          <div class="flex items-center justify-between gap-3"><div><h3 class="display text-lg font-semibold text-amber-100">Administration</h3><p class="muted mt-1 text-[10px]">Les actions modifient uniquement le compte sélectionné et sont journalisées.</p></div><button id="admin-close" type="button" class="rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] text-white/70">Fermer</button></div>
+          <p id="admin-status" class="min-h-5 text-xs text-white/70" aria-live="polite"></p>
+          <div class="flex flex-wrap items-end gap-2"><label class="min-w-[220px] flex-1 text-[10px] text-white/65">Compte cible<select id="admin-target" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs text-white"></select></label><button id="admin-refresh" type="button" class="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/75">Actualiser la liste</button></div>
+          <div class="max-h-48 overflow-auto rounded-lg border border-white/[.08]"><table class="w-full text-left text-[10px]"><thead class="sticky top-0 bg-[#141722] text-white/50"><tr><th class="p-2">Utilisateur</th><th class="p-2">Solde</th><th class="p-2">Cartes</th></tr></thead><tbody id="admin-users"></tbody></table></div>
+          <div class="flex items-center justify-between"><button id="admin-page-prev" type="button" class="rounded-md border border-white/10 px-2.5 py-1 text-[10px] text-white/70 disabled:opacity-40">Précédents</button><span id="admin-page-label" class="muted text-[10px]"></span><button id="admin-page-next" type="button" class="rounded-md border border-white/10 px-2.5 py-1 text-[10px] text-white/70 disabled:opacity-40">Suivants</button></div>
+          <div class="grid gap-3 sm:grid-cols-2"><label class="text-[10px] text-white/65">Ajustement d’argent (USD, négatif autorisé)<input id="admin-cash-delta" type="number" min="-100000" max="100000" step="0.01" value="10" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs text-white"></label><label class="text-[10px] text-white/65">Motif de l’action<input id="admin-reason" type="text" maxlength="200" placeholder="Ex. cadeau de bienvenue" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs text-white placeholder:text-white/30"></label></div>
+          <button id="admin-adjust-cash" type="button" class="rounded-lg bg-amber-200 px-4 py-2 text-xs font-semibold text-[#171321]">Appliquer l’ajustement</button>
+          <div class="border-t border-white/[.08] pt-3"><h4 class="text-xs font-semibold text-white/80">Offrir une carte</h4><div class="mt-2 grid gap-2 sm:grid-cols-2"><label class="text-[10px] text-white/65">Extension<select id="admin-card-set" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs text-white"></select></label><label class="text-[10px] text-white/65">Rechercher<input id="admin-card-search" type="search" placeholder="Nom ou numéro" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs text-white placeholder:text-white/30"></label></div><label class="mt-2 block text-[10px] text-white/65">Carte<select id="admin-card" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-xs text-white" disabled><option value="">Choisissez une extension</option></select></label><button id="admin-gift-card" type="button" class="mt-2 rounded-lg border border-amber-200/20 px-4 py-2 text-xs text-amber-100 disabled:opacity-40" disabled>Offrir la carte sélectionnée</button></div>
+        </section>
         <p id="account-status" class="mt-4 min-h-5 text-xs text-white/65" aria-live="polite"></p>
       </div>
     </div>
@@ -315,7 +327,15 @@
     let supabaseAuthSubscription = null;
     let authUser = null;
     let cloudSaveTimer = null;
+    let cloudSaveInProgress = false;
+    let cloudSaveQueued = false;
     let cloudLoadedUserId = null;
+    let cloudAdminActionCursor = 0;
+    let isPlayerAdmin = false;
+    let adminPlayers = [];
+    let adminCardCatalog = [];
+    let adminPlayerPage = 0;
+    let adminHasNext = false;
     let restoringCloudState = false;
     let refreshingMarketPrices = false;
     let eurUsdRateData = null;
@@ -394,16 +414,269 @@ alter table public.player_profiles enable row level security;
 drop policy if exists "Players can read their own profile" on public.player_profiles;
 drop policy if exists "Players can create their own profile" on public.player_profiles;
 drop policy if exists "Players can update their own profile" on public.player_profiles;
+revoke update on public.player_profiles from authenticated;
 create policy "Players can read their own profile"
   on public.player_profiles for select to authenticated
   using (auth.uid() = user_id);
 create policy "Players can create their own profile"
   on public.player_profiles for insert to authenticated
   with check (auth.uid() = user_id);
-create policy "Players can update their own profile"
-  on public.player_profiles for update to authenticated
-  using (auth.uid() = user_id) with check (auth.uid() = user_id);
-grant select, insert, update on public.player_profiles to authenticated;`;
+grant select, insert on public.player_profiles to authenticated;
+do $install$
+begin
+  if to_regprocedure('public.save_player_profile(text,jsonb,jsonb,bigint)') is null then
+    execute $function$
+      create function public.save_player_profile(p_username text, p_game_state jsonb, p_daily_state jsonb, p_admin_action_cursor bigint default 0)
+      returns table(admin_action_cursor bigint, applied_actions jsonb)
+      language plpgsql security definer set search_path = ''
+      as $body$
+      declare
+        v_user_id uuid := auth.uid();
+      begin
+        if v_user_id is null then raise exception 'Connexion requise.'; end if;
+        if length(trim(coalesce(p_username, ''))) not between 3 and 24 then raise exception 'Le pseudo doit contenir entre 3 et 24 caractères.'; end if;
+        if jsonb_typeof(p_game_state) is distinct from 'object'
+          or jsonb_typeof(p_game_state -> 'inventory') is distinct from 'array'
+          or jsonb_typeof(coalesce(p_daily_state, '{}'::jsonb)) is distinct from 'object' then
+          raise exception 'La progression reçue est invalide; aucune donnée n’a été enregistrée.';
+        end if;
+        insert into public.player_profiles(user_id, username, game_state, daily_state, updated_at)
+          values (v_user_id, trim(p_username), p_game_state, coalesce(p_daily_state, '{}'::jsonb), now())
+          on conflict (user_id) do update
+            set username = excluded.username, game_state = excluded.game_state,
+                daily_state = excluded.daily_state, updated_at = excluded.updated_at;
+        return query select greatest(coalesce(p_admin_action_cursor, 0), 0), '[]'::jsonb;
+      end;
+      $body$;
+    $function$;
+  end if;
+end;
+$install$;
+revoke all on function public.save_player_profile(text, jsonb, jsonb, bigint) from public, anon;
+grant execute on function public.save_player_profile(text, jsonb, jsonb, bigint) to authenticated;`;
+    const SUPABASE_ADMIN_SCHEMA=`create table if not exists public.player_admins (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.player_admins enable row level security;
+revoke all on public.player_admins from public, anon, authenticated;
+create table if not exists public.player_admin_actions (
+  action_id bigint generated by default as identity primary key,
+  target_user_id uuid not null,
+  actor_user_id uuid not null,
+  action_type text not null check (action_type in ('adjust_cash','gift_card')),
+  payload jsonb not null,
+  reason text not null,
+  created_at timestamptz not null default now()
+);
+alter table public.player_admin_actions enable row level security;
+revoke all on public.player_admin_actions from public, anon, authenticated;
+alter table public.player_profiles add column if not exists admin_action_cursor bigint not null default 0;
+drop policy if exists "Players can update their own profile" on public.player_profiles;
+revoke update on public.player_profiles from authenticated;
+
+create or replace function public.is_player_admin()
+returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select exists(select 1 from public.player_admins a where a.user_id = auth.uid());
+$$;
+
+create or replace function public.admin_list_players(p_limit integer default 100, p_offset integer default 0)
+returns table(user_id uuid, email text, username text, cash numeric, card_count integer, updated_at timestamptz)
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if not public.is_player_admin() then raise exception 'Accès administrateur requis.'; end if;
+  return query
+    select u.id, u.email::text,
+      coalesce(nullif(p.username, ''), nullif(u.raw_user_meta_data ->> 'username', ''), split_part(coalesce(u.email, ''), '@', 1), 'Joueur')::text,
+      case when coalesce(p.game_state ->> 'cash', '') ~ '^-?[0-9]+([.][0-9]+)?$'
+        then (p.game_state ->> 'cash')::numeric else 0::numeric end,
+      case when jsonb_typeof(p.game_state -> 'inventory') = 'array'
+        then jsonb_array_length(p.game_state -> 'inventory') else 0 end,
+      p.updated_at
+    from auth.users u
+    left join public.player_profiles p on p.user_id = u.id
+    order by p.updated_at desc nulls last, u.created_at desc
+    limit greatest(1, least(coalesce(p_limit, 101), 101))
+    offset greatest(0, least(coalesce(p_offset, 0), 100000));
+end;
+$$;
+
+create or replace function public.admin_adjust_player_cash(p_target_user_id uuid, p_delta numeric, p_reason text)
+returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_state jsonb;
+  v_cash_text text;
+  v_cash numeric;
+  v_delta numeric;
+  v_action_id bigint;
+begin
+  if not public.is_player_admin() then raise exception 'Accès administrateur requis.'; end if;
+  if p_target_user_id is null or p_delta is null or p_delta = 0 or p_delta < -100000 or p_delta > 100000 then
+    raise exception 'Choisissez un ajustement non nul compris entre -100 000 et 100 000 USD.';
+  end if;
+  v_delta := round(p_delta, 2);
+  if v_delta = 0 then raise exception 'L’ajustement doit être d’au moins un centime.'; end if;
+  if length(trim(coalesce(p_reason, ''))) not between 3 and 200 then raise exception 'Le motif doit contenir entre 3 et 200 caractères.'; end if;
+  select p.game_state into v_state from public.player_profiles p where p.user_id = p_target_user_id for update;
+  if not found then raise exception 'Ce joueur n’a pas encore de profil cloud.'; end if;
+  if jsonb_typeof(v_state) is distinct from 'object' then raise exception 'La progression enregistrée est invalide; aucune donnée n’a été modifiée.'; end if;
+  v_cash_text := v_state ->> 'cash';
+  if v_cash_text is null or length(v_cash_text) > 32 or v_cash_text !~ '^-?[0-9]+([.][0-9]+)?$' then
+    raise exception 'Le solde enregistré est invalide; aucune donnée n’a été modifiée.';
+  end if;
+  v_cash := v_cash_text::numeric;
+  if v_cash + v_delta < 0 then raise exception 'Le solde ne peut pas devenir négatif.'; end if;
+  insert into public.player_admin_actions(target_user_id, actor_user_id, action_type, payload, reason)
+    values (p_target_user_id, auth.uid(), 'adjust_cash', jsonb_build_object('delta', v_delta), trim(p_reason))
+    returning action_id into v_action_id;
+  update public.player_profiles
+    set game_state = jsonb_set(v_state, '{cash}', to_jsonb(v_cash + v_delta), true),
+        admin_action_cursor = v_action_id, updated_at = now()
+    where player_profiles.user_id = p_target_user_id;
+  return jsonb_build_object('action_id', v_action_id, 'cash', v_cash + v_delta);
+end;
+$$;
+
+create or replace function public.admin_gift_card(p_target_user_id uuid, p_card jsonb, p_reason text)
+returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_state jsonb;
+  v_inventory jsonb;
+  v_card jsonb;
+  v_image text;
+  v_key text;
+  v_action_id bigint;
+begin
+  if not public.is_player_admin() then raise exception 'Accès administrateur requis.'; end if;
+  if p_target_user_id is null or jsonb_typeof(p_card) is distinct from 'object'
+    or nullif(trim(p_card ->> 'id'), '') is null
+    or nullif(trim(p_card ->> 'name'), '') is null
+    or nullif(trim(p_card ->> 'setId'), '') is null then
+    raise exception 'Sélectionnez une carte valide.';
+  end if;
+  if length(trim(coalesce(p_reason, ''))) not between 3 and 200 then raise exception 'Le motif doit contenir entre 3 et 200 caractères.'; end if;
+  v_image := nullif(p_card ->> 'image', '');
+  if length(coalesce(p_card ->> 'value', '')) > 20 then raise exception 'La valeur de la carte est invalide.'; end if;
+  if v_image is not null and v_image !~ '^https://(assets[.]tcgdex[.]net|images[.]pokemontcg[.]io)/' then
+    raise exception 'La carte contient une URL d’image non autorisée.';
+  end if;
+  select p.game_state into v_state from public.player_profiles p where p.user_id = p_target_user_id for update;
+  if not found then raise exception 'Ce joueur n’a pas encore de profil cloud.'; end if;
+  if jsonb_typeof(v_state) is distinct from 'object' then raise exception 'La progression enregistrée est invalide; aucune donnée n’a été modifiée.'; end if;
+  v_inventory := v_state -> 'inventory';
+  if jsonb_typeof(v_inventory) is distinct from 'array' then
+    raise exception 'Le classeur enregistré est invalide; aucune donnée n’a été modifiée.';
+  end if;
+  v_key := 'admin-gift-' || gen_random_uuid()::text;
+  v_card := jsonb_build_object(
+    'id', left(p_card ->> 'id', 120),
+    'setId', left(p_card ->> 'setId', 80),
+    'name', left(p_card ->> 'name', 120),
+    'number', left(coalesce(p_card ->> 'number', ''), 32),
+    'printedTotal', case when coalesce(p_card ->> 'printedTotal', '') ~ '^[0-9]{1,6}$' then (p_card ->> 'printedTotal')::integer else 0 end,
+    'setName', left(coalesce(p_card ->> 'setName', ''), 120),
+    'category', left(coalesce(p_card ->> 'category', ''), 80),
+    'rarity', left(coalesce(p_card ->> 'rarity', 'Carte'), 80),
+    'raritySource', left(coalesce(p_card ->> 'raritySource', ''), 40),
+    'image', v_image,
+    'value', case when coalesce(p_card ->> 'value', '') ~ '^[0-9]+([.][0-9]{1,4})?$' then (p_card ->> 'value')::numeric else null end,
+    'priceSource', case when p_card ->> 'priceSource' in ('tcgplayer', 'cardmarket_trend') then p_card ->> 'priceSource' else 'unavailable' end,
+    'priceUpdatedAt', left(coalesce(p_card ->> 'priceUpdatedAt', ''), 40),
+    'priceMetric', left(coalesce(p_card ->> 'priceMetric', ''), 24),
+    'priceOriginalValueEur', case when coalesce(p_card ->> 'priceOriginalValueEur', '') ~ '^[0-9]+([.][0-9]{1,4})?$' then (p_card ->> 'priceOriginalValueEur')::numeric else null end,
+    'priceExchangeRate', case when coalesce(p_card ->> 'priceExchangeRate', '') ~ '^[0-9]+([.][0-9]{1,8})?$' then (p_card ->> 'priceExchangeRate')::numeric else null end,
+    'priceExchangeRateDate', left(coalesce(p_card ->> 'priceExchangeRateDate', ''), 40),
+    'kind', 'admin_gift',
+    'uniqueKey', v_key
+  );
+  insert into public.player_admin_actions(target_user_id, actor_user_id, action_type, payload, reason)
+    values (p_target_user_id, auth.uid(), 'gift_card', jsonb_build_object('card', v_card), trim(p_reason))
+    returning action_id into v_action_id;
+  update public.player_profiles
+    set game_state = jsonb_set(v_state, '{inventory}', coalesce(v_inventory, '[]'::jsonb) || jsonb_build_array(v_card), true),
+        admin_action_cursor = v_action_id, updated_at = now()
+    where player_profiles.user_id = p_target_user_id;
+  return jsonb_build_object('action_id', v_action_id, 'card', v_card ->> 'name');
+end;
+$$;
+
+create or replace function public.save_player_profile(p_username text, p_game_state jsonb, p_daily_state jsonb, p_admin_action_cursor bigint default 0)
+returns table(admin_action_cursor bigint, applied_actions jsonb)
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_cursor bigint := 0;
+  v_client_cursor bigint := 0;
+  v_state jsonb := p_game_state;
+  v_action record;
+  v_cash_text text;
+  v_delta numeric;
+  v_actions jsonb := '[]'::jsonb;
+begin
+  if v_user_id is null then raise exception 'Connexion requise.'; end if;
+  if length(trim(coalesce(p_username, ''))) not between 3 and 24 then raise exception 'Le pseudo doit contenir entre 3 et 24 caractères.'; end if;
+  if jsonb_typeof(p_game_state) is distinct from 'object'
+    or jsonb_typeof(p_game_state -> 'inventory') is distinct from 'array'
+    or jsonb_typeof(coalesce(p_daily_state, '{}'::jsonb)) is distinct from 'object' then
+    raise exception 'La progression reçue est invalide; aucune donnée n’a été enregistrée.';
+  end if;
+  insert into public.player_profiles(user_id, username, game_state, daily_state, updated_at, admin_action_cursor)
+    values (v_user_id, trim(p_username), v_state, coalesce(p_daily_state, '{}'::jsonb), now(), 0)
+    on conflict (user_id) do nothing;
+  select p.admin_action_cursor into v_cursor from public.player_profiles p where p.user_id = v_user_id for update;
+  v_client_cursor := least(greatest(coalesce(p_admin_action_cursor, 0), 0), v_cursor);
+  for v_action in
+    select a.action_id, a.action_type, a.payload
+    from public.player_admin_actions a
+    where a.target_user_id = v_user_id and a.action_id > v_client_cursor
+    order by a.action_id
+  loop
+    if v_action.action_type = 'adjust_cash' then
+      v_cash_text := v_state ->> 'cash';
+      if v_cash_text is null or length(v_cash_text) > 32 or v_cash_text !~ '^-?[0-9]+([.][0-9]+)?$' then raise exception 'Le solde local est invalide; reconnectez-vous pour charger la sauvegarde cloud.'; end if;
+      v_delta := (v_action.payload ->> 'delta')::numeric;
+      if (v_cash_text::numeric + v_delta) < 0 then raise exception 'Une action admin en attente dépasserait le solde disponible.'; end if;
+      v_state := jsonb_set(v_state, '{cash}', to_jsonb(v_cash_text::numeric + v_delta), true);
+    elsif v_action.action_type = 'gift_card' then
+      v_state := jsonb_set(v_state, '{inventory}', (v_state -> 'inventory') || jsonb_build_array(v_action.payload -> 'card'), true);
+    end if;
+    v_actions := v_actions || jsonb_build_array(jsonb_build_object('action_id', v_action.action_id, 'action_type', v_action.action_type, 'payload', v_action.payload));
+  end loop;
+  update public.player_profiles
+    set username = trim(p_username), game_state = v_state, daily_state = coalesce(p_daily_state, '{}'::jsonb), updated_at = now()
+    where player_profiles.user_id = v_user_id;
+  return query select v_cursor, v_actions;
+end;
+$$;
+
+revoke all on function public.is_player_admin() from public, anon;
+revoke all on function public.admin_list_players(integer, integer) from public, anon;
+revoke all on function public.admin_adjust_player_cash(uuid, numeric, text) from public, anon;
+revoke all on function public.admin_gift_card(uuid, jsonb, text) from public, anon;
+revoke all on function public.save_player_profile(text, jsonb, jsonb, bigint) from public, anon;
+grant execute on function public.is_player_admin() to authenticated;
+grant execute on function public.admin_list_players(integer, integer) to authenticated;
+grant execute on function public.admin_adjust_player_cash(uuid, numeric, text) to authenticated;
+grant execute on function public.admin_gift_card(uuid, jsonb, text) to authenticated;
+grant execute on function public.save_player_profile(text, jsonb, jsonb, bigint) to authenticated;
+
+do $assign_admin$
+declare
+  v_admin_id uuid;
+begin
+  select id into v_admin_id from auth.users where lower(email) = lower('ADMIN_EMAIL_HERE');
+  if v_admin_id is null then raise exception 'Remplacez ADMIN_EMAIL_HERE par l’adresse e-mail existante de votre compte Supabase.'; end if;
+  insert into public.player_admins(user_id) values (v_admin_id) on conflict (user_id) do nothing;
+end;
+$assign_admin$;`;
     function accountStatus(message,isError=false){
       const status=document.getElementById("account-status");
       status.textContent=message;
@@ -424,6 +697,8 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       document.getElementById("account-submit").textContent=resettingPassword?"Changer mon mot de passe":accountMode==="signup"?"Créer mon compte":"Se connecter";
       document.getElementById("account-forgot-password").classList.toggle("hidden",signedIn||accountMode!=="login");
       document.getElementById("account-signout").classList.toggle("hidden",!signedIn||resettingPassword);
+      document.getElementById("admin-open").classList.toggle("hidden",!signedIn||resettingPassword||!isPlayerAdmin);
+      if(!signedIn||!isPlayerAdmin)document.getElementById("admin-panel").hidden=true;
       document.getElementById("account-description").textContent=resettingPassword?"Choisissez un nouveau mot de passe pour votre compte.":signedIn?`Connecté en tant que ${authUser.email}. La progression est synchronisée avec votre compte.`:"Configurez Supabase pour créer un compte accessible à vos amis et synchroniser votre progression entre appareils. L’URL du projet et la clé anon publique peuvent être utilisées dans le navigateur si les règles RLS sont activées.";
     }
     async function configureSupabase(url,key){
@@ -453,18 +728,25 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       supabaseAuthSubscription=listener.subscription;
     }
     async function handleAuthSession(user){
-      if(!user){cloudLoadedUserId=null;return;}
+      if(!user){cloudLoadedUserId=null;cloudAdminActionCursor=0;isPlayerAdmin=false;adminPlayers=[];updateAccountUI();return;}
       if(cloudLoadedUserId===user.id)return;
       cloudLoadedUserId=user.id;
       clearTimeout(cloudSaveTimer);
       restoringCloudState=true;
       let profileExists=false;
       let migratedLegacyPrices=false;
+      cloudAdminActionCursor=0;
+      isPlayerAdmin=false;
       try{
-        const {data,error}=await supabaseClient.from("player_profiles").select("username,game_state,daily_state").eq("user_id",user.id).maybeSingle();
+        let {data,error}=await supabaseClient.from("player_profiles").select("username,game_state,daily_state,admin_action_cursor").eq("user_id",user.id).maybeSingle();
+        if(error&&["42703","PGRST204"].includes(error.code)){
+          const fallback=await supabaseClient.from("player_profiles").select("username,game_state,daily_state").eq("user_id",user.id).maybeSingle();
+          data=fallback.data;error=fallback.error;
+        }
         if(error)throw error;
         if(data){
           profileExists=true;
+          cloudAdminActionCursor=Number.isSafeInteger(data.admin_action_cursor)?Math.max(0,data.admin_action_cursor):0;
           const cloudState=data.game_state;
           if(cloudState&&Number.isFinite(cloudState.cash)&&Array.isArray(cloudState.inventory)){
             const migration=invalidateLegacyPriceEstimates(cloudState.inventory);
@@ -487,7 +769,44 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       }finally{
         restoringCloudState=false;
       }
+      await refreshAdminAccess(user.id);
       if(!profileExists||migratedLegacyPrices)scheduleCloudSave();
+    }
+    async function refreshAdminAccess(userId){
+      isPlayerAdmin=false;
+      if(!supabaseClient||!userId){updateAccountUI();return false;}
+      const {data,error}=await supabaseClient.rpc("is_player_admin");
+      if(error){
+        if(!["PGRST202","42883","42P01"].includes(error.code))console.error("Vérification des droits admin impossible.",error);
+        updateAccountUI();
+        return false;
+      }
+      isPlayerAdmin=data===true;
+      updateAccountUI();
+      return isPlayerAdmin;
+    }
+    function applyCloudAdminActions(actions){
+      let changed=false;
+      for(const action of actions){
+        if(action.action_type==="adjust_cash"){
+          const delta=Number(action.payload&&action.payload.delta);
+          if(!Number.isFinite(delta)||!Number.isFinite(state.cash+delta)||state.cash+delta<0)throw new Error("Un ajustement admin reçu est invalide.");
+          state.cash+=delta;
+          changed=true;
+        }else if(action.action_type==="gift_card"){
+          const card=action.payload&&action.payload.card;
+          if(!card||typeof card.id!=="string"||typeof card.uniqueKey!=="string")throw new Error("Une carte admin reçue est invalide.");
+          if(!state.inventory.some(owned=>owned.uniqueKey===card.uniqueKey)){
+            state.inventory.push(card);
+            changed=true;
+          }
+        }else throw new Error("Type d’action admin inconnu reçu du serveur.");
+      }
+      if(changed){
+        try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+        catch(error){console.error("Impossible d’enregistrer localement les actions admin reçues.",error);notify("Les actions admin sont synchronisées dans le cloud, mais la sauvegarde locale a échoué.","error");}
+        updateWallet();updateCollection();
+      }
     }
     function scheduleCloudSave(){
       if(!supabaseClient||!authUser||restoringCloudState)return;
@@ -496,22 +815,160 @@ grant select, insert, update on public.player_profiles to authenticated;`;
     }
     async function saveCloudState(){
       if(!supabaseClient||!authUser||restoringCloudState)return;
-      return persistCloudState();
+      if(cloudSaveInProgress){cloudSaveQueued=true;return;}
+      cloudSaveInProgress=true;
+      try{await persistCloudState();}
+      finally{
+        cloudSaveInProgress=false;
+        if(cloudSaveQueued){cloudSaveQueued=false;scheduleCloudSave();}
+      }
     }
     async function persistCloudState(){
       const user=authUser;
       const username=String(user.user_metadata?.username||user.email?.split("@")[0]||"Joueur").trim();
+      const submittedState=JSON.parse(JSON.stringify(state));
+      const submittedDailyState=JSON.parse(JSON.stringify(dailyState));
       try{
-        const {error}=await supabaseClient.from("player_profiles").upsert({
-          user_id:user.id,username,game_state:state,daily_state:dailyState,updated_at:new Date().toISOString()
-        },{onConflict:"user_id"});
-        if(error)throw error;
+        const {data,error}=await supabaseClient.rpc("save_player_profile",{
+          p_username:username,p_game_state:submittedState,p_daily_state:submittedDailyState,p_admin_action_cursor:cloudAdminActionCursor
+        });
+        if(error){
+          if(!["PGRST202","42883"].includes(error.code))throw error;
+          const {error:fallbackError}=await supabaseClient.from("player_profiles").upsert({
+            user_id:user.id,username,game_state:submittedState,daily_state:submittedDailyState,updated_at:new Date().toISOString()
+          },{onConflict:"user_id"});
+          if(fallbackError)throw fallbackError;
+        }else{
+          const result=Array.isArray(data)?data[0]:data;
+          if(!result||!Number.isSafeInteger(Number(result.admin_action_cursor))||!Array.isArray(result.applied_actions))throw new Error("Réponse invalide de la sauvegarde Supabase.");
+          cloudAdminActionCursor=Math.max(0,Number(result.admin_action_cursor));
+          if(result.applied_actions.length)applyCloudAdminActions(result.applied_actions);
+        }
         if(authUser?.id!==user.id)return;
         accountStatus(`Progression synchronisée · ${new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}.`);
       }catch(error){
         console.error("Synchronisation cloud impossible.",error);
         accountStatus(`Sauvegarde cloud échouée : ${error.message||error}. Vérifiez le pseudo et les règles RLS.`,true);
         notify("La sauvegarde cloud a échoué. La progression reste enregistrée sur cet appareil.","error");
+      }
+    }
+    function setAdminStatus(message,isError=false){
+      const status=document.getElementById("admin-status");
+      status.textContent=message;
+      status.className=`min-h-5 text-xs ${isError?"text-rose-200":"text-white/70"}`;
+    }
+    async function loadAdminPlayers(){
+      if(!isPlayerAdmin||!supabaseClient){setAdminStatus("Accès administrateur requis.",true);return;}
+      const refresh=document.getElementById("admin-refresh");
+      refresh.disabled=true;
+      adminHasNext=false;
+      setAdminStatus("Chargement de la liste des comptes…");
+      try{
+        const {data,error}=await supabaseClient.rpc("admin_list_players",{p_limit:101,p_offset:adminPlayerPage*100});
+        if(error)throw error;
+        if(!Array.isArray(data))throw new Error("Réponse invalide du panneau admin.");
+        adminHasNext=data.length>100;
+        adminPlayers=data.slice(0,100);
+        const target=document.getElementById("admin-target");
+        const previous=target.value;
+        target.innerHTML=adminPlayers.map(player=>`<option value="${escapeHtml(player.user_id)}">${escapeHtml(player.username)} · ${escapeHtml(player.email||"sans e-mail")}</option>`).join("")||'<option value="">Aucun compte sur cette page</option>';
+        if(adminPlayers.some(player=>player.user_id===previous))target.value=previous;
+        document.getElementById("admin-users").innerHTML=adminPlayers.map(player=>`<tr class="border-t border-white/[.06]"><td class="p-2"><span class="block font-medium text-white/80">${escapeHtml(player.username)}</span><span class="muted block">${escapeHtml(player.email||"sans e-mail")} · ${escapeHtml(String(player.user_id).slice(0,8))}</span></td><td class="p-2 text-amber-100">${currency(Number(player.cash)||0)}</td><td class="p-2 text-white/70">${Number(player.card_count)||0}</td></tr>`).join("")||'<tr><td colspan="3" class="p-3 text-center text-white/50">Aucun compte trouvé.</td></tr>';
+        document.getElementById("admin-page-label").textContent=`Page ${adminPlayerPage+1} · ${adminPlayers.length} compte${adminPlayers.length===1?"":"s"}`;
+        document.getElementById("admin-page-prev").disabled=adminPlayerPage===0;
+        document.getElementById("admin-page-next").disabled=!adminHasNext;
+        setAdminStatus(`${adminPlayers.length} compte${adminPlayers.length===1?"":"s"} chargé${adminPlayers.length===1?"":"s"}.`);
+      }catch(error){
+        console.error("Chargement des comptes admin impossible.",error);
+        setAdminStatus(`Impossible de charger les comptes : ${error.message||error}`,true);
+      }finally{refresh.disabled=false;}
+    }
+    function renderAdminCardOptions(){
+      const select=document.getElementById("admin-card");
+      const search=document.getElementById("admin-card-search").value.trim().toLocaleLowerCase();
+      const matches=adminCardCatalog.filter(card=>!search||`${card.name} ${card.number||""} ${card.rarity||""}`.toLocaleLowerCase().includes(search));
+      const shown=matches.slice(0,150);
+      select.innerHTML='<option value="">Sélectionnez une carte</option>'+shown.map(card=>`<option value="${escapeHtml(card.id)}">${escapeHtml(card.name)} · ${escapeHtml(card.number||"?")} · ${escapeHtml(card.rarity||"Rareté non indiquée")}</option>`).join("")+(matches.length>shown.length?'<option disabled>Affinez la recherche pour voir les autres cartes</option>':"");
+      select.disabled=shown.length===0;
+      document.getElementById("admin-gift-card").disabled=!select.value;
+      if(!shown.length&&adminCardCatalog.length)select.innerHTML='<option value="">Aucune carte correspondante</option>';
+    }
+    async function loadAdminCardSet(){
+      const set=SETS.find(candidate=>candidate.id===document.getElementById("admin-card-set").value);
+      const select=document.getElementById("admin-card");
+      if(!set){adminCardCatalog=[];select.innerHTML='<option value="">Choisissez une extension</option>';select.disabled=true;document.getElementById("admin-gift-card").disabled=true;return;}
+      select.disabled=true;
+      setAdminStatus(`Chargement des cartes de ${set.name}…`);
+      try{
+        adminCardCatalog=setCards.get(set.id)||await fetchTcgdexCards(set);
+        renderAdminCardOptions();
+        setAdminStatus(`${adminCardCatalog.length} cartes de ${set.name} disponibles.`);
+      }catch(error){
+        console.error("Chargement du catalogue de cartes admin impossible.",error);
+        select.innerHTML='<option value="">Catalogue indisponible</option>';
+        select.disabled=true;
+        setAdminStatus(`Impossible de charger ce catalogue : ${error.message||error}`,true);
+      }
+    }
+    async function adjustAdminPlayerCash(){
+      const targetId=document.getElementById("admin-target").value;
+      const delta=Number(document.getElementById("admin-cash-delta").value);
+      const reason=document.getElementById("admin-reason").value.trim();
+      const target=adminPlayers.find(player=>player.user_id===targetId);
+      if(!target||!Number.isFinite(delta)||delta===0||Math.abs(delta)>100000){setAdminStatus("Choisissez un compte et un ajustement non nul compris entre -100 000 et 100 000 USD.",true);return;}
+      if(reason.length<3||reason.length>200){setAdminStatus("Ajoutez un motif de 3 à 200 caractères.",true);return;}
+      const verb=delta>0?"Ajouter":"Retirer";
+      if(!window.confirm(`${verb} ${currency(Math.abs(delta))} ${delta>0?"au":"du"} compte ${target.email||target.username} ?`))return;
+      const button=document.getElementById("admin-adjust-cash");
+      button.disabled=true;
+      try{
+        const {error}=await supabaseClient.rpc("admin_adjust_player_cash",{p_target_user_id:targetId,p_delta:delta,p_reason:reason});
+        if(error)throw error;
+        await loadAdminPlayers();
+        setAdminStatus(`Ajustement appliqué à ${target.username}; l’action est journalisée.`);
+      }catch(error){
+        console.error("Ajustement admin du solde impossible.",error);
+        setAdminStatus(`Ajustement refusé : ${error.message||error}`,true);
+      }finally{button.disabled=false;}
+    }
+    async function giftAdminCard(){
+      const targetId=document.getElementById("admin-target").value;
+      const target=adminPlayers.find(player=>player.user_id===targetId);
+      const set=SETS.find(candidate=>candidate.id===document.getElementById("admin-card-set").value);
+      const card=adminCardCatalog.find(candidate=>candidate.id===document.getElementById("admin-card").value);
+      const reason=document.getElementById("admin-reason").value.trim();
+      if(!target||!set||!card){setAdminStatus("Sélectionnez un compte et une carte.",true);return;}
+      if(reason.length<3||reason.length>200){setAdminStatus("Ajoutez un motif de 3 à 200 caractères.",true);return;}
+      if(!window.confirm(`Offrir ${cardDisplayName({name:card.name,number:card.number,printedTotal:card.printedTotal||card.set?.printedTotal})} à ${target.email||target.username} ?`))return;
+      const quote=cardValue(card);
+      const payload={
+        id:card.id,setId:set.id,name:card.name,number:card.number||"",printedTotal:card.printedTotal||card.set?.printedTotal||card.set?.cardCount?.official||0,
+        setName:card.set?.name||set.name,category:card.category||card.supertype||"",rarity:card.rarity||"Carte",raritySource:card.raritySource||"",
+        image:card.image||card.images?.large||card.images?.small||"",value:quote.value,priceSource:quote.source,priceUpdatedAt:quote.updatedAt,priceMetric:quote.metric,
+        priceOriginalValueEur:quote.originalValueEur,priceExchangeRate:quote.exchangeRate,priceExchangeRateDate:quote.exchangeRateDate
+      };
+      const button=document.getElementById("admin-gift-card");
+      button.disabled=true;
+      try{
+        const {error}=await supabaseClient.rpc("admin_gift_card",{p_target_user_id:targetId,p_card:payload,p_reason:reason});
+        if(error)throw error;
+        await loadAdminPlayers();
+        setAdminStatus(`${card.name} offert à ${target.username}; l’action est journalisée.`);
+      }catch(error){
+        console.error("Don admin de carte impossible.",error);
+        setAdminStatus(`Don refusé : ${error.message||error}`,true);
+      }finally{button.disabled=false;}
+    }
+    async function copyAdminSetupSql(){
+      if(!authUser?.email){accountStatus("Connectez-vous au compte à autoriser comme administrateur avant de copier le SQL.",true);return;}
+      if(!navigator.clipboard?.writeText){accountStatus("Le presse-papiers n’est pas accessible dans ce navigateur. Copiez le script et remplacez ADMIN_EMAIL_HERE manuellement.",true);return;}
+      const email=authUser.email.replace(/'/g,"''");
+      try{
+        await navigator.clipboard.writeText(SUPABASE_ADMIN_SCHEMA.replace("'ADMIN_EMAIL_HERE'",`'${email}'`));
+        accountStatus("SQL admin copié avec l’e-mail du compte connecté. Collez-le dans SQL Editor, exécutez-le, puis actualisez l’application.");
+      }catch(error){
+        console.error("Copie du SQL admin impossible.",error);
+        accountStatus(`Copie impossible : ${error.message||error}. Copiez le script et remplacez ADMIN_EMAIL_HERE manuellement.`,true);
       }
     }
     async function submitAccount(event){
@@ -1922,6 +2379,23 @@ grant select, insert, update on public.player_profiles to authenticated;`;
       authUser=null;cloudLoadedUserId=null;updateAccountUI();accountStatus("Déconnecté. Cette progression reste sur cet appareil.");
     });
     document.getElementById("supabase-schema").textContent=SUPABASE_SCHEMA;
+    document.getElementById("supabase-admin-schema").textContent=SUPABASE_ADMIN_SCHEMA;
+    document.getElementById("admin-card-set").innerHTML='<option value="">Choisissez une extension</option>'+SETS.map(set=>`<option value="${escapeHtml(set.id)}">${escapeHtml(set.name)}</option>`).join("");
+    document.getElementById("admin-open").addEventListener("click",async()=>{
+      if(!isPlayerAdmin)return;
+      document.getElementById("admin-panel").hidden=false;
+      await loadAdminPlayers();
+    });
+    document.getElementById("admin-close").addEventListener("click",()=>{document.getElementById("admin-panel").hidden=true;});
+    document.getElementById("admin-refresh").addEventListener("click",loadAdminPlayers);
+    document.getElementById("admin-page-prev").addEventListener("click",async()=>{if(adminPlayerPage===0)return;adminPlayerPage--;await loadAdminPlayers();});
+    document.getElementById("admin-page-next").addEventListener("click",async()=>{if(!adminHasNext)return;adminPlayerPage++;await loadAdminPlayers();});
+    document.getElementById("admin-adjust-cash").addEventListener("click",adjustAdminPlayerCash);
+    document.getElementById("admin-gift-card").addEventListener("click",giftAdminCard);
+    document.getElementById("admin-card-set").addEventListener("change",loadAdminCardSet);
+    document.getElementById("admin-card-search").addEventListener("input",renderAdminCardOptions);
+    document.getElementById("admin-card").addEventListener("change",()=>{document.getElementById("admin-gift-card").disabled=!document.getElementById("admin-card").value;});
+    document.getElementById("copy-admin-sql").addEventListener("click",copyAdminSetupSql);
     document.getElementById("supabase-connect").addEventListener("click",async()=>{
       const button=document.getElementById("supabase-connect");
       button.disabled=true;
