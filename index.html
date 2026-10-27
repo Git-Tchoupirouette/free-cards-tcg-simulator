@@ -101,7 +101,7 @@
       <div class="flex h-[76px] items-center justify-between">
         <a href="#" class="flex items-center gap-3" aria-label="Free Cards accueil">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[.08] text-amber-200"><i data-lucide="crown" class="h-5 w-5"></i></span>
-          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.7.3</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
+          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.7.4</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
         </a>
         <nav class="flex items-center gap-1 rounded-xl border border-white/[.07] bg-white/[.025] p-1">
           <button class="nav-btn active flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="shop"><i data-lucide="store" class="h-4 w-4"></i><span class="hidden lg:inline">Boutique</span></button>
@@ -422,36 +422,40 @@ create policy "Players can create their own profile"
   on public.player_profiles for insert to authenticated
   with check (auth.uid() = user_id);
 grant select, insert on public.player_profiles to authenticated;
-do $install$
+create or replace function public.save_player_profile(p_username text, p_game_state jsonb, p_daily_state jsonb, p_admin_action_cursor bigint default 0)
+returns table(admin_action_cursor bigint, applied_actions jsonb)
+language plpgsql security definer set search_path = ''
+as $body$
+declare
+  v_user_id uuid := auth.uid();
+  v_existing public.player_profiles%rowtype;
 begin
-  if to_regprocedure('public.save_player_profile(text,jsonb,jsonb,bigint)') is null then
-    execute $function$
-      create function public.save_player_profile(p_username text, p_game_state jsonb, p_daily_state jsonb, p_admin_action_cursor bigint default 0)
-      returns table(admin_action_cursor bigint, applied_actions jsonb)
-      language plpgsql security definer set search_path = ''
-      as $body$
-      declare
-        v_user_id uuid := auth.uid();
-      begin
-        if v_user_id is null then raise exception 'Connexion requise.'; end if;
-        if length(trim(coalesce(p_username, ''))) not between 3 and 24 then raise exception 'Le pseudo doit contenir entre 3 et 24 caractères.'; end if;
-        if jsonb_typeof(p_game_state) is distinct from 'object'
-          or jsonb_typeof(p_game_state -> 'inventory') is distinct from 'array'
-          or jsonb_typeof(coalesce(p_daily_state, '{}'::jsonb)) is distinct from 'object' then
-          raise exception 'La progression reçue est invalide; aucune donnée n’a été enregistrée.';
-        end if;
-        insert into public.player_profiles(user_id, username, game_state, daily_state, updated_at)
-          values (v_user_id, trim(p_username), p_game_state, coalesce(p_daily_state, '{}'::jsonb), now())
-          on conflict (user_id) do update
-            set username = excluded.username, game_state = excluded.game_state,
-                daily_state = excluded.daily_state, updated_at = excluded.updated_at;
-        return query select greatest(coalesce(p_admin_action_cursor, 0), 0), '[]'::jsonb;
-      end;
-      $body$;
-    $function$;
+  if v_user_id is null then raise exception 'Connexion requise.'; end if;
+  if length(trim(coalesce(p_username, ''))) not between 3 and 24 then raise exception 'Le pseudo doit contenir entre 3 et 24 caractères.'; end if;
+  if jsonb_typeof(p_game_state) is distinct from 'object'
+    or jsonb_typeof(p_game_state -> 'inventory') is distinct from 'array'
+    or jsonb_typeof(coalesce(p_daily_state, '{}'::jsonb)) is distinct from 'object' then
+    raise exception 'La progression reçue est invalide; aucune donnée n’a été enregistrée.';
   end if;
+  select * into v_existing from public.player_profiles where user_id = v_user_id for update;
+  if not found then
+    insert into public.player_profiles(user_id, username, game_state, daily_state, updated_at)
+      values (v_user_id, trim(p_username), jsonb_build_object('cash', 150, 'inventory', '[]'::jsonb, 'freeBoosters', '[]'::jsonb, 'sealedProducts', '[]'::jsonb, 'showcaseKeys', '[]'::jsonb, 'showcaseCustomized', false, 'pricesUpdatedOn', '', 'marketPriceVersion', 0), coalesce(p_daily_state, '{}'::jsonb), now());
+    return query select 0::bigint, '[]'::jsonb;
+    return;
+  end if;
+  if (p_game_state -> 'cash') is distinct from (v_existing.game_state -> 'cash')
+    or (p_game_state -> 'inventory') is distinct from (v_existing.game_state -> 'inventory')
+    or (p_game_state -> 'freeBoosters') is distinct from (v_existing.game_state -> 'freeBoosters')
+    or (p_game_state -> 'sealedProducts') is distinct from (v_existing.game_state -> 'sealedProducts') then
+    raise exception 'Modification économique refusée côté serveur. Utilisez une action de jeu autorisée.';
+  end if;
+  update public.player_profiles
+    set username = trim(p_username), game_state = p_game_state, daily_state = coalesce(p_daily_state, '{}'::jsonb), updated_at = now()
+    where user_id = v_user_id;
+  return query select coalesce(v_existing.admin_action_cursor, 0), '[]'::jsonb;
 end;
-$install$;
+$body$;
 revoke all on function public.save_player_profile(text, jsonb, jsonb, bigint) from public, anon;
 grant execute on function public.save_player_profile(text, jsonb, jsonb, bigint) to authenticated;`;
     const SUPABASE_ADMIN_SCHEMA=`create table if not exists public.player_admins (
@@ -610,16 +614,11 @@ $$;
 create or replace function public.save_player_profile(p_username text, p_game_state jsonb, p_daily_state jsonb, p_admin_action_cursor bigint default 0)
 returns table(admin_action_cursor bigint, applied_actions jsonb)
 language plpgsql security definer set search_path = ''
-as $$
+as $body$
 declare
   v_user_id uuid := auth.uid();
-  v_cursor bigint := 0;
-  v_client_cursor bigint := 0;
-  v_state jsonb := p_game_state;
-  v_action record;
-  v_cash_text text;
-  v_delta numeric;
-  v_actions jsonb := '[]'::jsonb;
+  v_existing public.player_profiles%rowtype;
+  v_client_cursor bigint := greatest(coalesce(p_admin_action_cursor, 0), 0);
 begin
   if v_user_id is null then raise exception 'Connexion requise.'; end if;
   if length(trim(coalesce(p_username, ''))) not between 3 and 24 then raise exception 'Le pseudo doit contenir entre 3 et 24 caractères.'; end if;
@@ -628,35 +627,28 @@ begin
     or jsonb_typeof(coalesce(p_daily_state, '{}'::jsonb)) is distinct from 'object' then
     raise exception 'La progression reçue est invalide; aucune donnée n’a été enregistrée.';
   end if;
-  insert into public.player_profiles(user_id, username, game_state, daily_state, updated_at, admin_action_cursor)
-    values (v_user_id, trim(p_username), v_state, coalesce(p_daily_state, '{}'::jsonb), now(), 0)
-    on conflict (user_id) do nothing;
-  select p.admin_action_cursor into v_cursor from public.player_profiles p where p.user_id = v_user_id for update;
-  v_client_cursor := least(greatest(coalesce(p_admin_action_cursor, 0), 0), v_cursor);
-  for v_action in
-    select a.action_id, a.action_type, a.payload
-    from public.player_admin_actions a
-    where a.target_user_id = v_user_id and a.action_id > v_client_cursor
-    order by a.action_id
-  loop
-    if v_action.action_type = 'adjust_cash' then
-      v_cash_text := v_state ->> 'cash';
-      if v_cash_text is null or length(v_cash_text) > 32 or v_cash_text !~ '^-?[0-9]+([.][0-9]+)?$' then raise exception 'Le solde local est invalide; reconnectez-vous pour charger la sauvegarde cloud.'; end if;
-      v_delta := (v_action.payload ->> 'delta')::numeric;
-      if (v_cash_text::numeric + v_delta) < 0 then raise exception 'Une action admin en attente dépasserait le solde disponible.'; end if;
-      v_state := jsonb_set(v_state, '{cash}', to_jsonb(v_cash_text::numeric + v_delta), true);
-    elsif v_action.action_type = 'gift_card' then
-      v_state := jsonb_set(v_state, '{inventory}', (v_state -> 'inventory') || jsonb_build_array(v_action.payload -> 'card'), true);
-    end if;
-    v_actions := v_actions || jsonb_build_array(jsonb_build_object('action_id', v_action.action_id, 'action_type', v_action.action_type, 'payload', v_action.payload));
-  end loop;
+  select * into v_existing from public.player_profiles where user_id = v_user_id for update;
+  if not found then
+    insert into public.player_profiles(user_id, username, game_state, daily_state, updated_at, admin_action_cursor)
+      values (v_user_id, trim(p_username), jsonb_build_object('cash', 150, 'inventory', '[]'::jsonb, 'freeBoosters', '[]'::jsonb, 'sealedProducts', '[]'::jsonb, 'showcaseKeys', '[]'::jsonb, 'showcaseCustomized', false, 'pricesUpdatedOn', '', 'marketPriceVersion', 0), coalesce(p_daily_state, '{}'::jsonb), now(), 0);
+    return query select 0::bigint, '[]'::jsonb;
+    return;
+  end if;
+  if v_client_cursor < coalesce(v_existing.admin_action_cursor, 0) then
+    raise exception 'Une modification administrateur est en attente. Rechargez votre progression avant de réessayer.';
+  end if;
+  if (p_game_state -> 'cash') is distinct from (v_existing.game_state -> 'cash')
+    or (p_game_state -> 'inventory') is distinct from (v_existing.game_state -> 'inventory')
+    or (p_game_state -> 'freeBoosters') is distinct from (v_existing.game_state -> 'freeBoosters')
+    or (p_game_state -> 'sealedProducts') is distinct from (v_existing.game_state -> 'sealedProducts') then
+    raise exception 'Modification économique refusée côté serveur. Utilisez une action de jeu autorisée.';
+  end if;
   update public.player_profiles
-    set username = trim(p_username), game_state = v_state, daily_state = coalesce(p_daily_state, '{}'::jsonb), updated_at = now()
-    where player_profiles.user_id = v_user_id;
-  return query select v_cursor, v_actions;
+    set username = trim(p_username), game_state = p_game_state, daily_state = coalesce(p_daily_state, '{}'::jsonb), updated_at = now()
+    where user_id = v_user_id;
+  return query select coalesce(v_existing.admin_action_cursor, 0), '[]'::jsonb;
 end;
-$$;
-
+$body$;
 revoke all on function public.is_player_admin() from public, anon;
 revoke all on function public.admin_list_players(integer, integer) from public, anon;
 revoke all on function public.admin_adjust_player_cash(uuid, numeric, text) from public, anon;
@@ -829,21 +821,14 @@ $assign_admin$;`;
       const submittedState=JSON.parse(JSON.stringify(state));
       const submittedDailyState=JSON.parse(JSON.stringify(dailyState));
       try{
-        const {data,error}=await supabaseClient.rpc("save_player_profile",{
+       const {data,error}=await supabaseClient.rpc("save_player_profile",{
           p_username:username,p_game_state:submittedState,p_daily_state:submittedDailyState,p_admin_action_cursor:cloudAdminActionCursor
         });
-        if(error){
-          if(!["PGRST202","42883"].includes(error.code))throw error;
-          const {error:fallbackError}=await supabaseClient.from("player_profiles").upsert({
-            user_id:user.id,username,game_state:submittedState,daily_state:submittedDailyState,updated_at:new Date().toISOString()
-          },{onConflict:"user_id"});
-          if(fallbackError)throw fallbackError;
-        }else{
-          const result=Array.isArray(data)?data[0]:data;
-          if(!result||!Number.isSafeInteger(Number(result.admin_action_cursor))||!Array.isArray(result.applied_actions))throw new Error("Réponse invalide de la sauvegarde Supabase.");
-          cloudAdminActionCursor=Math.max(0,Number(result.admin_action_cursor));
-          if(result.applied_actions.length)applyCloudAdminActions(result.applied_actions);
-        }
+        if(error)throw error;
+        const result=Array.isArray(data)?data[0]:data;
+        if(!result||!Number.isSafeInteger(Number(result.admin_action_cursor))||!Array.isArray(result.applied_actions))throw new Error("Réponse invalide de la sauvegarde Supabase.");
+        cloudAdminActionCursor=Math.max(0,Number(result.admin_action_cursor));
+        if(result.applied_actions.length)applyCloudAdminActions(result.applied_actions);
         if(authUser?.id!==user.id)return;
         accountStatus(`Progression synchronisée · ${new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}.`);
       }catch(error){
