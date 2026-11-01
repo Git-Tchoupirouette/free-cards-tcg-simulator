@@ -101,7 +101,7 @@
       <div class="flex h-[76px] items-center justify-between">
         <a href="#" class="flex items-center gap-3" aria-label="Free Cards accueil">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[.08] text-amber-200"><i data-lucide="crown" class="h-5 w-5"></i></span>
-          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.7.6</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
+          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.7.8</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
         </a>
         <nav class="flex items-center gap-1 rounded-xl border border-white/[.07] bg-white/[.025] p-1">
           <button class="nav-btn active flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="shop"><i data-lucide="store" class="h-4 w-4"></i><span class="hidden lg:inline">Boutique</span></button>
@@ -229,7 +229,7 @@
           <label class="block text-xs text-white/70">URL du projet Supabase<input id="supabase-url" type="url" placeholder="https://votre-projet.supabase.co" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
           <label class="block text-xs text-white/70">Clé anon / publishable publique<input id="supabase-key" type="password" placeholder="sb_publishable_… ou clé anon" autocomplete="off" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
           <button id="supabase-connect" class="w-full rounded-lg bg-violet-300 px-4 py-2.5 text-sm font-semibold text-[#171321]">Connecter Supabase</button>
-          <details class="rounded-xl border border-white/[.08] p-3"><summary class="cursor-pointer text-xs font-semibold text-white/75">Configuration nécessaire dans Supabase</summary><p class="muted mt-2 text-[11px] leading-5">Créez un projet, puis exécutez le SQL fourni ci-dessous dans SQL Editor. Activez l’authentification par e-mail et ajoutez l’URL de votre site GitHub Pages aux URL du site et de redirection autorisées (dont la récupération du mot de passe). Pour que vos amis n’aient pas à saisir ces réglages, renseignez l’URL du projet et sa clé publique dans SUPABASE_PROJECT dans index.html avant publication. Seules les clés publiques sont acceptées ici ; ne mettez jamais une clé service_role dans cette page.</p><pre id="supabase-schema" class="mt-3 max-h-44 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-emerald-100"></pre></details>
+          <details class="rounded-xl border border-white/[.08] p-3"><summary class="cursor-pointer text-xs font-semibold text-white/75">Configuration nécessaire dans Supabase</summary><p class="muted mt-2 text-[11px] leading-5">Créez un projet, puis exécutez tout le SQL fourni ci-dessous dans SQL Editor. Les opérations économiques connectées utilisent désormais un RPC serveur ; aucune clé service_role ne doit être placée dans cette page.</p><pre id="supabase-schema" class="mt-3 max-h-64 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-emerald-100"></pre></details>
         </div>
         <details class="mt-4 rounded-xl border border-amber-200/15 p-3"><summary class="cursor-pointer text-xs font-semibold text-amber-100">Installation facultative du panneau admin</summary><p class="muted mt-2 text-[11px] leading-5">Cette migration ne supprime aucun profil ni aucune carte. Elle ajoute des fonctions SQL sécurisées et un journal d’actions; les commandes du panneau ne lisent pas le JSON complet de game_state. Exécutez ce script une seule fois après le schéma principal, remplacez ADMIN_EMAIL_HERE à la fin par l’adresse utilisée dans Supabase, puis actualisez l’application. Ne collez jamais de clé service_role ici.</p><button id="copy-admin-sql" type="button" class="mt-3 rounded-lg border border-amber-200/20 px-3 py-2 text-[10px] text-amber-100">Copier le SQL avec l’e-mail du compte connecté</button><pre id="supabase-admin-schema" class="mt-3 max-h-72 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-amber-100"></pre></details>
         <form id="account-form" class="mt-5 space-y-3" hidden>
@@ -275,7 +275,7 @@
       {id:"me04",name:"Chaos Rising",subtitle:"International · M04 · anglais",releaseDate:"2026-05-22",price:6,colors:["#e18755","#593c77"],tcgdex:{language:"en",setId:"me04"}},
       {id:"me5",name:"Pitch Black",subtitle:"Méga-Évolution · juillet 2026",releaseDate:"2026-07-17",price:8,colors:["#322b52","#16192e"],tcgdex:{language:"en",setId:"me05"}},
       {id:"me3",name:"Perfect Order",subtitle:"Méga-Évolution · mars 2026",releaseDate:"2026-03-27",price:8,colors:["#84a06b","#263e49"],tcgdex:{language:"en",setId:"me03"}},
-      {id:"me2",name:"Phantasmal Flames",subtitle:"Méga-Évolution · novembre 2025",releaseDate:"2025-11-14",price:9,colors:["#e2764f","#44234f"],tcgdex:{language:"en",setId:"me02"}},
+      {id:"me2",name:"Phantasmal Flames",subtitle:"Méga-Évolution · novembre 2025",releaseDate:"2025-11-14",price:12.42,colors:["#e2764f","#44234f"],tcgdex:{language:"en",setId:"me02"}},
       {id:"me1",name:"Mega Evolution",subtitle:"Méga-Évolution · septembre 2025",releaseDate:"2025-09-26",price:10,colors:["#e4b857","#493675"],tcgdex:{language:"en",setId:"me01"}},
       {id:"sv8pt5",name:"Prismatic Evolutions",subtitle:"Écarlate et Violet · janvier 2025",releaseDate:"2025-01-17",price:12,colors:["#d7a8e9","#3d4f92"],tcgdex:{language:"en",setId:"sv08.5"}},
       {id:"sv8",name:"Surging Sparks",subtitle:"Écarlate et Violet · novembre 2024",releaseDate:"2024-11-08",price:8,colors:["#e6b548","#2d5993"],tcgdex:{language:"en",setId:"sv08"}},
@@ -344,7 +344,9 @@
     let eurUsdRateData = null;
     let eurUsdRateRequest = null;
     let eurUsdRateFetchedOn = "";
-    const MARKET_PRICE_VERSION = 9;
+    const APP_VERSION = "0.7.8";
+    const BUILD_ID = "economy-rpc-prep-2026-11-01";
+    const MARKET_PRICE_VERSION = 10;
     const TCGPLAYER_SET_IDS={swsh45:"swsh4pt5",me1:"me01",me2:"me02",me3:"me03",me5:"me05"};
     const setOffers = new Map();
     const offerRequests = new Map();
@@ -405,6 +407,18 @@
         if(saved&&typeof saved==="object")return {lastClaimDate:typeof saved.lastClaimDate==="string"?saved.lastClaimDate:"",streakDay:Number.isInteger(saved.streakDay)?Math.max(0,Math.min(7,saved.streakDay)):0,lastReward:saved.lastReward||null};
       }catch(error){console.warn("La progression des récompenses quotidiennes n'a pas pu être lue.",error);}
       return {lastClaimDate:"",streakDay:0,lastReward:null};
+    }
+    function normalizeState(saved){
+      return {
+        cash:Math.max(0,Number(saved?.cash)||0),
+        inventory:Array.isArray(saved?.inventory)?saved.inventory:[],
+        freeBoosters:Array.isArray(saved?.freeBoosters)?saved.freeBoosters:[],
+        sealedProducts:Array.isArray(saved?.sealedProducts)?saved.sealedProducts:[],
+        showcaseKeys:Array.isArray(saved?.showcaseKeys)?saved.showcaseKeys:[],
+        showcaseCustomized:Boolean(saved?.showcaseCustomized),
+        pricesUpdatedOn:typeof saved?.pricesUpdatedOn==="string"?saved.pricesUpdatedOn:"",
+        marketPriceVersion:Number.isInteger(saved?.marketPriceVersion)?saved.marketPriceVersion:0
+      };
     }
     function saveState(){
       try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
@@ -480,6 +494,106 @@ end;
 $body$;
 revoke all on function public.save_player_profile(text, jsonb, jsonb, bigint) from public, anon;
 grant execute on function public.save_player_profile(text, jsonb, jsonb, bigint) to authenticated;`;
+    const SUPABASE_ECONOMY_SCHEMA=`create or replace function public.purchase_boosters(p_set_id text, p_product_type text, p_quantity integer)
+returns jsonb
+language plpgsql security definer set search_path = ''
+as $body$
+declare
+  v_user_id uuid := auth.uid();
+  v_profile public.player_profiles%rowtype;
+  v_state jsonb;
+  v_products jsonb := '[]'::jsonb;
+  v_pack_price numeric;
+  v_pack_count integer;
+  v_unit_price numeric;
+  v_total numeric;
+  v_index integer;
+begin
+  if v_user_id is null then raise exception 'Connexion requise.'; end if;
+  if p_set_id is null or p_product_type not in ('booster','bundle','display')
+    or p_quantity is null or p_quantity < 1 or p_quantity > 10 then
+    raise exception 'Produit ou quantité invalide.';
+  end if;
+  v_pack_price := case p_set_id
+    when 'base1' then 300 when 'swsh7' then 12 when 'swsh12pt5' then 8
+    when 'sv3pt5' then 6.5 when 'sv6' then 5 when 'swsh4pt5' then 7
+    when 'sv3' then 4.5 when 'sv2' then 4.5 when 'g1' then 15
+    when 'sv7' then 5 when 'me02.5' then 12 when 'me04' then 10
+    when 'me5' then 8 when 'me3' then 10 when 'me2' then 12.42
+    when 'me1' then 8 when 'sv8pt5' then 12 when 'sv8' then 8
+    when 'sv6pt5' then 5 when 'sv5' then 5 when 'sv4' then 5
+    when 'sv1' then 4.5 when 'xy6' then 20 else null end;
+  if v_pack_price is null then raise exception 'Extension inconnue.'; end if;
+  v_pack_count := case p_product_type when 'booster' then 1 when 'bundle' then 6 when 'display' then 36 end;
+  v_unit_price := round(v_pack_price * v_pack_count * case p_product_type when 'booster' then 1 else case when p_product_type = 'bundle' then .95 else .9 end end, 2);
+  v_total := v_unit_price * p_quantity;
+  select * into v_profile from public.player_profiles where user_id = v_user_id for update;
+  if not found then raise exception 'Profil cloud introuvable.'; end if;
+  v_state := v_profile.game_state;
+  if jsonb_typeof(v_state) is distinct from 'object' or jsonb_typeof(v_state -> 'sealedProducts') is distinct from 'array' then
+    raise exception 'Progression cloud invalide.';
+  end if;
+  if coalesce((v_state ->> 'cash')::numeric, 0) < v_total then raise exception 'Solde insuffisant.'; end if;
+  for v_index in 1..p_quantity loop
+    v_products := v_products || jsonb_build_array(jsonb_build_object(
+      'uniqueKey', 'sealed-' || gen_random_uuid()::text, 'setId', p_set_id,
+      'type', p_product_type, 'label', case p_product_type when 'bundle' then 'Booster Bundle · 6 boosters' when 'display' then 'Display · 36 boosters' else 'Booster individuel' end,
+      'packCount', v_pack_count, 'purchasePrice', v_unit_price, 'referencePrice', v_pack_price * v_pack_count,
+      'priceSource', 'server_catalog', 'purchasedAt', (extract(epoch from clock_timestamp()) * 1000)::bigint));
+  end loop;
+  v_state := jsonb_set(v_state, '{cash}', to_jsonb(round((v_state ->> 'cash')::numeric - v_total, 2)), true);
+  v_state := jsonb_set(v_state, '{sealedProducts}', (v_state -> 'sealedProducts') || v_products, true);
+  update public.player_profiles set game_state = v_state, updated_at = now() where user_id = v_user_id;
+  return jsonb_build_object('game_state', v_state, 'total', v_total);
+end;
+$body$;
+revoke all on function public.purchase_boosters(text, text, integer) from public, anon;
+grant execute on function public.purchase_boosters(text, text, integer) to authenticated;`;
+    const SUPABASE_SELL_SCHEMA=`create or replace function public.sell_cards(p_unique_keys text[])
+returns jsonb
+language plpgsql security definer set search_path = ''
+as $body$
+declare
+  v_user_id uuid := auth.uid();
+  v_profile public.player_profiles%rowtype;
+  v_state jsonb;
+  v_inventory jsonb;
+  v_remaining jsonb;
+  v_proceeds numeric := 0;
+  v_card jsonb;
+begin
+  if v_user_id is null then raise exception 'Connexion requise.'; end if;
+  if p_unique_keys is null or cardinality(p_unique_keys) = 0 or cardinality(p_unique_keys) > 500 then raise exception 'Sélection de cartes invalide.'; end if;
+  select * into v_profile from public.player_profiles where user_id = v_user_id for update;
+  if not found then raise exception 'Profil cloud introuvable.'; end if;
+  v_state := v_profile.game_state;
+  v_inventory := v_state -> 'inventory';
+  if jsonb_typeof(v_inventory) is distinct from 'array' then raise exception 'Classeur cloud invalide.'; end if;
+  for v_card in select value from jsonb_array_elements(v_inventory) loop
+    if (v_card ->> 'uniqueKey') = any(p_unique_keys)
+      and coalesce(v_card ->> 'favorite', 'false') <> 'true'
+      and v_card ->> 'priceSource' in ('tcgplayer','cardmarket_trend')
+      and (v_card ->> 'value') ~ '^[0-9]+([.][0-9]{1,4})?$'
+      and (v_card ->> 'value')::numeric > 0 then
+      v_proceeds := v_proceeds + (v_card ->> 'value')::numeric;
+    end if;
+  end loop;
+  if v_proceeds <= 0 then raise exception 'Aucune carte sélectionnée ne peut être vendue.'; end if;
+  select coalesce(jsonb_agg(value), '[]'::jsonb) into v_remaining
+    from jsonb_array_elements(v_inventory)
+    where not ((value ->> 'uniqueKey') = any(p_unique_keys)
+      and coalesce(value ->> 'favorite', 'false') <> 'true'
+      and value ->> 'priceSource' in ('tcgplayer','cardmarket_trend')
+      and (value ->> 'value') ~ '^[0-9]+([.][0-9]{1,4})?$'
+      and (value ->> 'value')::numeric > 0);
+  v_state := jsonb_set(v_state, '{inventory}', v_remaining, true);
+  v_state := jsonb_set(v_state, '{cash}', to_jsonb(round(coalesce((v_state ->> 'cash')::numeric, 0) + v_proceeds, 2)), true);
+  update public.player_profiles set game_state = v_state, updated_at = now() where user_id = v_user_id;
+  return jsonb_build_object('game_state', v_state, 'proceeds', v_proceeds);
+end;
+$body$;
+revoke all on function public.sell_cards(text[]) from public, anon;
+grant execute on function public.sell_cards(text[]) to authenticated;`;
     const SUPABASE_ADMIN_SCHEMA=`create table if not exists public.player_admins (
   user_id uuid primary key references auth.users(id) on delete cascade,
   created_at timestamptz not null default now()
@@ -1493,8 +1607,8 @@ $assign_admin$;`;
       if(!groupId)return fallbackSetOffers(set);
       const base=`https://tcgcsv.com/tcgplayer/3/${groupId}`;
       const [productsResponse,pricesResponse]=await Promise.all([
-        fetch(`${base}/products`,{headers:{Accept:"application/json"},cache:"no-cache"}),
-        fetch(`${base}/prices`,{headers:{Accept:"application/json"},cache:"no-cache"})
+        fetch(`${base}/products`,{headers:{Accept:"application/json"},cache:"no-store"}),
+        fetch(`${base}/prices`,{headers:{Accept:"application/json"},cache:"no-store"})
       ]);
       if(!productsResponse.ok||!pricesResponse.ok)throw new Error(`Cours des produits scellés indisponibles (${productsResponse.status}/${pricesResponse.status}).`);
       const [productsData,pricesData]=await Promise.all([productsResponse.json(),pricesResponse.json()]);
@@ -1635,7 +1749,7 @@ $assign_admin$;`;
           ?`${offer.productName?`${offer.productName} · `:""}Cours TCGplayer USD via TCGCSV : ${currency(offer.marketPrice||offer.price)}.`
           :offer.source==="tcgplayer"
           ?`${offer.marketPrice?`Cours TCGplayer du produit : ${currency(offer.marketPrice)} · `:`Cours TCGplayer des boosters via TCGCSV : ${currency(offer.referencePrice)} · `}prix boutique simulé : ${currency(offer.price)} · ${currency(offer.price/offer.packCount)} / booster · économie ${currency(Math.max(0,selectedSet.price*offer.packCount-offer.price))} vs packs séparés (remise incluse).`
-          :`Prix simulé estimé ; cours scellé TCGplayer indisponible pour ce produit${offer.type==="booster"?"":` · ${currency(offer.price/offer.packCount)} / booster · remise boutique de ${Math.round(offer.discount*100)} % incluse`}.`;
+          :`Prix simulé estimé — le cours TCGplayer n’a pas été récupéré (build ${BUILD_ID})${offer.type==="booster"?"":` · ${currency(offer.price/offer.packCount)} / booster · remise boutique de ${Math.round(offer.discount*100)} % incluse`}.`;
       }
       updateQuantityOptions();
       updatePurchaseButton();
@@ -2232,12 +2346,31 @@ $assign_admin$;`;
       if(!window.confirm(`Vendre ${cards.length} carte${cards.length===1?"":"s"} cotée${cards.length===1?"":"s"} pour ${currency(proceeds)} ? ${favoriteCount} favori${favoriteCount===1?" sera":"s seront"} conservé${favoriteCount===1?"":"s"}${unavailableCount?` · ${unavailableCount} sans cours conservée${unavailableCount===1?"":"s"}`:""}.`))return;
       sellCardsByKeys(cards.map(card=>card.uniqueKey));
     }
-    function sellCardsByKeys(keys){
+    async function sellCardsByKeys(keys){
       const keySet=new Set(keys);
       const matchingCards=state.inventory.filter(card=>keySet.has(card.uniqueKey)&&!isFavorite(card));
       const cards=matchingCards.filter(hasCardMarketValue);
       if(!cards.length){
         if(matchingCards.length)notify("Aucune carte sélectionnée n’a de cours de marché disponible ; elles ont été conservées.","error");
+        return;
+      }
+      if(authUser){
+        try{
+          if(!supabaseClient)throw new Error("Connexion Supabase indisponible.");
+          const {data,error}=await supabaseClient.rpc("sell_cards",{p_unique_keys:[...keySet]});
+          if(error)throw error;
+          const result=Array.isArray(data)?data[0]:data;
+          if(!result?.game_state)throw new Error("Réponse invalide de la vente serveur.");
+          state=normalizeState(result.game_state);
+          cloudEconomicFingerprint=economicFingerprint();
+          cloudEconomicSyncBlocked=false;
+          selectedCardKeys.forEach(key=>keySet.has(key)&&selectedCardKeys.delete(key));
+          saveState();updateWallet();updateCollection();
+          notify(`${cards.length} carte${cards.length===1?"":"s"} vendue${cards.length===1?"":"s"} pour ${currency(Number(result.proceeds)||0)} (cours de marché).`);
+        }catch(error){
+          console.error("Vente cloud impossible.",error);
+          notify(`Vente refusée : ${error.message||error}`,"error");
+        }
         return;
       }
       const proceeds=cards.reduce((sum,card)=>sum+card.value,0);
@@ -2280,8 +2413,21 @@ $assign_admin$;`;
       if(tab==="daily")renderDaily();
       window.scrollTo({top:0,behavior:"smooth"});
     }
-    function purchaseSealedProducts(quantity,offer){
+    async function purchaseSealedProducts(quantity,offer){
       if(!selectedSet||!offer||!["bundle","display"].includes(offer.type))return;
+      if(authUser){
+        if(!supabaseClient)throw new Error("Connexion Supabase indisponible.");
+        const {data,error}=await supabaseClient.rpc("purchase_boosters",{p_set_id:selectedSet.id,p_product_type:offer.type,p_quantity:quantity});
+        if(error)throw error;
+        const result=Array.isArray(data)?data[0]:data;
+        if(!result?.game_state)throw new Error("Réponse invalide de l’achat serveur.");
+        state=normalizeState(result.game_state);
+        cloudEconomicFingerprint=economicFingerprint();
+        cloudEconomicSyncBlocked=false;
+        saveState();updateWallet();updateCollection();
+        notify(`${quantity} ${offer.type==="bundle"?"Booster Bundle":"display"}${quantity===1?"":"s"} ajouté${quantity===1?"":"s"} au classeur scellé.`);
+        return;
+      }
       const totalCost=offer.price*quantity;
       if(state.cash<totalCost)throw new Error(`Il vous faut ${currency(totalCost)}. Vendez des cartes de votre classeur pour continuer.`);
       state.cash-=totalCost;
@@ -2399,7 +2545,7 @@ $assign_admin$;`;
       if(error){accountStatus(`Déconnexion impossible : ${error.message}`,true);return;}
       authUser=null;cloudLoadedUserId=null;updateAccountUI();accountStatus("Déconnecté. Cette progression reste sur cet appareil.");
     });
-    document.getElementById("supabase-schema").textContent=SUPABASE_SCHEMA;
+    document.getElementById("supabase-schema").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}`;
     document.getElementById("supabase-admin-schema").textContent=SUPABASE_ADMIN_SCHEMA;
     document.getElementById("admin-card-set").innerHTML='<option value="">Choisissez une extension</option>'+SETS.map(set=>`<option value="${escapeHtml(set.id)}">${escapeHtml(set.name)}</option>`).join("");
     document.getElementById("admin-open").addEventListener("click",async()=>{
@@ -2435,7 +2581,7 @@ $assign_admin$;`;
       }
       const quantity=boosterQuantity();
       try{
-        if(offer?.type==="bundle"||offer?.type==="display")purchaseSealedProducts(quantity,offer);
+        if(offer?.type==="bundle"||offer?.type==="display")await purchaseSealedProducts(quantity,offer);
         else await startPackOpening(quantity);
       }
       catch(error){notify(error.message,"error");}
