@@ -2548,8 +2548,9 @@ $assign_admin$;`;
         returnDraggedCard(top);
       });
     }
-    function advanceReveal(top=document.querySelector(".stack-top")){
+    function advanceReveal(topOrEvent){
       if(!pendingReveal||pendingReveal.transitioning)return;
+      const top=topOrEvent instanceof Element?topOrEvent:document.querySelector(".stack-top");
       if(!top)return;
       top.classList.remove("dragging");
       top.style.transform="";
