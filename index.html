@@ -101,7 +101,7 @@
       <div class="flex h-[76px] items-center justify-between">
         <a href="#" class="flex items-center gap-3" aria-label="Free Cards accueil">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[.08] text-amber-200"><i data-lucide="crown" class="h-5 w-5"></i></span>
-          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.8.6</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
+          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.8.7</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
         </a>
         <nav class="flex items-center gap-1 rounded-xl border border-white/[.07] bg-white/[.025] p-1">
           <button class="nav-btn active flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="shop"><i data-lucide="store" class="h-4 w-4"></i><span class="hidden lg:inline">Boutique</span></button>
@@ -230,9 +230,9 @@
           <label class="block text-xs text-white/70">URL du projet Supabase<input id="supabase-url" type="url" placeholder="https://votre-projet.supabase.co" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
           <label class="block text-xs text-white/70">Clé anon / publishable publique<input id="supabase-key" type="password" placeholder="sb_publishable_… ou clé anon" autocomplete="off" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
           <button id="supabase-connect" class="w-full rounded-lg bg-violet-300 px-4 py-2.5 text-sm font-semibold text-[#171321]">Connecter Supabase</button>
-          <details class="rounded-xl border border-white/[.08] p-3"><summary class="cursor-pointer text-xs font-semibold text-white/75">Configuration nécessaire dans Supabase</summary><p class="muted mt-2 text-[11px] leading-5">Créez un projet, puis exécutez tout le SQL fourni ci-dessous dans SQL Editor. Les opérations économiques connectées utilisent désormais un RPC serveur ; aucune clé service_role ne doit être placée dans cette page.</p><pre id="supabase-schema" class="mt-3 max-h-64 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-emerald-100"></pre></details>
+          <details class="rounded-xl border border-white/[.08] p-3"><summary class="cursor-pointer text-xs font-semibold text-white/75">Configuration nécessaire dans Supabase</summary><p class="muted mt-2 text-[11px] leading-5">Créez un projet, exécutez tout le SQL fourni ci-dessous dans SQL Editor, puis déployez la fonction Edge <code>open-booster</code> depuis <code>supabase/functions/open-booster</code>. Sans ce déploiement, les ouvertures connectées sont volontairement refusées plutôt que de revenir à un tirage client falsifiable. Aucune clé service_role ne doit être placée dans cette page.</p><pre id="supabase-schema" class="mt-3 max-h-64 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-emerald-100"></pre></details>
         </div>
-        <details class="mt-5 rounded-xl border border-emerald-200/20 bg-emerald-200/[.03] p-3" open><summary class="cursor-pointer text-xs font-semibold text-emerald-100">SQL sécurité et économie serveur</summary><p class="muted mt-2 text-[11px] leading-5">Ce bloc reste disponible même quand Supabase est déjà configuré. Copiez-le entièrement dans Supabase → SQL Editor, puis cliquez sur Run. Il remplace la sauvegarde vulnérable et ajoute les achats/ventes atomiques sans supprimer les données existantes.</p><button id="copy-economy-sql" type="button" class="mt-3 rounded-lg border border-emerald-200/20 px-3 py-2 text-[10px] text-emerald-100">Copier tout le SQL sécurité</button><pre id="supabase-schema-public" class="mt-3 max-h-72 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-emerald-100"></pre></details>
+        <details class="mt-5 rounded-xl border border-emerald-200/20 bg-emerald-200/[.03] p-3" open><summary class="cursor-pointer text-xs font-semibold text-emerald-100">SQL sécurité et économie serveur</summary><p class="muted mt-2 text-[11px] leading-5">Ce bloc reste disponible même quand Supabase est déjà configuré. Copiez-le entièrement dans Supabase → SQL Editor, puis cliquez sur Run. Ensuite déployez <code>open-booster</code> avec <code>supabase functions deploy open-booster</code>. Le script remplace la sauvegarde vulnérable et ajoute les achats/ventes atomiques sans supprimer les données existantes.</p><button id="copy-economy-sql" type="button" class="mt-3 rounded-lg border border-emerald-200/20 px-3 py-2 text-[10px] text-emerald-100">Copier tout le SQL sécurité</button><pre id="supabase-schema-public" class="mt-3 max-h-72 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-emerald-100"></pre></details>
         <details class="mt-4 rounded-xl border border-amber-200/15 p-3"><summary class="cursor-pointer text-xs font-semibold text-amber-100">Installation facultative du panneau admin</summary><p class="muted mt-2 text-[11px] leading-5">Cette migration ne supprime aucun profil ni aucune carte. Elle ajoute des fonctions SQL sécurisées et un journal d’actions; les commandes du panneau ne lisent pas le JSON complet de game_state. Exécutez ce script une seule fois après le schéma principal, remplacez ADMIN_EMAIL_HERE à la fin par l’adresse utilisée dans Supabase, puis actualisez l’application. Ne collez jamais de clé service_role ici.</p><button id="copy-admin-sql" type="button" class="mt-3 rounded-lg border border-amber-200/20 px-3 py-2 text-[10px] text-amber-100">Copier le SQL avec l’e-mail du compte connecté</button><pre id="supabase-admin-schema" class="mt-3 max-h-72 overflow-auto rounded-lg bg-black/30 p-3 text-[10px] leading-4 text-amber-100"></pre></details>
         <form id="account-form" class="mt-5 space-y-3" hidden>
           <label id="account-username-field" class="block text-xs text-white/70">Pseudo<input id="account-username" type="text" minlength="3" maxlength="24" autocomplete="nickname" placeholder="Votre pseudo" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
@@ -2019,6 +2019,22 @@ $assign_admin$;`;
       });
       await Promise.all(workers);
     }
+    async function edgeFunctionError(error){
+      const fallback=error?.message||String(error);
+      const response=error?.context;
+      if(!response||typeof response.text!=="function")return fallback;
+      try{
+        const body=await response.clone().text();
+        if(body){
+          try{
+            const parsed=JSON.parse(body);
+            if(parsed?.error)return parsed.error;
+          }catch{}
+          return body.slice(0,240);
+        }
+      }catch(readError){console.warn("Impossible de lire l’erreur de la fonction Edge.",readError);}
+      return fallback;
+    }
     function notify(message,type="info"){
       const el=document.createElement("div");
       el.className=`toast glass max-w-sm rounded-xl px-4 py-3 text-sm ${type==="error"?"text-rose-200":"text-white"}`;
@@ -2731,7 +2747,7 @@ $assign_admin$;`;
         }catch(error){
           loading=false;
           updatePurchaseButton();
-          throw error;
+          throw new Error(await edgeFunctionError(error));
         }
       }
       const pulls=[];
