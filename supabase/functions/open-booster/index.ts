@@ -1,0 +1,163 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const PACK_SIZES: Record<string, number> = { cel25: 4, me55: 5 };
+const SET_IDS: Record<string, string> = {};
+
+type ApiCard = {
+  id?: string;
+  name?: string;
+  number?: string;
+  rarity?: string;
+  supertype?: string;
+  images?: { large?: string; small?: string };
+  set?: { name?: string; printedTotal?: number; total?: number };
+  tcgplayer?: { prices?: Record<string, { market?: number }> };
+};
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function choose<T>(cards: T[]): T {
+  if (!cards.length) throw new Error("Catalogue vide pour cette extension.");
+  return cards[Math.floor(Math.random() * cards.length)];
+}
+
+function rarity(card: ApiCard) {
+  return String(card.rarity || "").toLowerCase().replace(/[-_]/g, " ");
+}
+
+function price(card: ApiCard) {
+  const prices = card.tcgplayer?.prices || {};
+  for (const key of ["holofoil", "reverseHolofoil", "normal", "1stEditionHolofoil", "1stEditionNormal"]) {
+    const value = Number(prices[key]?.market);
+    if (Number.isFinite(value) && value > 0) return { value, priceSource: "tcgplayer" };
+  }
+  return { value: null, priceSource: "unavailable" };
+}
+
+function isBasic(card: ApiCard) {
+  return ["common", "uncommon"].includes(rarity(card));
+}
+
+function isReverse(card: ApiCard) {
+  return isBasic(card) || ["rare", "rare holo", "holo rare"].includes(rarity(card));
+}
+
+function isUltra(card: ApiCard) {
+  const value = rarity(card);
+  return /double rare|ultra rare|amazing rare|radiant|v$|ex$|full art|full-art/.test(value);
+}
+
+function isSecret(card: ApiCard) {
+  const value = rarity(card);
+  return /secret|special illustration|illustration rare|hyper rare|black white rare|trainer gallery|character rare/.test(value);
+}
+
+function isClassicHit(card: ApiCard) {
+  const value = rarity(card);
+  return value === "rare" || value === "rare holo" || value === "holo rare" || value === "rare holo ex";
+}
+
+function toPull(card: ApiCard, setId: string, kind: string, packNumber: number) {
+  const quote = price(card);
+  const printedTotal = Number(card.set?.printedTotal || card.set?.total || 0);
+  return {
+    id: card.id,
+    setId,
+    name: card.name || "Carte inconnue",
+    number: card.number || "",
+    printedTotal,
+    setName: card.set?.name || setId,
+    category: card.supertype || "",
+    rarity: card.rarity || "Carte",
+    raritySource: "Pokémon TCG API",
+    image: card.images?.large || card.images?.small || "",
+    value: quote.value,
+    priceSource: quote.priceSource,
+    kind,
+    packNumber,
+    uniqueKey: crypto.randomUUID(),
+  };
+}
+
+async function loadCards(setId: string): Promise<ApiCard[]> {
+  const apiSetId = SET_IDS[setId] || setId;
+  const response = await fetch(
+    `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(`set.id:${apiSetId}`)}&pageSize=250`,
+    { headers: { Accept: "application/json" } },
+  );
+  if (!response.ok) throw new Error(`Catalogue Pokémon TCG indisponible (${response.status}).`);
+  const payload = await response.json();
+  if (!Array.isArray(payload.data) || !payload.data.length) throw new Error(`Aucune carte serveur trouvée pour ${setId}.`);
+  return payload.data;
+}
+
+function generatePulls(cards: ApiCard[], setId: string, quantity: number) {
+  const packSize = PACK_SIZES[setId] || 10;
+  const basics = cards.filter(isBasic);
+  const reverses = cards.filter(isReverse);
+  const classics = cards.filter(isClassicHit);
+  const ultras = cards.filter(isUltra);
+  const secrets = cards.filter(isSecret);
+  const rareFallback = cards.filter((card) => !isBasic(card));
+  const pulls = [];
+  for (let packNumber = 1; packNumber <= quantity; packNumber++) {
+    for (let index = 0; index < packSize - 3; index++) pulls.push(toPull(choose(basics.length ? basics : cards), setId, "common", packNumber));
+    for (let index = 0; index < 2; index++) pulls.push(toPull(choose(reverses.length ? reverses : cards), setId, "reverse", packNumber));
+    const roll = Math.random();
+    const pool = roll < 0.7
+      ? classics
+      : roll < 0.9 ? ultras : secrets;
+    pulls.push(toPull(choose(pool.length ? pool : rareFallback), setId, "hit", packNumber));
+  }
+  return pulls;
+}
+
+Deno.serve(async (request) => {
+  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (request.method !== "POST") return json({ error: "Méthode non autorisée." }, 405);
+  try {
+    const authorization = request.headers.get("Authorization");
+    const token = authorization?.replace(/^Bearer\s+/i, "");
+    if (!token) return json({ error: "Connexion requise." }, 401);
+    const url = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const authClient = createClient(url, anonKey);
+    const { data: userData, error: userError } = await authClient.auth.getUser(token);
+    if (userError || !userData.user) return json({ error: "Session Supabase invalide." }, 401);
+    const body = await request.json();
+    const setId = String(body.setId || "");
+    const quantity = Number(body.quantity);
+    const free = body.free === true;
+    const removeSealedKey = body.removeSealedKey ? String(body.removeSealedKey) : null;
+    const freeBoosterIndex = Number.isSafeInteger(body.freeBoosterIndex) ? body.freeBoosterIndex : null;
+    if (!setId || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 360) return json({ error: "Quantité ou extension invalide." }, 400);
+    const cards = await loadCards(setId);
+    const pulls = generatePulls(cards, setId, quantity);
+    const serviceClient = createClient(url, serviceKey);
+    const { data, error } = await serviceClient.rpc("open_boosters_internal", {
+      p_user_id: userData.user.id,
+      p_set_id: setId,
+      p_quantity: quantity,
+      p_free: free,
+      p_remove_sealed_key: removeSealedKey,
+      p_free_booster_index: freeBoosterIndex,
+      p_pulls: pulls,
+    });
+    if (error) throw error;
+    return json(Array.isArray(data) ? data[0] : data);
+  } catch (error) {
+    console.error("Server-side booster opening failed", error);
+    return json({ error: error instanceof Error ? error.message : "Ouverture serveur impossible." }, 400);
+  }
+});

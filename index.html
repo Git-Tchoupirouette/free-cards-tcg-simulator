@@ -101,7 +101,7 @@
       <div class="flex h-[76px] items-center justify-between">
         <a href="#" class="flex items-center gap-3" aria-label="Free Cards accueil">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[.08] text-amber-200"><i data-lucide="crown" class="h-5 w-5"></i></span>
-          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.8.4</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
+          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.8.6</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
         </a>
         <nav class="flex items-center gap-1 rounded-xl border border-white/[.07] bg-white/[.025] p-1">
           <button class="nav-btn active flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="shop"><i data-lucide="store" class="h-4 w-4"></i><span class="hidden lg:inline">Boutique</span></button>
@@ -346,8 +346,8 @@
     let eurUsdRateData = null;
     let eurUsdRateRequest = null;
     let eurUsdRateFetchedOn = "";
-    const APP_VERSION = "0.8.4";
-    const BUILD_ID = "economy-rpc-complete-2026-11-01";
+    const APP_VERSION = "0.8.6";
+    const BUILD_ID = "server-pulls-drop-rates-2026-11-01";
     const MARKET_PRICE_VERSION = 10;
     const TCGPLAYER_SET_IDS={swsh45:"swsh4pt5",me1:"me01",me2:"me02",me3:"me03",me5:"me05"};
     const setOffers = new Map();
@@ -671,6 +671,51 @@ end;
 $body$;
 revoke all on function public.claim_daily_reward() from public, anon;
 grant execute on function public.claim_daily_reward() to authenticated;`;
+    const SUPABASE_SECURE_OPEN_SCHEMA=`revoke all on function public.open_boosters(text, integer, integer, boolean, text, integer, jsonb) from public, anon, authenticated;
+
+create or replace function public.open_boosters_internal(p_user_id uuid, p_set_id text, p_quantity integer, p_free boolean, p_remove_sealed_key text, p_free_booster_index integer, p_pulls jsonb)
+returns jsonb
+language plpgsql security definer set search_path = ''
+as $body$
+declare
+  v_profile public.player_profiles%rowtype;
+  v_state jsonb;
+  v_pulls jsonb := coalesce(p_pulls, '[]'::jsonb);
+  v_price numeric;
+  v_total numeric;
+  v_pack_size integer;
+begin
+  v_pack_size := case when p_set_id = 'cel25' then 4 when p_set_id = 'me55' then 5 else 10 end;
+  if p_user_id is null or p_set_id is null or p_quantity is null or p_quantity < 1 or p_quantity > 360 or jsonb_typeof(v_pulls) is distinct from 'array' or jsonb_array_length(v_pulls) <> p_quantity * v_pack_size then
+    raise exception 'Ouverture générée côté serveur invalide.';
+  end if;
+  if exists(select 1 from jsonb_array_elements(v_pulls) card where jsonb_typeof(card) is distinct from 'object' or nullif(card ->> 'id', '') is null or nullif(card ->> 'uniqueKey', '') is null or nullif(card ->> 'setId', '') <> p_set_id) then
+    raise exception 'Le catalogue serveur a généré une carte invalide.';
+  end if;
+  select * into v_profile from public.player_profiles where user_id = p_user_id for update;
+  if not found then raise exception 'Profil cloud introuvable.'; end if;
+  v_state := v_profile.game_state;
+  v_price := case p_set_id when 'base1' then 300 when 'swsh7' then 12 when 'swsh12pt5' then 8 when 'sv3pt5' then 6.5 when 'sv6' then 5 when 'swsh4pt5' then 7 when 'sv3' then 4.5 when 'sv2' then 4.5 when 'g1' then 15 when 'sv7' then 5 when 'me02.5' then 12 when 'me04' then 10 when 'me5' then 8 when 'me3' then 10 when 'me2' then 12.42 when 'me1' then 8 when 'sv8pt5' then 12 when 'sv8' then 8 when 'sv6pt5' then 5 when 'sv5' then 5 when 'sv4' then 5 when 'sv1' then 4.5 when 'xy6' then 20 else null end;
+  if v_price is null then raise exception 'Extension inconnue.'; end if;
+  if p_free and p_free_booster_index is null and p_remove_sealed_key is null then raise exception 'Une ouverture gratuite doit consommer un crédit existant.'; end if;
+  v_total := case when coalesce(p_free,false) then 0 else v_price * p_quantity end;
+  if p_free_booster_index is not null then
+    if not p_free or p_free_booster_index < 0 or p_free_booster_index >= jsonb_array_length(v_state -> 'freeBoosters') or (v_state -> 'freeBoosters' -> p_free_booster_index ->> 'setId') <> p_set_id then raise exception 'Booster gratuit introuvable ou déjà ouvert.'; end if;
+    v_state := jsonb_set(v_state, '{freeBoosters}', (select coalesce(jsonb_agg(booster), '[]'::jsonb) from jsonb_array_elements(v_state -> 'freeBoosters') with ordinality as entries(booster, ordinal) where entries.ordinal <> p_free_booster_index + 1), true);
+  elsif p_remove_sealed_key is not null then
+    if not exists(select 1 from jsonb_array_elements(v_state -> 'sealedProducts') product where product ->> 'uniqueKey' = p_remove_sealed_key and product ->> 'setId' = p_set_id and coalesce((product ->> 'packCount')::integer, 0) = p_quantity) then raise exception 'Produit scellé introuvable ou déjà ouvert.'; end if;
+    v_state := jsonb_set(v_state, '{sealedProducts}', (select coalesce(jsonb_agg(product), '[]'::jsonb) from jsonb_array_elements(v_state -> 'sealedProducts') product where product ->> 'uniqueKey' <> p_remove_sealed_key), true);
+  elsif not p_free then
+    if coalesce((v_state ->> 'cash')::numeric, 0) < v_total then raise exception 'Solde insuffisant.'; end if;
+    v_state := jsonb_set(v_state, '{cash}', to_jsonb(round((v_state ->> 'cash')::numeric - v_total, 2)), true);
+  end if;
+  v_state := jsonb_set(v_state, '{inventory}', coalesce(v_state -> 'inventory', '[]'::jsonb) || v_pulls, true);
+  update public.player_profiles set game_state = v_state, updated_at = now() where user_id = p_user_id;
+  return jsonb_build_object('game_state', v_state, 'pulls', v_pulls);
+end;
+$body$;
+revoke all on function public.open_boosters_internal(uuid, text, integer, boolean, text, integer, jsonb) from public, anon, authenticated;
+grant execute on function public.open_boosters_internal(uuid, text, integer, boolean, text, integer, jsonb) to service_role;`;
     const SUPABASE_PREFERENCES_SCHEMA=`create or replace function public.set_card_favorite(p_unique_key text, p_favorite boolean)
 returns jsonb
 language plpgsql security definer set search_path = ''
@@ -1238,7 +1283,7 @@ $assign_admin$;`;
       async function copyEconomySetupSql(){
         if(!navigator.clipboard?.writeText){accountStatus("Le presse-papiers n’est pas accessible. Sélectionnez et copiez le SQL affiché manuellement.",true);return;}
         try{
-          await navigator.clipboard.writeText(`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`);
+          await navigator.clipboard.writeText(`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_SECURE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`);
           accountStatus("SQL sécurité copié. Collez-le dans Supabase → SQL Editor, exécutez-le, puis actualisez l’application.");
         }catch(error){
           console.error("Copie du SQL sécurité impossible.",error);
@@ -2657,15 +2702,16 @@ $assign_admin$;`;
       button.innerHTML=`<i data-lucide="loader-circle" class="h-4 w-4 animate-spin"></i><span>Ouverture de ${quantity} booster${quantity>1?"s":""}…</span>`;
       lucide.createIcons();
       if(!authUser&&!free)state.cash-=totalCost;
-      const pulls=[];
-      for(let packNumber=1;packNumber<=quantity;packNumber++){
-        pulls.push(...makeBooster(setCards.get(selectedSet.id)).map(card=>({...card,packNumber})));
-      }
       if(authUser){
         try{
-          const {data,error}=await supabaseClient.rpc("open_boosters",{
-            p_set_id:selectedSet.id,p_quantity:quantity,p_card_count:packSizeFor(selectedSet),
-            p_free:free,p_remove_sealed_key:options.removeSealedKey||null,p_free_booster_index:Number.isInteger(options.freeBoosterIndex)?options.freeBoosterIndex:null,p_pulls:pulls
+          if(!supabaseClient)throw new Error("Connexion Supabase indisponible.");
+          const {data,error}=await supabaseClient.functions.invoke("open-booster",{
+            body:{
+              setId:selectedSet.id,quantity,
+              free,
+              removeSealedKey:options.removeSealedKey||null,
+              freeBoosterIndex:Number.isInteger(options.freeBoosterIndex)?options.freeBoosterIndex:null
+            }
           });
           if(error)throw error;
           const result=Array.isArray(data)?data[0]:data;
@@ -2687,6 +2733,10 @@ $assign_admin$;`;
           updatePurchaseButton();
           throw error;
         }
+      }
+      const pulls=[];
+      for(let packNumber=1;packNumber<=quantity;packNumber++){
+        pulls.push(...makeBooster(setCards.get(selectedSet.id)).map(card=>({...card,packNumber})));
       }
       if(options.freeBoosterIndex!==undefined)state.freeBoosters.splice(options.freeBoosterIndex,1);
       if(options.removeSealedKey)state.sealedProducts=state.sealedProducts.filter(product=>product.uniqueKey!==options.removeSealedKey);
@@ -2766,8 +2816,8 @@ $assign_admin$;`;
       if(error){accountStatus(`Déconnexion impossible : ${error.message}`,true);return;}
       authUser=null;cloudLoadedUserId=null;updateAccountUI();accountStatus("Déconnecté. Cette progression reste sur cet appareil.");
     });
-    document.getElementById("supabase-schema").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
-    document.getElementById("supabase-schema-public").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
+    document.getElementById("supabase-schema").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_SECURE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
+    document.getElementById("supabase-schema-public").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_SECURE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
     document.getElementById("supabase-admin-schema").textContent=SUPABASE_ADMIN_SCHEMA;
     document.getElementById("admin-card-set").innerHTML='<option value="">Choisissez une extension</option>'+SETS.map(set=>`<option value="${escapeHtml(set.id)}">${escapeHtml(set.name)}</option>`).join("");
     document.getElementById("admin-open").addEventListener("click",async()=>{
