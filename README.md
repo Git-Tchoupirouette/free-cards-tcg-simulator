@@ -11,7 +11,7 @@ Après avoir exécuté le SQL affiché dans **Compte → SQL sécurité et écon
 supabase functions deploy open-booster
 ```
 
-La fonction doit disposer de `SUPABASE_URL`, `SUPABASE_ANON_KEY` et `SUPABASE_SERVICE_ROLE_KEY` dans son environnement Supabase. Ne mettez jamais la clé `service_role` dans `index.html`.
+La fonction dispose automatiquement de `SUPABASE_URL`, `SUPABASE_ANON_KEY` et `SUPABASE_SERVICE_ROLE_KEY`. Elle essaie trois fois l’API Pokémon TCG puis utilise TCGdex en secours. Tu peux ajouter `POKEMONTCG_API_KEY` dans les secrets Edge Functions pour augmenter la limite de l’API. Ne mets jamais une clé secrète dans `index.html`.
 
 Tant que la fonction n’est pas déployée, une ouverture connectée est refusée explicitement ; le navigateur ne peut pas revenir à un tirage client non sécurisé.
 

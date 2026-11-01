@@ -7,6 +7,12 @@ const corsHeaders = {
 
 const PACK_SIZES: Record<string, number> = { cel25: 4, me55: 5 };
 const SET_IDS: Record<string, string> = {};
+const TCGDEX_SET_IDS: Record<string, string> = {
+  base1: "base1", swsh7: "swsh7", swsh12pt5: "swsh12.5", sv3pt5: "sv03.5",
+  sv6: "sv06", swsh4pt5: "swsh4.5", sv3: "sv03", sv2: "sv02", g1: "g1",
+  sv7: "sv07", "me02.5": "me02.5", me04: "me04", me5: "me05", me3: "me03",
+  me2: "me02", me1: "me01", cel25: "cel25", me55: "30th",
+};
 
 type ApiCard = {
   id?: string;
@@ -91,14 +97,57 @@ function toPull(card: ApiCard, setId: string, kind: string, packNumber: number) 
 
 async function loadCards(setId: string): Promise<ApiCard[]> {
   const apiSetId = SET_IDS[setId] || setId;
-  const response = await fetch(
-    `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(`set.id:${apiSetId}`)}&pageSize=250`,
-    { headers: { Accept: "application/json" } },
-  );
-  if (!response.ok) throw new Error(`Catalogue Pokémon TCG indisponible (${response.status}).`);
-  const payload = await response.json();
-  if (!Array.isArray(payload.data) || !payload.data.length) throw new Error(`Aucune carte serveur trouvée pour ${setId}.`);
-  return payload.data;
+  const apiKey = Deno.env.get("POKEMONTCG_API_KEY");
+  let apiFailure = "";
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await fetch(
+        `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(`set.id:${apiSetId}`)}&pageSize=250`,
+        { headers: { Accept: "application/json", ...(apiKey ? { "X-Api-Key": apiKey } : {}) } },
+      );
+      if (response.ok) {
+        const payload = await response.json();
+        if (Array.isArray(payload.data) && payload.data.length) return payload.data;
+        apiFailure = "réponse vide";
+      } else {
+        apiFailure = `HTTP ${response.status}`;
+      }
+    } catch (error) {
+      apiFailure = error instanceof Error ? error.message : String(error);
+    }
+    if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
+  }
+
+  const tcgdexSetId = TCGDEX_SET_IDS[setId];
+  if (!tcgdexSetId) throw new Error(`Catalogue Pokémon TCG indisponible (${apiFailure}). Aucun fallback TCGdex pour ${setId}.`);
+  try {
+    const base = "https://api.tcgdex.net/v2/en";
+    const setResponse = await fetch(`${base}/sets/${encodeURIComponent(tcgdexSetId)}`, { headers: { Accept: "application/json" } });
+    if (!setResponse.ok) throw new Error(`TCGdex HTTP ${setResponse.status}`);
+    const setData = await setResponse.json();
+    if (!Array.isArray(setData.cards) || !setData.cards.length) throw new Error("TCGdex a renvoyé un catalogue vide.");
+    const details = await Promise.all(setData.cards.map(async (reference: { id?: string }) => {
+      const response = await fetch(`${base}/cards/${encodeURIComponent(reference.id || "")}`, { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(`TCGdex carte HTTP ${response.status}`);
+      return response.json();
+    }));
+    return details.map((card: Record<string, unknown>) => {
+      const image = typeof card.image === "string" ? `${card.image}/high.webp` : "";
+      const set = (card.set || {}) as Record<string, unknown>;
+      return {
+        id: String(card.id || ""),
+        name: String(card.name || "Carte inconnue"),
+        number: String(card.localId || ""),
+        rarity: String(card.rarity || ""),
+        supertype: Array.isArray(card.category) ? card.category.join(", ") : String(card.category || ""),
+        images: { large: image, small: image },
+        set: { name: String(set.name || setId), printedTotal: Number(set.cardCount || 0), total: Number(set.cardCount || 0) },
+      } satisfies ApiCard;
+    }).filter((card) => card.id);
+  } catch (fallbackError) {
+    const detail = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+    throw new Error(`Catalogues indisponibles : Pokémon TCG (${apiFailure}) et TCGdex (${detail}).`);
+  }
 }
 
 function generatePulls(cards: ApiCard[], setId: string, quantity: number) {
