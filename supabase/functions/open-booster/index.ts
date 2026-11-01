@@ -23,6 +23,7 @@ type ApiCard = {
   images?: { large?: string; small?: string };
   set?: { name?: string; printedTotal?: number; total?: number };
   tcgplayer?: { prices?: Record<string, { market?: number }> };
+  pricing?: { tcgplayer?: { market?: number }; cardmarket?: { trend?: number } };
 };
 
 function json(body: unknown, status = 200) {
@@ -47,6 +48,10 @@ function price(card: ApiCard) {
     const value = Number(prices[key]?.market);
     if (Number.isFinite(value) && value > 0) return { value, priceSource: "tcgplayer" };
   }
+  const tcgplayer = Number(card.pricing?.tcgplayer?.market);
+  if (Number.isFinite(tcgplayer) && tcgplayer > 0) return { value: tcgplayer, priceSource: "tcgplayer" };
+  const cardmarket = Number(card.pricing?.cardmarket?.trend);
+  if (Number.isFinite(cardmarket) && cardmarket > 0) return { value: cardmarket, priceSource: "cardmarket_trend" };
   return { value: null, priceSource: "unavailable" };
 }
 
@@ -97,6 +102,41 @@ function toPull(card: ApiCard, setId: string, kind: string, packNumber: number) 
 
 async function loadCards(setId: string): Promise<ApiCard[]> {
   const apiSetId = SET_IDS[setId] || setId;
+  const tcgdexSetId = TCGDEX_SET_IDS[setId];
+  if (tcgdexSetId) {
+    try {
+      const base = "https://api.tcgdex.net/v2/en";
+      const setResponse = await fetch(`${base}/sets/${encodeURIComponent(tcgdexSetId)}`, { headers: { Accept: "application/json" } });
+      if (!setResponse.ok) throw new Error(`TCGdex HTTP ${setResponse.status}`);
+      const setData = await setResponse.json();
+      if (!Array.isArray(setData.cards) || !setData.cards.length) throw new Error("TCGdex a renvoyé un catalogue vide.");
+      const details: ApiCard[] = [];
+      for (let start = 0; start < setData.cards.length; start += 16) {
+        const batch = setData.cards.slice(start, start + 16);
+        const result = await Promise.all(batch.map(async (reference: { id?: string }) => {
+          const response = await fetch(`${base}/cards/${encodeURIComponent(reference.id || "")}`, { headers: { Accept: "application/json" } });
+          if (!response.ok) throw new Error(`TCGdex carte HTTP ${response.status}`);
+          const card = await response.json();
+          const image = typeof card.image === "string" ? `${card.image}/high.webp` : "";
+          const cardSet = (card.set || {}) as Record<string, unknown>;
+          return {
+            id: String(card.id || ""),
+            name: String(card.name || "Carte inconnue"),
+            number: String(card.localId || ""),
+            rarity: String(card.rarity || ""),
+            supertype: String(card.category || ""),
+            images: { large: image, small: image },
+            set: { name: String(cardSet.name || setId), printedTotal: Number((cardSet.cardCount as Record<string, unknown>)?.official || 0), total: Number((cardSet.cardCount as Record<string, unknown>)?.total || 0) },
+            pricing: card.pricing,
+          } satisfies ApiCard;
+        }));
+        details.push(...result.filter((card) => card.id));
+      }
+      if (details.length) return details;
+    } catch (error) {
+      console.warn("TCGdex indisponible, tentative API Pokémon TCG.", error);
+    }
+  }
   const apiKey = Deno.env.get("POKEMONTCG_API_KEY");
   let apiFailure = "";
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -118,11 +158,11 @@ async function loadCards(setId: string): Promise<ApiCard[]> {
     if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
   }
 
-  const tcgdexSetId = TCGDEX_SET_IDS[setId];
-  if (!tcgdexSetId) throw new Error(`Catalogue Pokémon TCG indisponible (${apiFailure}). Aucun fallback TCGdex pour ${setId}.`);
+  const fallbackSetId = TCGDEX_SET_IDS[setId];
+  if (!fallbackSetId) throw new Error(`Catalogue Pokémon TCG indisponible (${apiFailure}). Aucun fallback TCGdex pour ${setId}.`);
   try {
     const base = "https://api.tcgdex.net/v2/en";
-    const setResponse = await fetch(`${base}/sets/${encodeURIComponent(tcgdexSetId)}`, { headers: { Accept: "application/json" } });
+    const setResponse = await fetch(`${base}/sets/${encodeURIComponent(fallbackSetId)}`, { headers: { Accept: "application/json" } });
     if (!setResponse.ok) throw new Error(`TCGdex HTTP ${setResponse.status}`);
     const setData = await setResponse.json();
     if (!Array.isArray(setData.cards) || !setData.cards.length) throw new Error("TCGdex a renvoyé un catalogue vide.");
