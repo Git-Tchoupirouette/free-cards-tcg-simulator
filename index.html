@@ -101,7 +101,7 @@
       <div class="flex h-[76px] items-center justify-between">
         <a href="#" class="flex items-center gap-3" aria-label="Free Cards accueil">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[.08] text-amber-200"><i data-lucide="crown" class="h-5 w-5"></i></span>
-          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.7.9</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
+          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.8.0</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
         </a>
         <nav class="flex items-center gap-1 rounded-xl border border-white/[.07] bg-white/[.025] p-1">
           <button class="nav-btn active flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="shop"><i data-lucide="store" class="h-4 w-4"></i><span class="hidden lg:inline">Boutique</span></button>
@@ -224,8 +224,9 @@
     <div id="account-modal" class="fixed inset-0 z-[55] hidden overflow-y-auto bg-[#07080d]/90 p-4 backdrop-blur-xl">
       <div class="glass mx-auto my-6 max-w-xl rounded-2xl p-5 sm:p-7">
         <div class="flex items-start justify-between gap-4"><div><p class="mb-1 text-[10px] uppercase tracking-[.23em] text-violet-300">Sauvegarde et identité</p><h2 class="display text-2xl font-semibold">Votre compte</h2></div><button id="account-close" aria-label="Fermer" class="rounded-lg border border-white/10 p-2 text-white/70 hover:bg-white/10"><i data-lucide="x" class="h-5 w-5"></i></button></div>
-        <p id="account-description" class="muted mt-3 text-xs leading-5">Configurez Supabase pour créer un compte accessible à vos amis et synchroniser votre progression entre appareils. L’URL du projet et la clé anon publique peuvent être utilisées dans le navigateur si les règles RLS sont activées.</p>
+        <p id="account-description" class="muted mt-3 text-xs leading-5">La configuration Supabase est celle de l’application et ne doit être saisie qu’une fois par le propriétaire. Vos amis n’ont besoin que de leur e-mail et de leur mot de passe.</p>
         <div id="account-config" class="mt-5 space-y-3">
+          <p class="rounded-lg border border-violet-200/15 bg-violet-200/[.04] p-3 text-[11px] leading-5 text-violet-100">Ces deux champs concernent uniquement la configuration technique de l’application, pas la connexion des joueurs. Une fois l’URL et la clé publique intégrées dans <code>SUPABASE_PROJECT</code> puis publiée sur GitHub Pages, tes amis ne les verront plus et utiliseront seulement leur e-mail et leur mot de passe.</p>
           <label class="block text-xs text-white/70">URL du projet Supabase<input id="supabase-url" type="url" placeholder="https://votre-projet.supabase.co" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
           <label class="block text-xs text-white/70">Clé anon / publishable publique<input id="supabase-key" type="password" placeholder="sb_publishable_… ou clé anon" autocomplete="off" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white placeholder:text-white/30"></label>
           <button id="supabase-connect" class="w-full rounded-lg bg-violet-300 px-4 py-2.5 text-sm font-semibold text-[#171321]">Connecter Supabase</button>
@@ -345,7 +346,7 @@
     let eurUsdRateData = null;
     let eurUsdRateRequest = null;
     let eurUsdRateFetchedOn = "";
-    const APP_VERSION = "0.7.9";
+    const APP_VERSION = "0.8.0";
     const BUILD_ID = "economy-rpc-prep-2026-11-01";
     const MARKET_PRICE_VERSION = 10;
     const TCGPLAYER_SET_IDS={swsh45:"swsh4pt5",me1:"me01",me2:"me02",me3:"me03",me5:"me05"};
@@ -828,7 +829,7 @@ $assign_admin$;`;
       document.getElementById("account-signout").classList.toggle("hidden",!signedIn||resettingPassword);
       document.getElementById("admin-open").classList.toggle("hidden",!signedIn||resettingPassword||!isPlayerAdmin);
       if(!signedIn||!isPlayerAdmin)document.getElementById("admin-panel").hidden=true;
-      document.getElementById("account-description").textContent=resettingPassword?"Choisissez un nouveau mot de passe pour votre compte.":signedIn?`Connecté en tant que ${authUser.email}. La progression est synchronisée avec votre compte.`:"Configurez Supabase pour créer un compte accessible à vos amis et synchroniser votre progression entre appareils. L’URL du projet et la clé anon publique peuvent être utilisées dans le navigateur si les règles RLS sont activées.";
+      document.getElementById("account-description").textContent=resettingPassword?"Choisissez un nouveau mot de passe pour votre compte.":signedIn?`Connecté en tant que ${authUser.email}. La progression est synchronisée avec votre compte.`:"La configuration Supabase est celle de l’application et ne doit être saisie qu’une fois par le propriétaire. Vos amis utilisent seulement leur e-mail et leur mot de passe.";
     }
     async function configureSupabase(url,key){
       if(!window.supabase?.createClient)throw new Error("La bibliothèque Supabase n’a pas pu être chargée. Vérifiez votre connexion, puis rechargez la page.");
@@ -1106,6 +1107,7 @@ $assign_admin$;`;
         console.error("Copie du SQL admin impossible.",error);
         accountStatus(`Copie impossible : ${error.message||error}. Copiez le script et remplacez ADMIN_EMAIL_HERE manuellement.`,true);
       }
+    }
       async function copyEconomySetupSql(){
         if(!navigator.clipboard?.writeText){accountStatus("Le presse-papiers n’est pas accessible. Sélectionnez et copiez le SQL affiché manuellement.",true);return;}
         try{
@@ -1114,7 +1116,6 @@ $assign_admin$;`;
         }catch(error){
           console.error("Copie du SQL sécurité impossible.",error);
           accountStatus(`Copie impossible : ${error.message||error}. Sélectionnez le SQL affiché manuellement.`,true);
-        }
       }
     }
     async function submitAccount(event){
