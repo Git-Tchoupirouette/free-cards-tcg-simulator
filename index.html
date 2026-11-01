@@ -101,7 +101,7 @@
       <div class="flex h-[76px] items-center justify-between">
         <a href="#" class="flex items-center gap-3" aria-label="Free Cards accueil">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[.08] text-amber-200"><i data-lucide="crown" class="h-5 w-5"></i></span>
-          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.8.2</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
+          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.8.3</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
         </a>
         <nav class="flex items-center gap-1 rounded-xl border border-white/[.07] bg-white/[.025] p-1">
           <button class="nav-btn active flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="shop"><i data-lucide="store" class="h-4 w-4"></i><span class="hidden lg:inline">Boutique</span></button>
@@ -346,7 +346,7 @@
     let eurUsdRateData = null;
     let eurUsdRateRequest = null;
     let eurUsdRateFetchedOn = "";
-    const APP_VERSION = "0.8.2";
+    const APP_VERSION = "0.8.3";
     const BUILD_ID = "economy-rpc-prep-2026-11-01";
     const MARKET_PRICE_VERSION = 10;
     const TCGPLAYER_SET_IDS={swsh45:"swsh4pt5",me1:"me01",me2:"me02",me3:"me03",me5:"me05"};
@@ -2433,11 +2433,15 @@ $assign_admin$;`;
       modal.classList.remove("hidden");document.body.style.overflow="hidden";lucide.createIcons();
       renderRevealCard();
     }
-    function sellCard(uniqueKey){
+    async function sellCard(uniqueKey){
       const index=state.inventory.findIndex(card=>card.uniqueKey===uniqueKey);
       if(index<0)return;
       if(isFavorite(state.inventory[index])){notify("Cette carte est favorite et protégée. Retirez-la des favoris avant de la vendre.","error");return;}
       if(!hasCardMarketValue(state.inventory[index])){notify("Vente impossible : aucun cours de marché fiable n’est disponible pour cette carte.","error");return;}
+      if(authUser){
+        await sellCardsByKeys([uniqueKey]);
+        return;
+      }
       const [card]=state.inventory.splice(index,1);
       state.showcaseKeys=state.showcaseKeys.filter(key=>key!==uniqueKey);
       selectedCardKeys.delete(uniqueKey);
