@@ -5,14 +5,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PACK_SIZES: Record<string, number> = { cel25: 4, me55: 5 };
+const PACK_SIZES: Record<string, number> = { cel25: 4, me55: 5, M2a: 5, M4: 5 };
 const SET_IDS: Record<string, string> = {};
 const TCGDEX_SET_IDS: Record<string, string> = {
   base1: "base1", swsh7: "swsh7", swsh12pt5: "swsh12.5", sv3pt5: "sv03.5",
   sv6: "sv06", swsh4pt5: "swsh4.5", sv3: "sv03", sv2: "sv02", g1: "g1",
   sv7: "sv07", "me02.5": "me02.5", me04: "me04", me5: "me05", me3: "me03",
   me2: "me02", me1: "me01", cel25: "cel25", me55: "30th",
+  M2a: "M2a", M4: "M4",
 };
+const TCGDEX_LANGUAGES: Record<string, string> = { M2a: "ja", M4: "ja" };
 
 type ApiCard = {
   id?: string;
@@ -105,7 +107,7 @@ async function loadCards(setId: string): Promise<ApiCard[]> {
   const tcgdexSetId = TCGDEX_SET_IDS[setId];
   if (tcgdexSetId) {
     try {
-      const base = "https://api.tcgdex.net/v2/en";
+      const base = `https://api.tcgdex.net/v2/${TCGDEX_LANGUAGES[setId] || "en"}`;
       const setResponse = await fetch(`${base}/sets/${encodeURIComponent(tcgdexSetId)}`, { headers: { Accept: "application/json" } });
       if (!setResponse.ok) throw new Error(`TCGdex HTTP ${setResponse.status}`);
       const setData = await setResponse.json();
@@ -161,7 +163,7 @@ async function loadCards(setId: string): Promise<ApiCard[]> {
   const fallbackSetId = TCGDEX_SET_IDS[setId];
   if (!fallbackSetId) throw new Error(`Catalogue Pokémon TCG indisponible (${apiFailure}). Aucun fallback TCGdex pour ${setId}.`);
   try {
-    const base = "https://api.tcgdex.net/v2/en";
+    const base = `https://api.tcgdex.net/v2/${TCGDEX_LANGUAGES[setId] || "en"}`;
     const setResponse = await fetch(`${base}/sets/${encodeURIComponent(fallbackSetId)}`, { headers: { Accept: "application/json" } });
     if (!setResponse.ok) throw new Error(`TCGdex HTTP ${setResponse.status}`);
     const setData = await setResponse.json();

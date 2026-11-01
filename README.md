@@ -11,7 +11,7 @@ Après avoir exécuté le SQL affiché dans **Compte → SQL sécurité et écon
 supabase functions deploy open-booster
 ```
 
-La fonction dispose automatiquement de `SUPABASE_URL`, `SUPABASE_ANON_KEY` et `SUPABASE_SERVICE_ROLE_KEY`. Elle utilise désormais TCGdex en priorité, avec l’API Pokémon TCG en secours et trois tentatives. Tu peux ajouter `POKEMONTCG_API_KEY` dans les secrets Edge Functions pour augmenter la limite de l’API. Ne mets jamais une clé secrète dans `index.html`.
+La fonction dispose automatiquement de `SUPABASE_URL`, `SUPABASE_ANON_KEY` et `SUPABASE_SERVICE_ROLE_KEY`. Elle utilise TCGdex avec la langue correcte (`en` ou `ja`) en priorité, l’API Pokémon TCG en secours et trois tentatives. Les sets japonais `M2a` et `M4`, ainsi que `30th Celebration`, ont leurs tailles de booster dédiées. Tu peux ajouter `POKEMONTCG_API_KEY` dans les secrets Edge Functions pour augmenter la limite de l’API. Ne mets jamais une clé secrète dans `index.html`.
 
 Tant que la fonction n’est pas déployée, une ouverture connectée est refusée explicitement ; le navigateur ne peut pas revenir à un tirage client non sécurisé.
 
