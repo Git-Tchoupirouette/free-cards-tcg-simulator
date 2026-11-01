@@ -101,7 +101,7 @@
       <div class="flex h-[76px] items-center justify-between">
         <a href="#" class="flex items-center gap-3" aria-label="Free Cards accueil">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[.08] text-amber-200"><i data-lucide="crown" class="h-5 w-5"></i></span>
-          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.8.3</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
+          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.8.4</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
         </a>
         <nav class="flex items-center gap-1 rounded-xl border border-white/[.07] bg-white/[.025] p-1">
           <button class="nav-btn active flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="shop"><i data-lucide="store" class="h-4 w-4"></i><span class="hidden lg:inline">Boutique</span></button>
@@ -346,8 +346,8 @@
     let eurUsdRateData = null;
     let eurUsdRateRequest = null;
     let eurUsdRateFetchedOn = "";
-    const APP_VERSION = "0.8.3";
-    const BUILD_ID = "economy-rpc-prep-2026-11-01";
+    const APP_VERSION = "0.8.4";
+    const BUILD_ID = "economy-rpc-complete-2026-11-01";
     const MARKET_PRICE_VERSION = 10;
     const TCGPLAYER_SET_IDS={swsh45:"swsh4pt5",me1:"me01",me2:"me02",me3:"me03",me5:"me05"};
     const setOffers = new Map();
@@ -671,6 +671,58 @@ end;
 $body$;
 revoke all on function public.claim_daily_reward() from public, anon;
 grant execute on function public.claim_daily_reward() to authenticated;`;
+    const SUPABASE_PREFERENCES_SCHEMA=`create or replace function public.set_card_favorite(p_unique_key text, p_favorite boolean)
+returns jsonb
+language plpgsql security definer set search_path = ''
+as $body$
+declare
+  v_user_id uuid := auth.uid();
+  v_profile public.player_profiles%rowtype;
+  v_state jsonb;
+begin
+  if v_user_id is null then raise exception 'Connexion requise.'; end if;
+  if nullif(trim(coalesce(p_unique_key, '')), '') is null then raise exception 'Carte invalide.'; end if;
+  select * into v_profile from public.player_profiles where user_id = v_user_id for update;
+  if not found then raise exception 'Profil cloud introuvable.'; end if;
+  if not exists(select 1 from jsonb_array_elements(coalesce(v_profile.game_state -> 'inventory', '[]'::jsonb)) card where card ->> 'uniqueKey' = p_unique_key) then
+    raise exception 'Cette carte n’est pas dans votre classeur.';
+  end if;
+  v_state := jsonb_set(v_profile.game_state, '{inventory}', (
+    select coalesce(jsonb_agg(case when card ->> 'uniqueKey' = p_unique_key then jsonb_set(card, '{favorite}', to_jsonb(coalesce(p_favorite, false)), true) else card end), '[]'::jsonb)
+    from jsonb_array_elements(coalesce(v_profile.game_state -> 'inventory', '[]'::jsonb)) card
+  ), true);
+  update public.player_profiles set game_state = v_state, updated_at = now() where user_id = v_user_id;
+  return jsonb_build_object('game_state', v_state);
+end;
+$body$;
+revoke all on function public.set_card_favorite(text, boolean) from public, anon;
+grant execute on function public.set_card_favorite(text, boolean) to authenticated;
+
+create or replace function public.set_showcase(p_keys jsonb, p_customized boolean)
+returns jsonb
+language plpgsql security definer set search_path = ''
+as $body$
+declare
+  v_user_id uuid := auth.uid();
+  v_profile public.player_profiles%rowtype;
+  v_state jsonb;
+  v_keys jsonb := coalesce(p_keys, '[]'::jsonb);
+begin
+  if v_user_id is null then raise exception 'Connexion requise.'; end if;
+  if jsonb_typeof(v_keys) is distinct from 'array' or jsonb_array_length(v_keys) > 3 then raise exception 'La vitrine est limitée à trois cartes.'; end if;
+  if exists(select 1 from jsonb_array_elements(v_keys) key where jsonb_typeof(key) is distinct from 'string') then raise exception 'Une carte de vitrine est invalide.'; end if;
+  select * into v_profile from public.player_profiles where user_id = v_user_id for update;
+  if not found then raise exception 'Profil cloud introuvable.'; end if;
+  if exists(select 1 from jsonb_array_elements_text(v_keys) key where not exists(select 1 from jsonb_array_elements(coalesce(v_profile.game_state -> 'inventory', '[]'::jsonb)) card where card ->> 'uniqueKey' = key)) then
+    raise exception 'Une carte de vitrine n’est pas dans votre classeur.';
+  end if;
+  v_state := jsonb_set(jsonb_set(v_profile.game_state, '{showcaseKeys}', v_keys, true), '{showcaseCustomized}', to_jsonb(coalesce(p_customized, false)), true);
+  update public.player_profiles set game_state = v_state, updated_at = now() where user_id = v_user_id;
+  return jsonb_build_object('game_state', v_state);
+end;
+$body$;
+revoke all on function public.set_showcase(jsonb, boolean) from public, anon;
+grant execute on function public.set_showcase(jsonb, boolean) to authenticated;`;
     const SUPABASE_ADMIN_SCHEMA=`create table if not exists public.player_admins (
   user_id uuid primary key references auth.users(id) on delete cascade,
   created_at timestamptz not null default now()
@@ -1186,7 +1238,7 @@ $assign_admin$;`;
       async function copyEconomySetupSql(){
         if(!navigator.clipboard?.writeText){accountStatus("Le presse-papiers n’est pas accessible. Sélectionnez et copiez le SQL affiché manuellement.",true);return;}
         try{
-          await navigator.clipboard.writeText(`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}`);
+          await navigator.clipboard.writeText(`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`);
           accountStatus("SQL sécurité copié. Collez-le dans Supabase → SQL Editor, exécutez-le, puis actualisez l’application.");
         }catch(error){
           console.error("Copie du SQL sécurité impossible.",error);
@@ -2124,9 +2176,24 @@ $assign_admin$;`;
         return unprotected.slice(group.some(isFavorite)?0:1).map(card=>card.uniqueKey);
       });
     }
-    function toggleFavorite(uniqueKey){
+    async function toggleFavorite(uniqueKey){
       const card=state.inventory.find(entry=>entry.uniqueKey===uniqueKey);
       if(!card)return;
+      if(authUser){
+        try{
+          if(!supabaseClient)throw new Error("Connexion Supabase indisponible.");
+          const {data,error}=await supabaseClient.rpc("set_card_favorite",{p_unique_key:uniqueKey,p_favorite:!isFavorite(card)});
+          if(error)throw error;
+          const result=Array.isArray(data)?data[0]:data;
+          if(!result?.game_state)throw new Error("Réponse invalide de la mise à jour du favori.");
+          state=normalizeState(result.game_state);
+          cloudEconomicFingerprint=economicFingerprint();
+          cloudEconomicSyncBlocked=false;
+          saveState();updateCollection();
+          notify(isFavorite(state.inventory.find(entry=>entry.uniqueKey===uniqueKey))?`${card.name} ajoutée aux favoris et protégée contre la vente.`:`${card.name} retirée des favoris et de sa protection.`);
+        }catch(error){console.error("Mise à jour du favori impossible.",error);notify(error.message||"Impossible de mettre à jour le favori.","error");}
+        return;
+      }
       card.favorite=!isFavorite(card);
       if(card.favorite)selectedCardKeys.delete(uniqueKey);
       saveState();updateCollection();
@@ -2286,24 +2353,40 @@ $assign_admin$;`;
         }
         grid.querySelectorAll("[data-unfeature]").forEach(button=>button.addEventListener("click",()=>{
           if(state.showcaseCustomized)toggleShowcase(button.dataset.unfeature);
-          else{state.showcaseKeys=[button.dataset.unfeature];state.showcaseCustomized=true;saveState();renderShowcase();renderBinder();}
+          else{setShowcase([button.dataset.unfeature],true);}
         }));
       }
       grid.querySelectorAll("[data-go-binder]").forEach(button=>button.addEventListener("click",()=>switchTab("binder")));
       lucide.createIcons();
     }
-    function toggleShowcase(uniqueKey){
-      const existing=state.showcaseKeys.indexOf(uniqueKey);
-      if(existing>=0)state.showcaseKeys.splice(existing,1);
-      else if(state.showcaseKeys.length>=3){notify("La vitrine est limitée à trois cartes. Retirez-en une avant d’en ajouter une autre.","error");return;}
-      else state.showcaseKeys.push(uniqueKey);
-      state.showcaseCustomized=true;
+    async function setShowcase(keys,customized=true){
+      const nextKeys=[...new Set(keys)].filter(key=>state.inventory.some(card=>card.uniqueKey===key));
+      if(authUser){
+        try{
+          if(!supabaseClient)throw new Error("Connexion Supabase indisponible.");
+          const {data,error}=await supabaseClient.rpc("set_showcase",{p_keys:nextKeys,p_customized:customized});
+          if(error)throw error;
+          const result=Array.isArray(data)?data[0]:data;
+          if(!result?.game_state)throw new Error("Réponse invalide de la mise à jour de la vitrine.");
+          state=normalizeState(result.game_state);
+          cloudEconomicFingerprint=economicFingerprint();
+          cloudEconomicSyncBlocked=false;
+          saveState();renderShowcase();renderBinder();
+        }catch(error){console.error("Mise à jour de la vitrine impossible.",error);notify(error.message||"Impossible de mettre à jour la vitrine.","error");}
+        return;
+      }
+      state.showcaseKeys=nextKeys;
+      state.showcaseCustomized=customized;
       saveState();renderShowcase();renderBinder();
     }
+    function toggleShowcase(uniqueKey){
+      const existing=state.showcaseKeys.indexOf(uniqueKey);
+      if(existing>=0)return setShowcase(state.showcaseKeys.filter(key=>key!==uniqueKey),true);
+      else if(state.showcaseKeys.length>=3){notify("La vitrine est limitée à trois cartes. Retirez-en une avant d’en ajouter une autre.","error");return;}
+      return setShowcase([...state.showcaseKeys,uniqueKey],true);
+    }
     function resetShowcase(){
-      state.showcaseKeys=[];
-      state.showcaseCustomized=false;
-      saveState();renderShowcase();renderBinder();
+      return setShowcase([],false);
     }
     function returnDraggedCard(top){
       top.classList.remove("dragging");
@@ -2573,7 +2656,7 @@ $assign_admin$;`;
       button.disabled=true;
       button.innerHTML=`<i data-lucide="loader-circle" class="h-4 w-4 animate-spin"></i><span>Ouverture de ${quantity} booster${quantity>1?"s":""}…</span>`;
       lucide.createIcons();
-      if(!free)state.cash-=totalCost;
+      if(!authUser&&!free)state.cash-=totalCost;
       const pulls=[];
       for(let packNumber=1;packNumber<=quantity;packNumber++){
         pulls.push(...makeBooster(setCards.get(selectedSet.id)).map(card=>({...card,packNumber})));
@@ -2683,8 +2766,8 @@ $assign_admin$;`;
       if(error){accountStatus(`Déconnexion impossible : ${error.message}`,true);return;}
       authUser=null;cloudLoadedUserId=null;updateAccountUI();accountStatus("Déconnecté. Cette progression reste sur cet appareil.");
     });
-    document.getElementById("supabase-schema").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}`;
-    document.getElementById("supabase-schema-public").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}`;
+    document.getElementById("supabase-schema").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
+    document.getElementById("supabase-schema-public").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
     document.getElementById("supabase-admin-schema").textContent=SUPABASE_ADMIN_SCHEMA;
     document.getElementById("admin-card-set").innerHTML='<option value="">Choisissez une extension</option>'+SETS.map(set=>`<option value="${escapeHtml(set.id)}">${escapeHtml(set.name)}</option>`).join("");
     document.getElementById("admin-open").addEventListener("click",async()=>{
