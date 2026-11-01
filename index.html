@@ -101,7 +101,7 @@
       <div class="flex h-[76px] items-center justify-between">
         <a href="#" class="flex items-center gap-3" aria-label="Free Cards accueil">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[.08] text-amber-200"><i data-lucide="crown" class="h-5 w-5"></i></span>
-          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.7.4</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
+          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.7.6</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
         </a>
         <nav class="flex items-center gap-1 rounded-xl border border-white/[.07] bg-white/[.025] p-1">
           <button class="nav-btn active flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="shop"><i data-lucide="store" class="h-4 w-4"></i><span class="hidden lg:inline">Boutique</span></button>
@@ -306,6 +306,7 @@
     const TCGCSV_GROUPS={base1:604,swsh7:2848,swsh12pt5:17688,sv3pt5:23237,sv6:23473,swsh45:2754,sv3:23228,sv2:23120,g1:1728,sv7:23537,"me02.5":24541,me04:24655,me5:24688,me3:24587,me2:24448,me1:24380,sv8pt5:23821,sv8:23651,sv6pt5:23529,sv5:23381,sv4:23286,sv1:22873,swsh12:3170,swsh10:3040,swsh9:2948,swsh2:2626,swsh5:2765,sm12:2534,sm9:2377,xy12:1842,xy4:1494,xy2:1464,swsh11:3118,swsh8:2906,swsh6:2807,cel25:2867,sv4pt5:23353,sv9:24073,sv10:24269,me55:24722,xy6:1534};
     const STORAGE_KEY = "crown-cards-save-v1";
     const DAILY_KEY = "crown-cards-daily-v1";
+    const LOCAL_BACKUP_KEY = "crown-cards-local-backup-v1";
     const SUPABASE_CONFIG_KEY = "crown-cards-supabase-config-v1";
     // Configure with the public project values before publishing; never use a service_role key here.
     const SUPABASE_PROJECT = {url:"https://jxxbztnuggensywuhnbi.supabase.co",anonKey:"sb_publishable_UTNvLgCCD5ylON-oXY8glQ_uqLPaKu0"};
@@ -331,6 +332,8 @@
     let cloudSaveQueued = false;
     let cloudLoadedUserId = null;
     let cloudAdminActionCursor = 0;
+    let cloudEconomicFingerprint = "";
+    let cloudEconomicSyncBlocked = false;
     let isPlayerAdmin = false;
     let adminPlayers = [];
     let adminCardCatalog = [];
@@ -384,6 +387,18 @@
       }catch(error){console.warn("La sauvegarde locale n'a pas pu être lue.",error);}
       return {cash:150,inventory:[],freeBoosters:[],sealedProducts:[],showcaseKeys:[],showcaseCustomized:false,pricesUpdatedOn:"",marketPriceVersion:0};
     }
+    function cacheSet(key,value){
+      try{localStorage.setItem(key,value);return true;}
+      catch(error){console.warn(`Cache local indisponible pour ${key}; les données cloud restent prioritaires.`,error);return false;}
+    }
+    function economicFingerprint(value=state){
+      return JSON.stringify({
+        cash:value.cash,
+        inventory:value.inventory,
+        freeBoosters:value.freeBoosters,
+        sealedProducts:value.sealedProducts
+      });
+    }
     function loadDailyState(){
       try{
         const saved=JSON.parse(localStorage.getItem(DAILY_KEY)||"null");
@@ -393,13 +408,20 @@
     }
     function saveState(){
       try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
-      catch(error){console.error("Impossible d'enregistrer la progression localement.",error);notify("Sauvegarde impossible : vérifiez l'espace disponible du navigateur.","error");}
-      scheduleCloudSave();
+      catch(error){console.warn("Cache local indisponible; la progression cloud reste prioritaire.",error);}
+      if(authUser){
+        if(cloudEconomicFingerprint&&economicFingerprint()!==cloudEconomicFingerprint){
+          cloudEconomicSyncBlocked=true;
+          accountStatus("Action économique locale en attente : la sauvegarde cloud est bloquée jusqu’à l’installation des RPC sécurisées.",true);
+          return;
+        }
+        scheduleCloudSave();
+      }
     }
     function saveDailyState(){
       try{localStorage.setItem(DAILY_KEY,JSON.stringify(dailyState));}
-      catch(error){console.error("Impossible d'enregistrer les récompenses quotidiennes.",error);notify("La récompense n'a pas pu être sauvegardée localement.","error");}
-      scheduleCloudSave();
+      catch(error){console.warn("Cache local des récompenses indisponible; la progression cloud reste prioritaire.",error);}
+      if(authUser&&!cloudEconomicSyncBlocked)scheduleCloudSave();
     }
     const SUPABASE_SCHEMA=`create table if not exists public.player_profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -699,7 +721,7 @@ $assign_admin$;`;
       try{parsed=new URL(url);}catch{throw new Error("L’URL Supabase n’est pas valide.");}
       if(!["https:"].includes(parsed.protocol)||!parsed.hostname.endsWith(".supabase.co"))throw new Error("Utilisez l’URL HTTPS officielle de votre projet, au format https://xxxx.supabase.co.");
       if(!key.trim()||key.includes("service_role"))throw new Error("Utilisez la clé anon/publishable publique du projet, jamais une clé service_role.");
-      localStorage.setItem(SUPABASE_CONFIG_KEY,JSON.stringify({url:parsed.origin,key:key.trim()}));
+      cacheSet(SUPABASE_CONFIG_KEY,JSON.stringify({url:parsed.origin,key:key.trim()}));
       if(supabaseAuthSubscription)supabaseAuthSubscription.unsubscribe();
       supabaseClient=window.supabase.createClient(parsed.origin,key.trim());
       const {data,error}=await supabaseClient.auth.getSession();
@@ -720,7 +742,7 @@ $assign_admin$;`;
       supabaseAuthSubscription=listener.subscription;
     }
     async function handleAuthSession(user){
-      if(!user){cloudLoadedUserId=null;cloudAdminActionCursor=0;isPlayerAdmin=false;adminPlayers=[];updateAccountUI();return;}
+      if(!user){cloudLoadedUserId=null;cloudAdminActionCursor=0;cloudEconomicFingerprint="";cloudEconomicSyncBlocked=false;isPlayerAdmin=false;adminPlayers=[];updateAccountUI();return;}
       if(cloudLoadedUserId===user.id)return;
       cloudLoadedUserId=user.id;
       clearTimeout(cloudSaveTimer);
@@ -728,6 +750,8 @@ $assign_admin$;`;
       let profileExists=false;
       let migratedLegacyPrices=false;
       cloudAdminActionCursor=0;
+      cloudEconomicFingerprint="";
+      cloudEconomicSyncBlocked=false;
       isPlayerAdmin=false;
       try{
         let {data,error}=await supabaseClient.from("player_profiles").select("username,game_state,daily_state,admin_action_cursor").eq("user_id",user.id).maybeSingle();
@@ -744,14 +768,21 @@ $assign_admin$;`;
             const migration=invalidateLegacyPriceEstimates(cloudState.inventory);
             migratedLegacyPrices=migration.changed;
             state={cash:Math.max(0,cloudState.cash),inventory:migration.cards,freeBoosters:Array.isArray(cloudState.freeBoosters)?cloudState.freeBoosters:[],sealedProducts:Array.isArray(cloudState.sealedProducts)?cloudState.sealedProducts:[],showcaseKeys:Array.isArray(cloudState.showcaseKeys)?cloudState.showcaseKeys:[],showcaseCustomized:Boolean(cloudState.showcaseCustomized),pricesUpdatedOn:migration.changed?"":typeof cloudState.pricesUpdatedOn==="string"?cloudState.pricesUpdatedOn:"",marketPriceVersion:migration.changed?0:Number.isInteger(cloudState.marketPriceVersion)?cloudState.marketPriceVersion:0};
+            cloudEconomicFingerprint=economicFingerprint();
           }
           const cloudDaily=data.daily_state;
           if(cloudDaily&&typeof cloudDaily==="object")dailyState={lastClaimDate:typeof cloudDaily.lastClaimDate==="string"?cloudDaily.lastClaimDate:"",streakDay:Number.isInteger(cloudDaily.streakDay)?Math.max(0,Math.min(7,cloudDaily.streakDay)):0,lastReward:cloudDaily.lastReward||null};
-          localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
-          localStorage.setItem(DAILY_KEY,JSON.stringify(dailyState));
+          cacheSet(STORAGE_KEY,JSON.stringify(state));
+          cacheSet(DAILY_KEY,JSON.stringify(dailyState));
           accountStatus(`Progression cloud chargée pour ${data.username}.`);
         }else{
-          accountStatus("Nouveau profil : votre progression locale va être copiée dans le cloud.");
+          const localSnapshot=JSON.stringify({state,dailyState,savedAt:new Date().toISOString()});
+          cacheSet(LOCAL_BACKUP_KEY,localSnapshot);
+          state={cash:150,inventory:[],freeBoosters:[],sealedProducts:[],showcaseKeys:[],showcaseCustomized:false,pricesUpdatedOn:"",marketPriceVersion:0};
+          dailyState={lastClaimDate:"",streakDay:0,lastReward:null};
+          cloudEconomicFingerprint=economicFingerprint();
+          updateWallet();updateCollection();renderDaily();
+          accountStatus("Nouveau profil : progression cloud initialisée avec 150 $. Votre ancienne progression locale a été conservée comme sauvegarde de secours.");
         }
         updateWallet();updateCollection();renderDaily();
       }catch(error){
@@ -762,7 +793,7 @@ $assign_admin$;`;
         restoringCloudState=false;
       }
       await refreshAdminAccess(user.id);
-      if(!profileExists||migratedLegacyPrices)scheduleCloudSave();
+      if(!profileExists)scheduleCloudSave();
     }
     async function refreshAdminAccess(userId){
       isPlayerAdmin=false;
@@ -817,6 +848,9 @@ $assign_admin$;`;
     }
     async function persistCloudState(){
       const user=authUser;
+      if(cloudEconomicSyncBlocked||cloudEconomicFingerprint&&economicFingerprint()!==cloudEconomicFingerprint){
+        throw new Error("La progression économique locale n’est pas envoyée au cloud. Installez les RPC économiques sécurisées avant de continuer.");
+      }
       const username=String(user.user_metadata?.username||user.email?.split("@")[0]||"Joueur").trim();
       const submittedState=JSON.parse(JSON.stringify(state));
       const submittedDailyState=JSON.parse(JSON.stringify(dailyState));
@@ -829,6 +863,8 @@ $assign_admin$;`;
         if(!result||!Number.isSafeInteger(Number(result.admin_action_cursor))||!Array.isArray(result.applied_actions))throw new Error("Réponse invalide de la sauvegarde Supabase.");
         cloudAdminActionCursor=Math.max(0,Number(result.admin_action_cursor));
         if(result.applied_actions.length)applyCloudAdminActions(result.applied_actions);
+        cloudEconomicFingerprint=economicFingerprint();
+        cloudEconomicSyncBlocked=false;
         if(authUser?.id!==user.id)return;
         accountStatus(`Progression synchronisée · ${new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}.`);
       }catch(error){
