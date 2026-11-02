@@ -15,6 +15,12 @@ const TCGDEX_SET_IDS: Record<string, string> = {
   M2a: "M2a", M4: "M4",
 };
 const TCGDEX_LANGUAGES: Record<string, string> = { M2a: "ja", M4: "ja" };
+const PACK_PRICES: Record<string, number> = {
+  base1: 300, swsh7: 12, swsh12pt5: 8, sv3pt5: 6.5, sv6: 5, swsh45: 7,
+  sv3: 4.5, sv2: 4.5, g1: 15, sv7: 5, M2a: 8, "me02.5": 8, M4: 6,
+  me04: 6, me5: 8, me3: 8, me2: 12.42, me1: 8, sv8pt5: 12, sv8: 8,
+  sv6pt5: 5, sv5: 5, sv4: 5, sv1: 4.5, cel25: 12, me55: 15, xy6: 20,
+};
 
 type ApiCard = {
   id?: string;
@@ -210,6 +216,9 @@ function generatePulls(cards: ApiCard[], setId: string, quantity: number) {
       : roll < 0.9 ? ultras : secrets;
     pulls.push(toPull(choose(pool.length ? pool : rareFallback), setId, "hit", packNumber));
   }
+  if (pulls.length !== quantity * packSize) {
+    throw new Error(`Catalogue serveur incohérent pour ${setId} : ${pulls.length} cartes générées au lieu de ${quantity * packSize}.`);
+  }
   return pulls;
 }
 
@@ -233,6 +242,9 @@ Deno.serve(async (request) => {
     const removeSealedKey = body.removeSealedKey ? String(body.removeSealedKey) : null;
     const freeBoosterIndex = Number.isSafeInteger(body.freeBoosterIndex) ? body.freeBoosterIndex : null;
     if (!setId || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 360) return json({ error: "Quantité ou extension invalide." }, 400);
+    if (!Object.prototype.hasOwnProperty.call(PACK_PRICES, setId)) {
+      return json({ error: `Extension non configurée côté serveur : ${setId}.` }, 400);
+    }
     const cards = await loadCards(setId);
     const pulls = generatePulls(cards, setId, quantity);
     const serviceClient = createClient(url, serviceKey);

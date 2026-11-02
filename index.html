@@ -44,7 +44,7 @@
     .opening-stage{position:relative;display:grid;min-height:min(68vh,680px);place-items:center;overflow:hidden;border:1px solid rgba(255,255,255,.07);border-radius:18px;background:radial-gradient(ellipse at 50% 58%,rgba(105,86,167,.22),transparent 52%),linear-gradient(150deg,rgba(22,25,37,.92),rgba(10,12,19,.96))}
     .opening-stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.05) 50%,transparent 65%);transform:translateX(-100%);animation:stageSweep 2.3s ease-in-out infinite}
     @keyframes stageSweep{to{transform:translateX(100%)}}
-    .reveal-stack{position:relative;width:min(42vw,430px,calc((min(68vh,680px) - 85px)*.714));max-width:calc(100vw - 72px);aspect-ratio:2.5/3.5;perspective:1100px;touch-action:pan-y;user-select:none}
+    .reveal-stack{position:relative;width:min(42vw,430px,calc((min(68vh,680px) - 85px)*.714));max-width:calc(100vw - 72px);aspect-ratio:2.5/3.5;perspective:1100px;touch-action:none;user-select:none}
     .stack-back{position:absolute;inset:0;border:4px solid #d6c4a1;border-radius:14px;background:radial-gradient(circle at 50% 50%,#f2d783 0 8%,#db6f6a 9% 14%,#e6d1a6 15% 17%,transparent 18%),repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0 3px,transparent 3px 8px),linear-gradient(145deg,#2d72b1,#172950 56%,#5b4387);box-shadow:0 12px 32px rgba(0,0,0,.55),inset 0 0 0 2px rgba(28,37,74,.85);transition:transform .3s}
     .stack-back:after{content:"C";position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,239,190,.7);font:700 58px Outfit,sans-serif;text-shadow:0 2px 15px rgba(255,226,144,.65)}
     .stack-next-preview{position:absolute;inset:0;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:#111522;box-shadow:0 12px 32px rgba(0,0,0,.5);transform:translateY(-5px) scale(.985)}
@@ -199,6 +199,8 @@
               <div id="daily-result" class="mt-4 hidden rounded-xl border border-amber-200/20 bg-amber-100/[.06] px-4 py-3 text-sm"></div>
             </div>
             <div class="mt-5"><h2 class="display text-lg font-semibold">Boosters gratuits</h2><p class="muted mt-1 text-xs">Vos boosters gagnés attendent ici. Ouvrez-les quand vous voulez.</p><div id="free-booster-list" class="mt-3 grid gap-2"></div></div>
+            <div class="mt-8"><h2 class="display text-lg font-semibold">Quêtes</h2><p class="muted mt-1 text-xs">Accomplissez des objectifs de collection pour financer vos prochaines ouvertures.</p><div id="quest-list" class="mt-3 grid gap-3"></div></div>
+            <div class="mt-8"><h2 class="display text-lg font-semibold">Mew RGB</h2><p class="muted mt-1 text-xs">Les trois Mew ex de l’extension 151, chargés depuis TCGdex.</p><div id="rgb-mew-grid" class="mt-3 grid grid-cols-3 gap-3"><div class="col-span-full rounded-xl border border-dashed border-white/10 px-4 py-5 text-center"><p class="muted text-xs">Chargement des cartes Mew…</p></div></div></div>
           </div>
           <div class="glass flex flex-col items-center rounded-3xl p-5 sm:p-7">
             <div class="daily-wheel-wrap"><span class="wheel-pointer"></span><div id="daily-wheel" class="daily-wheel"></div><div class="wheel-spin">FREE<br>CARDS</div></div>
@@ -343,6 +345,8 @@
     let adminHasNext = false;
     let restoringCloudState = false;
     let refreshingMarketPrices = false;
+    let rgbMewCards = [];
+    let rgbMewRequest = null;
     let eurUsdRateData = null;
     let eurUsdRateRequest = null;
     let eurUsdRateFetchedOn = "";
@@ -386,10 +390,10 @@
             try{localStorage.setItem(STORAGE_KEY,JSON.stringify({...saved,inventory:migration.cards,pricesUpdatedOn:"",marketPriceVersion:0}));}
             catch(error){console.error("Impossible d'enregistrer la migration des cours de cartes.",error);}
           }
-          return {cash:Math.max(0,saved.cash),inventory:migration.cards,freeBoosters:Array.isArray(saved.freeBoosters)?saved.freeBoosters:[],sealedProducts:Array.isArray(saved.sealedProducts)?saved.sealedProducts:[],showcaseKeys:Array.isArray(saved.showcaseKeys)?saved.showcaseKeys:[],showcaseCustomized:Boolean(saved.showcaseCustomized),pricesUpdatedOn:migration.changed?"":typeof saved.pricesUpdatedOn==="string"?saved.pricesUpdatedOn:"",marketPriceVersion:migration.changed?0:Number.isInteger(saved.marketPriceVersion)?saved.marketPriceVersion:0};
+          return {cash:Math.max(0,saved.cash),inventory:migration.cards,freeBoosters:Array.isArray(saved.freeBoosters)?saved.freeBoosters:[],sealedProducts:Array.isArray(saved.sealedProducts)?saved.sealedProducts:[],showcaseKeys:Array.isArray(saved.showcaseKeys)?saved.showcaseKeys:[],showcaseCustomized:Boolean(saved.showcaseCustomized),quests:saved.quests&&typeof saved.quests==="object"&&!Array.isArray(saved.quests)?saved.quests:{},pricesUpdatedOn:migration.changed?"":typeof saved.pricesUpdatedOn==="string"?saved.pricesUpdatedOn:"",marketPriceVersion:migration.changed?0:Number.isInteger(saved.marketPriceVersion)?saved.marketPriceVersion:0};
         }
       }catch(error){console.warn("La sauvegarde locale n'a pas pu être lue.",error);}
-      return {cash:150,inventory:[],freeBoosters:[],sealedProducts:[],showcaseKeys:[],showcaseCustomized:false,pricesUpdatedOn:"",marketPriceVersion:0};
+      return {cash:150,inventory:[],freeBoosters:[],sealedProducts:[],showcaseKeys:[],showcaseCustomized:false,quests:{},pricesUpdatedOn:"",marketPriceVersion:0};
     }
     function cacheSet(key,value){
       try{localStorage.setItem(key,value);return true;}
@@ -418,6 +422,7 @@
         sealedProducts:Array.isArray(saved?.sealedProducts)?saved.sealedProducts:[],
         showcaseKeys:Array.isArray(saved?.showcaseKeys)?saved.showcaseKeys:[],
         showcaseCustomized:Boolean(saved?.showcaseCustomized),
+        quests:saved?.quests&&typeof saved.quests==="object"&&!Array.isArray(saved.quests)?saved.quests:{},
         pricesUpdatedOn:typeof saved?.pricesUpdatedOn==="string"?saved.pricesUpdatedOn:"",
         marketPriceVersion:Number.isInteger(saved?.marketPriceVersion)?saved.marketPriceVersion:0
       };
@@ -478,7 +483,7 @@ begin
   select * into v_existing from public.player_profiles where user_id = v_user_id for update;
   if not found then
     insert into public.player_profiles(user_id, username, game_state, daily_state, updated_at)
-      values (v_user_id, trim(p_username), jsonb_build_object('cash', 150, 'inventory', '[]'::jsonb, 'freeBoosters', '[]'::jsonb, 'sealedProducts', '[]'::jsonb, 'showcaseKeys', '[]'::jsonb, 'showcaseCustomized', false, 'pricesUpdatedOn', '', 'marketPriceVersion', 0), coalesce(p_daily_state, '{}'::jsonb), now());
+      values (v_user_id, trim(p_username), jsonb_build_object('cash', 150, 'inventory', '[]'::jsonb, 'freeBoosters', '[]'::jsonb, 'sealedProducts', '[]'::jsonb, 'showcaseKeys', '[]'::jsonb, 'showcaseCustomized', false, 'quests', '{}'::jsonb, 'pricesUpdatedOn', '', 'marketPriceVersion', 0), coalesce(p_daily_state, '{}'::jsonb), now());
     return query select 0::bigint, '[]'::jsonb;
     return;
   end if;
@@ -496,6 +501,34 @@ end;
 $body$;
 revoke all on function public.save_player_profile(text, jsonb, jsonb, bigint) from public, anon;
 grant execute on function public.save_player_profile(text, jsonb, jsonb, bigint) to authenticated;`;
+    const SUPABASE_CATALOG_SCHEMA=`create or replace function public.catalog_pack_price(p_set_id text)
+returns numeric
+language sql
+immutable
+set search_path = ''
+as $body$
+  select case p_set_id
+    when 'base1' then 300 when 'swsh7' then 12 when 'swsh12pt5' then 8
+    when 'sv3pt5' then 6.5 when 'sv6' then 5 when 'swsh4pt5' then 7
+    when 'sv3' then 4.5 when 'sv2' then 4.5 when 'g1' then 15 when 'sv7' then 5
+    when 'M2a' then 8 when 'me02.5' then 8 when 'M4' then 6
+    when 'me04' then 6 when 'me5' then 8 when 'me3' then 8 when 'me2' then 12.42
+    when 'me1' then 8 when 'sv8pt5' then 12 when 'sv8' then 8 when 'sv6pt5' then 5
+    when 'sv5' then 5 when 'sv4' then 5 when 'sv1' then 4.5 when 'cel25' then 12
+    when 'me55' then 15 when 'xy6' then 20 else null end;
+$body$;
+revoke all on function public.catalog_pack_price(text) from public, anon, authenticated;
+grant execute on function public.catalog_pack_price(text) to service_role;`;
+    const SUPABASE_PACK_SCHEMA=`create or replace function public.catalog_pack_size(p_set_id text)
+returns integer
+language sql
+immutable
+set search_path = ''
+as $body$
+  select case when p_set_id = 'cel25' then 4 when p_set_id in ('me55','M2a','M4') then 5 when public.catalog_pack_price(p_set_id) is not null then 10 else null end;
+$body$;
+revoke all on function public.catalog_pack_size(text) from public, anon, authenticated;
+grant execute on function public.catalog_pack_size(text) to service_role;`;
     const SUPABASE_ECONOMY_SCHEMA=`create or replace function public.purchase_boosters(p_set_id text, p_product_type text, p_quantity integer)
 returns jsonb
 language plpgsql security definer set search_path = ''
@@ -516,16 +549,8 @@ begin
     or p_quantity is null or p_quantity < 1 or p_quantity > 10 then
     raise exception 'Produit ou quantité invalide.';
   end if;
-  v_pack_price := case p_set_id
-    when 'base1' then 300 when 'swsh7' then 12 when 'swsh12pt5' then 8
-    when 'sv3pt5' then 6.5 when 'sv6' then 5 when 'swsh4pt5' then 7
-    when 'sv3' then 4.5 when 'sv2' then 4.5 when 'g1' then 15
-    when 'sv7' then 5 when 'me02.5' then 12 when 'me04' then 10
-    when 'me5' then 8 when 'me3' then 10 when 'me2' then 12.42
-    when 'me1' then 8 when 'sv8pt5' then 12 when 'sv8' then 8
-    when 'sv6pt5' then 5 when 'sv5' then 5 when 'sv4' then 5
-    when 'sv1' then 4.5 when 'xy6' then 20 else null end;
-  if v_pack_price is null then raise exception 'Extension inconnue.'; end if;
+  v_pack_price := public.catalog_pack_price(p_set_id);
+  if v_pack_price is null then raise exception 'Extension inconnue côté catalogue serveur : %.', p_set_id; end if;
   v_pack_count := case p_product_type when 'booster' then 1 when 'bundle' then 6 when 'display' then 36 end;
   v_unit_price := round(v_pack_price * v_pack_count * case p_product_type when 'booster' then 1 else case when p_product_type = 'bundle' then .95 else .9 end end, 2);
   v_total := v_unit_price * p_quantity;
@@ -615,8 +640,8 @@ begin
   select * into v_profile from public.player_profiles where user_id = v_user_id for update;
   if not found then raise exception 'Profil cloud introuvable.'; end if;
   v_state := v_profile.game_state;
-  v_price := case p_set_id when 'base1' then 300 when 'swsh7' then 12 when 'swsh12pt5' then 8 when 'sv3pt5' then 6.5 when 'sv6' then 5 when 'swsh4pt5' then 7 when 'sv3' then 4.5 when 'sv2' then 4.5 when 'g1' then 15 when 'sv7' then 5 when 'me02.5' then 12 when 'me04' then 10 when 'me5' then 8 when 'me3' then 10 when 'me2' then 12.42 when 'me1' then 8 when 'sv8pt5' then 12 when 'sv8' then 8 when 'sv6pt5' then 5 when 'sv5' then 5 when 'sv4' then 5 when 'sv1' then 4.5 when 'xy6' then 20 else null end;
-  if v_price is null then raise exception 'Extension inconnue.'; end if;
+  v_price := public.catalog_pack_price(p_set_id);
+  if v_price is null then raise exception 'Extension inconnue côté catalogue serveur : %.', p_set_id; end if;
   if p_free and p_free_booster_index is null and p_remove_sealed_key is null then raise exception 'Une ouverture gratuite doit consommer un crédit existant.'; end if;
   v_total := case when coalesce(p_free,false) then 0 else v_price * p_quantity end;
   if p_free_booster_index is not null then
@@ -685,8 +710,8 @@ declare
   v_total numeric;
   v_pack_size integer;
 begin
-  v_pack_size := case when p_set_id = 'cel25' then 4 when p_set_id in ('me55', 'M2a', 'M4') then 5 else 10 end;
-  if p_user_id is null or p_set_id is null or p_quantity is null or p_quantity < 1 or p_quantity > 360 or jsonb_typeof(v_pulls) is distinct from 'array' or jsonb_array_length(v_pulls) <> p_quantity * v_pack_size then
+  v_pack_size := public.catalog_pack_size(p_set_id);
+  if p_user_id is null or p_set_id is null or v_pack_size is null or p_quantity is null or p_quantity < 1 or p_quantity > 360 or jsonb_typeof(v_pulls) is distinct from 'array' or jsonb_array_length(v_pulls) <> p_quantity * v_pack_size then
     raise exception 'Ouverture générée côté serveur invalide.';
   end if;
   if exists(select 1 from jsonb_array_elements(v_pulls) card where jsonb_typeof(card) is distinct from 'object' or nullif(card ->> 'id', '') is null or nullif(card ->> 'uniqueKey', '') is null or nullif(card ->> 'setId', '') <> p_set_id) then
@@ -695,8 +720,8 @@ begin
   select * into v_profile from public.player_profiles where user_id = p_user_id for update;
   if not found then raise exception 'Profil cloud introuvable.'; end if;
   v_state := v_profile.game_state;
-  v_price := case p_set_id when 'base1' then 300 when 'swsh7' then 12 when 'swsh12pt5' then 8 when 'sv3pt5' then 6.5 when 'sv6' then 5 when 'swsh4pt5' then 7 when 'sv3' then 4.5 when 'sv2' then 4.5 when 'g1' then 15 when 'sv7' then 5 when 'me02.5' then 12 when 'me04' then 10 when 'me5' then 8 when 'me3' then 10 when 'me2' then 12.42 when 'me1' then 8 when 'sv8pt5' then 12 when 'sv8' then 8 when 'sv6pt5' then 5 when 'sv5' then 5 when 'sv4' then 5 when 'sv1' then 4.5 when 'xy6' then 20 else null end;
-  if v_price is null then raise exception 'Extension inconnue.'; end if;
+  v_price := public.catalog_pack_price(p_set_id);
+  if v_price is null then raise exception 'Extension inconnue côté catalogue serveur : %.', p_set_id; end if;
   if p_free and p_free_booster_index is null and p_remove_sealed_key is null then raise exception 'Une ouverture gratuite doit consommer un crédit existant.'; end if;
   v_total := case when coalesce(p_free,false) then 0 else v_price * p_quantity end;
   if p_free_booster_index is not null then
@@ -716,6 +741,58 @@ end;
 $body$;
 revoke all on function public.open_boosters_internal(uuid, text, integer, boolean, text, integer, jsonb) from public, anon, authenticated;
 grant execute on function public.open_boosters_internal(uuid, text, integer, boolean, text, integer, jsonb) to service_role;`;
+    const SUPABASE_QUEST_SCHEMA=`create or replace function public.claim_quest(p_quest_id text)
+returns jsonb
+language plpgsql security definer set search_path = ''
+as $body$
+declare
+  v_user_id uuid := auth.uid();
+  v_profile public.player_profiles%rowtype;
+  v_state jsonb;
+  v_inventory jsonb;
+  v_claimed jsonb;
+  v_reward numeric;
+  v_completed boolean := false;
+  v_set_count integer := 0;
+  v_card jsonb;
+begin
+  if v_user_id is null then raise exception 'Connexion requise.'; end if;
+  if p_quest_id not in ('welcome_open','collect_5','collect_25','collect_3_sets','hit_card') then
+    raise exception 'Quête inconnue : %.', p_quest_id;
+  end if;
+  select * into v_profile from public.player_profiles where user_id = v_user_id for update;
+  if not found then raise exception 'Profil cloud introuvable.'; end if;
+  v_state := v_profile.game_state;
+  v_inventory := coalesce(v_state -> 'inventory', '[]'::jsonb);
+  v_claimed := coalesce(v_state -> 'quests', '{}'::jsonb);
+  if jsonb_typeof(v_inventory) is distinct from 'array' or jsonb_typeof(v_claimed) is distinct from 'object' then
+    raise exception 'Progression cloud invalide.'; end if;
+  if v_claimed ? p_quest_id then raise exception 'Quête déjà réclamée.'; end if;
+  v_reward := case p_quest_id when 'welcome_open' then 10 when 'collect_5' then 15 when 'collect_25' then 40 when 'collect_3_sets' then 30 when 'hit_card' then 25 end;
+  if p_quest_id = 'welcome_open' then v_completed := jsonb_array_length(v_inventory) >= 1;
+  elsif p_quest_id = 'collect_5' then v_completed := jsonb_array_length(v_inventory) >= 5;
+  elsif p_quest_id = 'collect_25' then v_completed := jsonb_array_length(v_inventory) >= 25;
+  elsif p_quest_id = 'collect_3_sets' then
+    select count(distinct value ->> 'setId') into v_set_count from jsonb_array_elements(v_inventory);
+    v_completed := v_set_count >= 3;
+  elsif p_quest_id = 'hit_card' then
+    select value into v_card from jsonb_array_elements(v_inventory)
+      where lower(coalesce(value ->> 'rarity','')) like '%illustration%'
+         or lower(coalesce(value ->> 'rarity','')) like '%secret%'
+         or lower(coalesce(value ->> 'rarity','')) like '%ultra%'
+         or (value ->> 'value') ~ '^[0-9]+([.][0-9]+)?$' and (value ->> 'value')::numeric >= 20
+      limit 1;
+    v_completed := v_card is not null;
+  end if;
+  if not v_completed then raise exception 'Conditions de la quête non remplies.'; end if;
+  v_state := jsonb_set(v_state, '{cash}', to_jsonb(round(coalesce((v_state ->> 'cash')::numeric,0) + v_reward, 2)), true);
+  v_state := jsonb_set(v_state, array['quests',p_quest_id], jsonb_build_object('claimedAt', (extract(epoch from clock_timestamp()) * 1000)::bigint, 'reward', v_reward), true);
+  update public.player_profiles set game_state = v_state, updated_at = now() where user_id = v_user_id;
+  return jsonb_build_object('game_state', v_state, 'quest_id', p_quest_id, 'reward', v_reward);
+end;
+$body$;
+revoke all on function public.claim_quest(text) from public, anon;
+grant execute on function public.claim_quest(text) to authenticated;`;
     const SUPABASE_PREFERENCES_SCHEMA=`create or replace function public.set_card_favorite(p_unique_key text, p_favorite boolean)
 returns jsonb
 language plpgsql security definer set search_path = ''
@@ -940,7 +1017,7 @@ begin
   select * into v_existing from public.player_profiles where user_id = v_user_id for update;
   if not found then
     insert into public.player_profiles(user_id, username, game_state, daily_state, updated_at, admin_action_cursor)
-      values (v_user_id, trim(p_username), jsonb_build_object('cash', 150, 'inventory', '[]'::jsonb, 'freeBoosters', '[]'::jsonb, 'sealedProducts', '[]'::jsonb, 'showcaseKeys', '[]'::jsonb, 'showcaseCustomized', false, 'pricesUpdatedOn', '', 'marketPriceVersion', 0), coalesce(p_daily_state, '{}'::jsonb), now(), 0);
+      values (v_user_id, trim(p_username), jsonb_build_object('cash', 150, 'inventory', '[]'::jsonb, 'freeBoosters', '[]'::jsonb, 'sealedProducts', '[]'::jsonb, 'showcaseKeys', '[]'::jsonb, 'showcaseCustomized', false, 'quests', '{}'::jsonb, 'pricesUpdatedOn', '', 'marketPriceVersion', 0), coalesce(p_daily_state, '{}'::jsonb), now(), 0);
     return query select 0::bigint, '[]'::jsonb;
     return;
   end if;
@@ -1055,7 +1132,7 @@ $assign_admin$;`;
           if(cloudState&&Number.isFinite(cloudState.cash)&&Array.isArray(cloudState.inventory)){
             const migration=invalidateLegacyPriceEstimates(cloudState.inventory);
             migratedLegacyPrices=migration.changed;
-            state={cash:Math.max(0,cloudState.cash),inventory:migration.cards,freeBoosters:Array.isArray(cloudState.freeBoosters)?cloudState.freeBoosters:[],sealedProducts:Array.isArray(cloudState.sealedProducts)?cloudState.sealedProducts:[],showcaseKeys:Array.isArray(cloudState.showcaseKeys)?cloudState.showcaseKeys:[],showcaseCustomized:Boolean(cloudState.showcaseCustomized),pricesUpdatedOn:migration.changed?"":typeof cloudState.pricesUpdatedOn==="string"?cloudState.pricesUpdatedOn:"",marketPriceVersion:migration.changed?0:Number.isInteger(cloudState.marketPriceVersion)?cloudState.marketPriceVersion:0};
+            state={cash:Math.max(0,cloudState.cash),inventory:migration.cards,freeBoosters:Array.isArray(cloudState.freeBoosters)?cloudState.freeBoosters:[],sealedProducts:Array.isArray(cloudState.sealedProducts)?cloudState.sealedProducts:[],showcaseKeys:Array.isArray(cloudState.showcaseKeys)?cloudState.showcaseKeys:[],showcaseCustomized:Boolean(cloudState.showcaseCustomized),quests:cloudState.quests&&typeof cloudState.quests==="object"&&!Array.isArray(cloudState.quests)?cloudState.quests:{},pricesUpdatedOn:migration.changed?"":typeof cloudState.pricesUpdatedOn==="string"?cloudState.pricesUpdatedOn:"",marketPriceVersion:migration.changed?0:Number.isInteger(cloudState.marketPriceVersion)?cloudState.marketPriceVersion:0};
             cloudEconomicFingerprint=economicFingerprint();
           }
           const cloudDaily=data.daily_state;
@@ -1066,7 +1143,7 @@ $assign_admin$;`;
         }else{
           const localSnapshot=JSON.stringify({state,dailyState,savedAt:new Date().toISOString()});
           cacheSet(LOCAL_BACKUP_KEY,localSnapshot);
-          state={cash:150,inventory:[],freeBoosters:[],sealedProducts:[],showcaseKeys:[],showcaseCustomized:false,pricesUpdatedOn:"",marketPriceVersion:0};
+          state={cash:150,inventory:[],freeBoosters:[],sealedProducts:[],showcaseKeys:[],showcaseCustomized:false,quests:{},pricesUpdatedOn:"",marketPriceVersion:0};
           dailyState={lastClaimDate:"",streakDay:0,lastReward:null};
           cloudEconomicFingerprint=economicFingerprint();
           updateWallet();updateCollection();renderDaily();
@@ -1390,6 +1467,8 @@ $assign_admin$;`;
         result.innerHTML=`<span class="muted text-[10px] uppercase tracking-wider">Récompense du jour</span><strong class="mt-1 block">${escapeHtml(formatReward(dailyState.lastReward))}</strong>`;
       }else result.classList.add("hidden");
       renderFreeBoosters();
+      renderQuests();
+      loadRgbMews();
       renderWheel(day);
       lucide.createIcons();
     }
@@ -1404,6 +1483,76 @@ $assign_admin$;`;
         return `<div class="glass flex items-center justify-between gap-3 rounded-xl p-3"><div class="min-w-0"><strong class="block truncate text-xs">${escapeHtml(set?set.name:"Booster offert")}</strong><span class="muted text-[10px]">Booster gratuit · ${escapeHtml(set?set.subtitle:booster.setId)}</span></div><button data-open-free="${index}" class="shrink-0 rounded-lg bg-white px-3 py-2 text-[10px] font-semibold text-black" ${freeBoosterOpening?"disabled":""}>Ouvrir</button></div>`;
       }).join("");
       list.querySelectorAll("[data-open-free]").forEach(button=>button.addEventListener("click",()=>openFreeBooster(Number(button.dataset.openFree))));
+    }
+    const QUESTS=[
+      {id:"welcome_open",title:"Première ouverture",description:"Ouvrir votre premier booster",reward:10},
+      {id:"collect_5",title:"Première pile",description:"Obtenir 5 cartes",reward:15},
+      {id:"collect_25",title:"Collectionneur",description:"Obtenir 25 cartes",reward:40},
+      {id:"collect_3_sets",title:"Voyageur des extensions",description:"Obtenir des cartes de 3 extensions différentes",reward:30},
+      {id:"hit_card",title:"Trouvaille brillante",description:"Obtenir une carte rare ou une carte d’une valeur d’au moins $20",reward:25}
+    ];
+    function questCompleted(quest){
+      const inventory=state.inventory;
+      if(quest.id==="welcome_open")return inventory.length>=1;
+      if(quest.id==="collect_5")return inventory.length>=5;
+      if(quest.id==="collect_25")return inventory.length>=25;
+      if(quest.id==="collect_3_sets")return new Set(inventory.map(card=>card.setId)).size>=3;
+      return inventory.some(card=>rarityScore(card)>=5||Number(card.value)>=20);
+    }
+    function renderQuests(){
+      const list=document.getElementById("quest-list");
+      if(!list)return;
+      list.innerHTML=QUESTS.map(quest=>{
+        const claimed=Boolean(state.quests?.[quest.id]);
+        const completed=questCompleted(quest);
+        return `<article class="glass rounded-xl border ${claimed?"border-emerald-300/20":"border-white/10"} p-3"><div class="flex items-start justify-between gap-3"><div><strong class="block text-xs">${escapeHtml(quest.title)}</strong><span class="muted mt-1 block text-[10px]">${escapeHtml(quest.description)}</span></div><span class="shrink-0 text-xs gold">+$${quest.reward}</span></div><button type="button" data-claim-quest="${quest.id}" class="mt-3 w-full rounded-lg ${claimed?"border border-emerald-300/20 text-emerald-200":"bg-white text-black"} px-3 py-2 text-[10px] font-semibold" ${claimed||!completed?"disabled":""}>${claimed?"Récompensée":completed?"Réclamer la récompense":"Objectif en cours"}</button></article>`;
+      }).join("");
+      list.querySelectorAll("[data-claim-quest]").forEach(button=>button.addEventListener("click",()=>claimQuest(button.dataset.claimQuest)));
+    }
+    function renderRgbMews(){
+      const grid=document.getElementById("rgb-mew-grid");
+      if(!grid)return;
+      if(!rgbMewCards.length){
+        grid.innerHTML='<div class="col-span-full rounded-xl border border-dashed border-white/10 px-4 py-5 text-center"><p class="muted text-xs">Les cartes Mew RGB sont momentanément indisponibles.</p></div>';
+        return;
+      }
+      grid.innerHTML=rgbMewCards.map(card=>`<article class="glass overflow-hidden rounded-xl p-2"><img class="card-image" src="${escapeHtml(imageUrl(card))}" alt="${escapeHtml(card.name)}" loading="eager" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"><p class="mt-2 truncate text-[10px] font-semibold">${escapeHtml(card.name)}</p><p class="muted text-[9px]">${escapeHtml(card.number||"")}</p></article>`).join("");
+    }
+    async function loadRgbMews(){
+      if(rgbMewCards.length||rgbMewRequest)return rgbMewRequest;
+      const set=SETS.find(entry=>entry.id==="sv3pt5");
+      if(!set)return;
+      rgbMewRequest=(async()=>{
+        try{
+          const cards=setCards.get("sv3pt5")||await fetchTcgdexCards(set);
+          rgbMewCards=cards.filter(card=>/\bmew\b/i.test(String(card.name||""))).slice(0,3);
+          renderRgbMews();
+        }catch(error){
+          console.warn("Les cartes Mew RGB ne peuvent pas être chargées.",error);
+          renderRgbMews();
+        }finally{rgbMewRequest=null;}
+      })();
+      return rgbMewRequest;
+    }
+    async function claimQuest(questId){
+      const quest=QUESTS.find(item=>item.id===questId);
+      if(!quest||state.quests?.[questId]||!questCompleted(quest))return;
+      try{
+        if(authUser){
+          if(!supabaseClient)throw new Error("Connexion Supabase indisponible.");
+          const {data,error}=await supabaseClient.rpc("claim_quest",{p_quest_id:questId});
+          if(error)throw error;
+          const result=Array.isArray(data)?data[0]:data;
+          if(!result?.game_state)throw new Error("Réponse invalide de la quête serveur.");
+          state=normalizeState(result.game_state);
+          cloudEconomicFingerprint=economicFingerprint();
+        }else{
+          state.cash+=quest.reward;
+          state.quests={...state.quests,[questId]:{claimedAt:Date.now(),reward:quest.reward}};
+        }
+        saveState();updateWallet();updateCollection();renderQuests();
+        notify(`${currency(quest.reward)} ajoutés à votre portefeuille.`);
+      }catch(error){console.error("Récompense de quête impossible.",error);notify(error.message||"Impossible de réclamer cette quête.","error");}
     }
     function spinDailyWheel(){
       if(dailySpinning||dailyState.lastClaimDate===localDateKey())return;
@@ -2511,17 +2660,19 @@ $assign_admin$;`;
       });
       top.addEventListener("pointerdown",event=>{
         if(!event.isPrimary||event.button!==0||pendingReveal.transitioning)return;
-        pendingReveal.drag={pointerId:event.pointerId,startY:event.clientY,moved:false};
+        pendingReveal.drag={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,moved:false};
         top.setPointerCapture(event.pointerId);
       });
       top.addEventListener("pointermove",event=>{
         const drag=pendingReveal?.drag;
         if(!drag||drag.pointerId!==event.pointerId)return;
-        const deltaY=Math.min(0,event.clientY-drag.startY);
-        if(Math.abs(deltaY)>6)drag.moved=true;
+        const deltaX=event.clientX-drag.startX;
+        const deltaY=event.clientY-drag.startY;
+        const distance=Math.hypot(deltaX,deltaY);
+        if(distance>6)drag.moved=true;
         if(drag.moved){
           top.classList.add("dragging");
-          top.style.transform=`translateY(${deltaY}px) rotate(${deltaY*.025}deg) scale(${Math.max(.94,1+deltaY/2500)})`;
+          top.style.transform=`translate(${deltaX}px,${deltaY}px) rotate(${(deltaX+deltaY)*.025}deg) scale(${Math.max(.94,1-distance/2500)})`;
         }
       });
       top.addEventListener("pointerup",event=>{
@@ -2531,10 +2682,12 @@ $assign_admin$;`;
         if(!drag.moved)return;
         event.preventDefault();
         pendingReveal.ignoreClick=true;
-        const deltaY=Math.min(0,event.clientY-drag.startY);
-        if(Math.abs(deltaY)>=Math.max(70,top.clientHeight*.2)){
-          top.style.transform=`translateY(${deltaY}px) rotate(${deltaY*.025}deg) scale(${Math.max(.94,1+deltaY/2500)})`;
-          advanceReveal(top);
+        const deltaX=event.clientX-drag.startX;
+        const deltaY=event.clientY-drag.startY;
+        const distance=Math.hypot(deltaX,deltaY);
+        if(distance>=Math.max(60,Math.min(top.clientWidth,top.clientHeight)*.16)){
+          top.style.transform=`translate(${deltaX}px,${deltaY}px) rotate(${(deltaX+deltaY)*.025}deg) scale(${Math.max(.94,1-distance/2500)})`;
+          advanceReveal(top,{x:deltaX,y:deltaY});
           setTimeout(()=>{if(pendingReveal)pendingReveal.ignoreClick=false;},0);
         }else{
           returnDraggedCard(top);
@@ -2548,7 +2701,7 @@ $assign_admin$;`;
         returnDraggedCard(top);
       });
     }
-    function advanceReveal(topOrEvent){
+    function advanceReveal(topOrEvent,direction={x:0,y:-1}){
       if(!pendingReveal||pendingReveal.transitioning)return;
       const top=topOrEvent instanceof Element?topOrEvent:document.querySelector(".stack-top");
       if(!top)return;
@@ -2557,12 +2710,13 @@ $assign_admin$;`;
       top.style.transition="";
       pendingReveal.transitioning=true;
       top.classList.add("swiping");
+      top.style.transform=`translate(${direction.x*window.innerWidth}px,${direction.y*window.innerHeight}px) rotate(${(direction.x+direction.y)*.04}deg)`;
       setTimeout(()=>{
         if(!pendingReveal)return;
         pendingReveal.index++;
         pendingReveal.transitioning=false;
         renderRevealCard();
-      },180);
+      },90);
     }
     function openReveal(pulls,hitPileMode,batchLabel=""){
       const packs=[...new Set(pulls.map(card=>card.packNumber))];
@@ -2833,8 +2987,8 @@ $assign_admin$;`;
       if(error){accountStatus(`Déconnexion impossible : ${error.message}`,true);return;}
       authUser=null;cloudLoadedUserId=null;updateAccountUI();accountStatus("Déconnecté. Cette progression reste sur cet appareil.");
     });
-    document.getElementById("supabase-schema").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_SECURE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
-    document.getElementById("supabase-schema-public").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_SECURE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
+    document.getElementById("supabase-schema").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_CATALOG_SCHEMA}\n\n${SUPABASE_PACK_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_SECURE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_QUEST_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
+    document.getElementById("supabase-schema-public").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_CATALOG_SCHEMA}\n\n${SUPABASE_PACK_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_SECURE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_QUEST_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
     document.getElementById("supabase-admin-schema").textContent=SUPABASE_ADMIN_SCHEMA;
     document.getElementById("admin-card-set").innerHTML='<option value="">Choisissez une extension</option>'+SETS.map(set=>`<option value="${escapeHtml(set.id)}">${escapeHtml(set.name)}</option>`).join("");
     document.getElementById("admin-open").addEventListener("click",async()=>{
