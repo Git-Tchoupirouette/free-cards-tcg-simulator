@@ -161,7 +161,7 @@
                 <div class="mt-4 grid grid-cols-3 gap-2 border-y border-white/[.07] py-3 text-center"><div><span class="muted block text-[9px] uppercase">Par booster</span><b id="selected-pack-count" class="text-xs">10 cartes</b></div><div><span class="muted block text-[9px] uppercase">Reverse</span><b id="selected-reverse-count" class="text-xs">2</b></div><div><span class="muted block text-[9px] uppercase">Hit simulé*</span><b class="text-xs">1</b></div></div>
                 <label class="mt-4 block text-xs text-white/70">Produit<select id="product-type" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white"><option value="booster">Booster individuel</option><option value="bundle">Booster Bundle · 6 boosters</option><option value="display">Display · 36 boosters</option></select></label><p id="product-price-note" class="muted mt-1 min-h-4 text-[10px] leading-4" aria-live="polite">Prix indicatifs arrondis à partir du marché USD ; estimés pour les sets japonais.</p>
                 <div class="mt-4 flex items-center justify-between"><label id="quantity-label" for="booster-quantity" class="muted text-xs">Nombre de boosters</label><div class="flex items-center gap-3"><button id="quantity-minus" type="button" aria-label="Diminuer le nombre de produits" class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-white/75 hover:bg-white/10"><i data-lucide="minus" class="h-4 w-4"></i></button><select id="booster-quantity" class="min-w-[74px] rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-center text-sm text-white" aria-label="Nombre de produits"></select><button id="quantity-plus" type="button" aria-label="Augmenter le nombre de produits" class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-white/75 hover:bg-white/10"><i data-lucide="plus" class="h-4 w-4"></i></button></div></div>
-                <label class="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-violet-300/15 bg-violet-300/[.045] p-3"><input id="hit-pile-mode" type="checkbox" class="mt-0.5 h-4 w-4 accent-violet-300"><span><span class="block text-xs font-semibold text-violet-100">Mode Hit Pile</span><span class="muted mt-1 block text-[10px] leading-4">Empile les 3 dernières cartes de chaque booster. Les 7 autres restent dans le classeur.</span></span></label>
+                <label class="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-violet-300/15 bg-violet-300/[.045] p-3"><input id="hit-pile-mode" type="checkbox" class="mt-0.5 h-4 w-4 accent-violet-300"><span><span class="block text-xs font-semibold text-violet-100">Mode Hit Pile</span><span class="muted mt-1 block text-[10px] leading-4">Révèle les cartes reverse et le hit de chaque booster ; les communes restent dans le classeur.</span></span></label>
                 <div class="mt-3 flex items-center justify-between text-xs"><span class="muted">Total</span><strong id="total-price" class="display gold text-base">—</strong></div>
                 <button id="buy-button" class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-200 to-amber-300 px-4 py-3 text-sm font-bold text-[#19140a] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40" disabled><i data-lucide="package-open" class="h-4 w-4"></i><span>Choisissez un booster</span></button>
                 <p class="muted mt-3 text-center text-[10px]">* Le slot rare garantit une carte rare ou mieux. Les tirages restent aléatoires.</p>
@@ -171,7 +171,7 @@
             <p class="muted mt-3 px-1 text-[10px] leading-4">Simulation éducative non affiliée à Pokémon, Nintendo ou TCGplayer. Valeurs indicatives ; aucune transaction réelle.</p>
           </aside>
         </div>
-        <div class="muted mt-8 border-t border-white/[.07] pt-4 text-center text-[10px]">FREE CARDS · <span class="text-amber-200">BETA 0.9.5</span> · Simulateur fan-made à but éducatif · Prix USD arrondis au 12 nov. 2026 ; estimés pour les sets japonais.</div>
+        <div class="muted mt-8 border-t border-white/[.07] pt-4 text-center text-[10px]">FREE CARDS · <span class="text-amber-200">BETA 0.10.0</span> · Simulateur fan-made à but éducatif · Prix USD arrondis au 12 nov. 2026 ; estimés pour les sets japonais.</div>
       </section>
 
       <section id="binder-panel" class="tab-panel" hidden>
@@ -330,8 +330,89 @@
       {id:"sv9",name:"Aventures Ensemble",subtitle:"Écarlate et Violet · mars 2025",releaseDate:"2025-03-28",price:6.5,colors:["#63b4a5","#3d5e8a"],tcgdex:{language:"en",setId:"sv09"}},
       {id:"sv10",name:"Rivalités Destinées",subtitle:"Écarlate et Violet · mai 2025",releaseDate:"2025-05-30",price:8.5,colors:["#df7955","#633f73"],tcgdex:{language:"en",setId:"sv10"}},
       {id:"me55",name:"30th Celebration",subtitle:"Édition 30e anniversaire · septembre 2026",releaseDate:"2026-09-16",packSize:5,price:10,colors:["#e8cf83","#604b95"],tcgdex:{language:"en",setId:"30th"}},
+      {id:"me06",name:"Delta Reign",subtitle:"Méga-Évolution · novembre 2026",releaseDate:"2026-11-06",price:6.5,colors:["#57a983","#385b91"],tcgdex:{language:"en",setId:"me06"}},
       {id:"xy6",name:"Roaring Skies · Emerald Break",subtitle:"Version internationale · équivalent japonais XY6",releaseDate:"2015-05-06",price:88.5,colors:["#70b9d0","#4764a0"],tcgdex:{language:"en",setId:"xy6"}}
     ];
+    const EXTRA_SETS=[
+      ["base4","Base Set 2","Wizards · 2000","2000-02-24",459.5],
+      ["base3","Fossil","Wizards · 1999","1999-10-10",340],
+      ["base2","Jungle","Wizards · 1999","1999-06-16",327.5],
+      ["base5","Team Rocket","Wizards · 2000","2000-04-24",329],
+      ["gym1","Gym Heroes","Gym · 2000","2000-08-14",279],
+      ["gym2","Gym Challenge","Gym · 2000","2000-10-16",420],
+      ["neo1","Neo Genesis","Neo · 2000","2000-12-16",632],
+      ["neo2","Neo Discovery","Neo · 2001","2001-06-01",1500],
+      ["ex1","Ruby & Sapphire","EX · 2003","2003-06-18",800],
+      ["ex3","Dragon","EX · 2003","2003-11-24",1125],
+      ["ex5","Hidden Legends","EX · 2004","2004-06-14",800],
+      ["ex6","FireRed & LeafGreen","EX · 2004","2004-08-30",1013],
+      ["ex13","Holon Phantoms","EX · 2006","2006-02-13",1902],
+      ["ex14","Crystal Guardians","EX · 2006","2006-05-03",1650],
+      ["ex16","Power Keepers","EX · 2007","2007-02-01",1000],
+      ["dp1","Diamond & Pearl","Diamond & Pearl · 2007","2007-05-23",304],
+      ["dp2","Mysterious Treasures","Diamond & Pearl · 2007","2007-08-22",340],
+      ["dp3","Secret Wonders","Diamond & Pearl · 2007","2007-11-07",628],
+      ["dp4","Great Encounters","Diamond & Pearl · 2008","2008-02-13",347.5],
+      ["dp7","Stormfront","Diamond & Pearl · 2008","2008-11-05",596.5],
+      ["pl1","Platinum","Platinum · 2009","2009-02-11",390],
+      ["pl2","Rising Rivals","Platinum · 2009","2009-05-16",1000],
+      ["pl3","Supreme Victors","Platinum · 2009","2009-08-19",737.5],
+      ["pl4","Arceus","Platinum · 2009","2009-11-04",568],
+      ["hgss1","HeartGold & SoulSilver","HGSS · 2010","2010-02-10",450],
+      ["col1","Call of Legends","HGSS · 2011","2011-02-09",1115],
+      ["bw1","Black & White","Black & White · 2011","2011-04-25",188],
+      ["bw2","Emerging Powers","Black & White · 2011","2011-08-31",112.5],
+      ["bw3","Noble Victories","Black & White · 2011","2011-11-16",169],
+      ["bw4","Next Destinies","Black & White · 2012","2012-02-08",383],
+      ["bw5","Dark Explorers","Black & White · 2012","2012-05-09",397],
+      ["bw6","Dragons Exalted","Black & White · 2012","2012-08-15",366],
+      ["bw7","Boundaries Crossed","Black & White · 2012","2012-10-05",246],
+      ["bw8","Plasma Storm","Black & White · 2013","2013-02-06",651],
+      ["bw9","Plasma Freeze","Black & White · 2013","2013-05-08",329],
+      ["bw10","Plasma Blast","Black & White · 2013","2013-08-14",275.5],
+      ["bw11","Legendary Treasures","Black & White · 2013","2013-11-08",392.5],
+      ["xy1","XY","XY · 2014","2014-02-05",140.5],
+      ["xy3","Furious Fists","XY · 2014","2014-08-13",81.5],
+      ["xy5","Primal Clash","XY · 2015","2015-02-04",96.5],
+      ["dc1","Double Crisis","XY · mini-extension 2015","2015-03-25",452.5,7],
+      ["xy7","Ancient Origins","XY · 2015","2015-08-12",153],
+      ["xy8","BREAKthrough","XY · 2015","2015-11-04",67.5],
+      ["xy9","BREAKpoint","XY · 2016","2016-02-03",51.5],
+      ["xy10","Fates Collide","XY · 2016","2016-05-02",47],
+      ["xy11","Steam Siege","XY · 2016","2016-08-03",34],
+      ["sm1","Sun & Moon","Soleil & Lune · 2017","2017-02-03",22],
+      ["sm2","Guardians Rising","Soleil & Lune · 2017","2017-05-05",38],
+      ["sm3","Burning Shadows","Soleil & Lune · 2017","2017-08-04",30.5],
+      ["sm3.5","Shining Legends","Soleil & Lune · mini-extension 2017","2017-10-06",113],
+      ["sm4","Crimson Invasion","Soleil & Lune · 2017","2017-11-03",19],
+      ["sm5","Ultra Prism","Soleil & Lune · 2018","2018-02-02",51],
+      ["sm6","Forbidden Light","Soleil & Lune · 2018","2018-05-04",52],
+      ["sm7","Celestial Storm","Soleil & Lune · 2018","2018-08-03",72.5],
+      ["sm7.5","Dragon Majesty","Soleil & Lune · mini-extension 2018","2018-09-07",116.5],
+      ["sm8","Lost Thunder","Soleil & Lune · 2018","2018-11-02",55],
+      ["det1","Detective Pikachu","Soleil & Lune · mini-extension 2019","2019-04-05",24.5,4],
+      ["sm10","Unbroken Bonds","Soleil & Lune · 2019","2019-05-03",67.5],
+      ["sm11","Unified Minds","Soleil & Lune · 2019","2019-08-02",81.5],
+      ["sm115","Hidden Fates","Soleil & Lune · mini-extension 2019","2019-08-23",46.5],
+      ["swsh1","Sword & Shield","Épée & Bouclier · 2020","2020-02-07",12],
+      ["swsh3","Darkness Ablaze","Épée & Bouclier · 2020","2020-08-14",10.5],
+      ["swsh3.5","Champion's Path","Épée & Bouclier · mini-extension 2020","2020-09-25",20],
+      ["swsh4","Vivid Voltage","Épée & Bouclier · 2020","2020-11-13",10.5],
+      ["swsh10.5","Pokémon GO","Épée & Bouclier · mini-extension 2022","2022-07-01",16],
+      ["sv10.5b","Black Bolt","Écarlate & Violet · 2025","2025-07-18",14],
+      ["sv10.5w","White Flare","Écarlate & Violet · 2025","2025-07-18",13],
+      ["pop1","POP Series 1","POP · 2004","2004-09-01",145,2],
+      ["pop2","POP Series 2","POP · 2004","2004-12-01",147,2],
+      ["pop3","POP Series 3","POP · 2005","2005-09-01",194,2],
+      ["pop4","POP Series 4","POP · 2006","2006-03-01",198.5,2],
+      ["pop6","POP Series 6","POP · 2007","2007-03-01",47.5,2],
+      ["pop8","POP Series 8","POP · 2008","2008-03-01",30,2]
+    ];
+    const SET_PALETTES=[["#c87567","#70466a"],["#65a5b8","#374b82"],["#d3ae67","#654c80"],["#829b72","#3c5664"],["#ab76b6","#4c477f"],["#d8884e","#754760"],["#7793d2","#424976"],["#65a58f","#3f6376"]];
+    SETS.push(...EXTRA_SETS.map(([id,name,subtitle,releaseDate,price,packSize],index)=>({
+      id,name,subtitle,releaseDate,price,...(packSize?{packSize}:{}),
+      colors:SET_PALETTES[index%SET_PALETTES.length],tcgdex:{language:"en",setId:id}
+    })));
     const STORAGE_KEY = "crown-cards-save-v1";
     const DAILY_KEY = "crown-cards-daily-v1";
     const LOCAL_BACKUP_KEY = "crown-cards-local-backup-v1";
@@ -536,7 +617,9 @@ language sql
 immutable
 set search_path = ''
 as $body$
-  select case when p_set_id = 'cel25' then 4 when p_set_id in ('me55','M2a','M4') then 5 when public.catalog_pack_price(p_set_id) is not null then 10 else null end;
+  select case p_set_id
+    ${SETS.filter(set=>packSizeFor(set)!==10).map(set=>`when '${set.id.replace(/'/g,"''")}' then ${packSizeFor(set)}`).join("\n    ")}
+    else case when public.catalog_pack_price(p_set_id) is not null then 10 else null end end;
 $body$;
 revoke all on function public.catalog_pack_size(text) from public, anon, authenticated;
 grant execute on function public.catalog_pack_size(text) to service_role;`;
@@ -1923,7 +2006,11 @@ $assign_admin$;`;
     function packSizeFor(set){return set.packSize|| (set.tcgdex&&set.tcgdex.language==="ja"?5:10);}
     function packSlotsFor(set){
       const count=packSizeFor(set);
-      return count===5?{common:3,reverse:1}: {common:count-3,reverse:2};
+      if(count===5)return {common:3,reverse:1};
+      if(count===4)return {common:1,reverse:2};
+      if(count===3)return {common:1,reverse:1};
+      if(count===2)return set.id.startsWith("pop")?{common:1,reverse:0}:{common:0,reverse:1};
+      return {common:count-3,reverse:2};
     }
     function roundedPrice(value){return Math.round((Number(value)+Number.EPSILON)*100)/100;}
     function fallbackSetOffers(set){
@@ -2170,7 +2257,7 @@ $assign_admin$;`;
       document.getElementById("pack-card-count").textContent=`${packSizeFor(set)} CARTES`;
       document.getElementById("selected-pack-count").textContent=`${packSizeFor(set)} cartes`;
       document.getElementById("selected-reverse-count").textContent=String(slots.reverse);
-      document.querySelector("#hit-pile-mode + span .muted").textContent=`Empile les 3 dernières cartes de chaque booster. Les ${packSizeFor(set)-3} premières restent dans le classeur.`;
+      document.querySelector("#hit-pile-mode + span .muted").textContent="Révèle les cartes reverse et le hit de chaque booster ; les communes restent dans le classeur.";
       renderProductOptions(set);
       const art=document.getElementById("pack-art");
       art.style.background=`linear-gradient(145deg,${set.colors[0]}40,${set.colors[1]}70)`;
@@ -2366,7 +2453,7 @@ $assign_admin$;`;
     }
     function revealQueueFor(pulls,hitPileMode){
       const packs=[...new Set(pulls.map(card=>card.packNumber))];
-      return hitPileMode?packs.flatMap(packNumber=>pulls.filter(card=>card.packNumber===packNumber).slice(-3)):pulls;
+      return hitPileMode?packs.flatMap(packNumber=>pulls.filter(card=>card.packNumber===packNumber&&card.kind!=="common")):pulls;
     }
     function preloadInitialReveal(pulls,hitPileMode){
       revealQueueFor(pulls,hitPileMode).slice(0,3).forEach(preloadCardImage);
@@ -2577,7 +2664,7 @@ $assign_admin$;`;
       }
       document.getElementById("reveal-subtitle").textContent=`${hitPileMode?"Hit Pile":"Booster "+current.packNumber} · carte ${index+1} sur ${queue.length}`;
       document.getElementById("opening-message").textContent=hitPileMode?`Hit Pile · ${index+1} / ${queue.length}`:`Booster ${current.packNumber} · ${index+1} / ${queue.length}`;
-      document.getElementById("opening-hint").textContent=hitPileMode?"Les 3 dernières cartes de chaque booster · glissez dans n’importe quelle direction":"Glissez dans n’importe quelle direction avec le doigt ou la souris";
+      document.getElementById("opening-hint").textContent=hitPileMode?"Cartes reverse et hit de chaque booster · glissez dans n’importe quelle direction":"Glissez dans n’importe quelle direction avec le doigt ou la souris";
       currentValue.textContent=`Carte révélée : ${cardPriceText(current)}${cardPriceLabel(current)}`;
       if(current.value>=100)priceBadge.classList.add("price-jackpot");
       else if(current.value>=20)priceBadge.classList.add("price-hit");

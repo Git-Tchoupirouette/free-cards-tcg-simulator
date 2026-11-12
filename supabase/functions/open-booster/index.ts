@@ -5,7 +5,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PACK_SIZES: Record<string, number> = { cel25: 4, me55: 5, M2a: 5, M4: 5 };
+const PACK_SIZES: Record<string, number> = {
+  cel25: 4, me55: 5, M2a: 5, M4: 5, dc1: 7, det1: 4,
+  pop1: 2, pop2: 2, pop3: 2, pop4: 2, pop6: 2, pop8: 2,
+};
 const SET_IDS: Record<string, string> = {};
 const TCGDEX_SET_IDS: Record<string, string> = {
   base1: "base1", swsh7: "swsh7", swsh12pt5: "swsh12.5", sv3pt5: "sv03.5",
@@ -17,7 +20,23 @@ const TCGDEX_SET_IDS: Record<string, string> = {
   swsh5: "swsh5", sm12: "sm12", sm9: "sm9", xy12: "xy12", xy4: "xy4",
   xy2: "xy2", swsh11: "swsh11", swsh8: "swsh8", swsh6: "swsh6",
   cel25: "cel25", sv4pt5: "sv04.5", sv9: "sv09", sv10: "sv10",
-  me55: "30th", xy6: "xy6",
+  me55: "30th", me06: "me06", xy6: "xy6",
+  base4: "base4", base3: "base3", base2: "base2", base5: "base5",
+  gym1: "gym1", gym2: "gym2", neo1: "neo1", neo2: "neo2",
+  ex1: "ex1", ex3: "ex3", ex5: "ex5", ex6: "ex6", ex13: "ex13",
+  ex14: "ex14", ex16: "ex16", dp1: "dp1", dp2: "dp2", dp3: "dp3",
+  dp4: "dp4", dp7: "dp7", pl1: "pl1", pl2: "pl2", pl3: "pl3",
+  pl4: "pl4", hgss1: "hgss1", col1: "col1", bw1: "bw1", bw2: "bw2",
+  bw3: "bw3", bw4: "bw4", bw5: "bw5", bw6: "bw6", bw7: "bw7",
+  bw8: "bw8", bw9: "bw9", bw10: "bw10", bw11: "bw11", xy1: "xy1",
+  xy3: "xy3", xy5: "xy5", dc1: "dc1", xy7: "xy7", xy8: "xy8",
+  xy9: "xy9", xy10: "xy10", xy11: "xy11", sm1: "sm1", sm2: "sm2",
+  sm3: "sm3", "sm3.5": "sm3.5", sm4: "sm4", sm5: "sm5", sm6: "sm6",
+  sm7: "sm7", "sm7.5": "sm7.5", sm8: "sm8", det1: "det1", sm10: "sm10",
+  sm11: "sm11", sm115: "sm115", swsh1: "swsh1", swsh3: "swsh3",
+  "swsh3.5": "swsh3.5", swsh4: "swsh4", "swsh10.5": "swsh10.5",
+  "sv10.5b": "sv10.5b", "sv10.5w": "sv10.5w", pop1: "pop1", pop2: "pop2",
+  pop3: "pop3", pop4: "pop4", pop6: "pop6", pop8: "pop8",
 };
 const TCGDEX_LANGUAGES: Record<string, string> = { M2a: "ja", M4: "ja" };
 const PACK_PRICES: Record<string, number> = {
@@ -27,7 +46,21 @@ const PACK_PRICES: Record<string, number> = {
   sv6pt5: 12.5, sv5: 10.5, sv4: 9, sv1: 9, swsh12: 15, swsh10: 10.5,
   swsh9: 15, swsh2: 11.5, swsh5: 10, sm12: 72, sm9: 325, xy12: 71.5,
   xy4: 229.5, xy2: 162, swsh11: 17.5, swsh8: 19.5, swsh6: 12, cel25: 26.5,
-  sv4pt5: 24.5, sv9: 6.5, sv10: 8.5, me55: 10, xy6: 88.5,
+  sv4pt5: 24.5, sv9: 6.5, sv10: 8.5, me55: 10, me06: 6.5, xy6: 88.5,
+  base4: 459.5, base3: 340, base2: 327.5, base5: 329, gym1: 279,
+  gym2: 420, neo1: 632, neo2: 1500, ex1: 800, ex3: 1125, ex5: 800,
+  ex6: 1013, ex13: 1902, ex14: 1650, ex16: 1000, dp1: 304, dp2: 340,
+  dp3: 628, dp4: 347.5, dp7: 596.5, pl1: 390, pl2: 1000, pl3: 737.5,
+  pl4: 568, hgss1: 450, col1: 1115, bw1: 188, bw2: 112.5, bw3: 169,
+  bw4: 383, bw5: 397, bw6: 366, bw7: 246, bw8: 651, bw9: 329,
+  bw10: 275.5, bw11: 392.5, xy1: 140.5, xy3: 81.5, xy5: 96.5,
+  dc1: 452.5, xy7: 153, xy8: 67.5, xy9: 51.5, xy10: 47, xy11: 34,
+  sm1: 22, sm2: 38, sm3: 30.5, "sm3.5": 113, sm4: 19, sm5: 51,
+  sm6: 52, sm7: 72.5, "sm7.5": 116.5, sm8: 55, det1: 24.5,
+  sm10: 67.5, sm11: 81.5, sm115: 46.5, swsh1: 12, swsh3: 10.5,
+  "swsh3.5": 20, swsh4: 10.5, "swsh10.5": 16, "sv10.5b": 14,
+  "sv10.5w": 13, pop1: 145, pop2: 147, pop3: 194, pop4: 198.5,
+  pop6: 47.5, pop8: 30,
 };
 
 type ApiCard = {
@@ -208,6 +241,11 @@ async function loadCards(setId: string): Promise<ApiCard[]> {
 
 function generatePulls(cards: ApiCard[], setId: string, quantity: number) {
   const packSize = PACK_SIZES[setId] || 10;
+  const slots = packSize === 5 ? { common: 3, reverse: 1 }
+    : packSize === 4 ? { common: 1, reverse: 2 }
+      : packSize === 3 ? { common: 1, reverse: 1 }
+        : packSize === 2 ? setId.startsWith("pop") ? { common: 1, reverse: 0 } : { common: 0, reverse: 1 }
+          : { common: packSize - 3, reverse: 2 };
   const basics = cards.filter(isBasic);
   const reverses = cards.filter(isReverse);
   const classics = cards.filter(isClassicHit);
@@ -216,8 +254,8 @@ function generatePulls(cards: ApiCard[], setId: string, quantity: number) {
   const rareFallback = cards.filter((card) => !isBasic(card));
   const pulls = [];
   for (let packNumber = 1; packNumber <= quantity; packNumber++) {
-    for (let index = 0; index < packSize - 3; index++) pulls.push(toPull(choose(basics.length ? basics : cards), setId, "common", packNumber));
-    for (let index = 0; index < 2; index++) pulls.push(toPull(choose(reverses.length ? reverses : cards), setId, "reverse", packNumber));
+    for (let index = 0; index < slots.common; index++) pulls.push(toPull(choose(basics.length ? basics : cards), setId, "common", packNumber));
+    for (let index = 0; index < slots.reverse; index++) pulls.push(toPull(choose(reverses.length ? reverses : cards), setId, "reverse", packNumber));
     const roll = Math.random();
     const pool = roll < 0.7
       ? classics
