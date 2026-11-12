@@ -21,13 +21,13 @@ const TCGDEX_SET_IDS: Record<string, string> = {
 };
 const TCGDEX_LANGUAGES: Record<string, string> = { M2a: "ja", M4: "ja" };
 const PACK_PRICES: Record<string, number> = {
-  base1: 300, swsh7: 12, swsh12pt5: 8, sv3pt5: 6.5, sv6: 5, swsh45: 7,
-  sv3: 4.5, sv2: 4.5, g1: 15, sv7: 5, M2a: 8, "me02.5": 8, M4: 6,
-  me04: 6, me5: 8, me3: 8, me2: 12.42, me1: 10, sv8pt5: 12, sv8: 8,
-  sv6pt5: 5, sv5: 5, sv4: 5, sv1: 4.5, swsh12: 5, swsh10: 5,
-  swsh9: 7, swsh2: 8, swsh5: 5, sm12: 20, sm9: 50, xy12: 20,
-  xy4: 35, xy2: 25, swsh11: 8, swsh8: 8, swsh6: 8, cel25: 12,
-  sv4pt5: 12, sv9: 6, sv10: 9, me55: 15, xy6: 20,
+  base1: 875, swsh7: 42.5, swsh12pt5: 26, sv3pt5: 27, sv6: 9.5, swsh45: 18,
+  sv3: 12.5, sv2: 15.5, g1: 335, sv7: 11, M2a: 8, "me02.5": 10.5, M4: 2.5,
+  me04: 5.5, me5: 6, me3: 5.5, me2: 12, me1: 9, sv8pt5: 13.5, sv8: 9,
+  sv6pt5: 12.5, sv5: 10.5, sv4: 9, sv1: 9, swsh12: 15, swsh10: 10.5,
+  swsh9: 15, swsh2: 11.5, swsh5: 10, sm12: 72, sm9: 325, xy12: 71.5,
+  xy4: 229.5, xy2: 162, swsh11: 17.5, swsh8: 19.5, swsh6: 12, cel25: 26.5,
+  sv4pt5: 24.5, sv9: 6.5, sv10: 8.5, me55: 10, xy6: 88.5,
 };
 
 type ApiCard = {

@@ -145,7 +145,7 @@
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
           <section>
-            <div class="mb-3 flex flex-wrap items-end justify-between gap-3"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><button id="shop-back-years" type="button" class="hidden shrink-0 items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-white/75 hover:bg-white/[.07]"><i data-lucide="arrow-left" class="h-3.5 w-3.5"></i>Années</button><h2 id="shop-heading" class="display text-xl font-semibold">Choisissez votre booster</h2></div><p id="set-count" class="muted mt-1 text-xs">Choisissez une année pour parcourir les extensions · prix fixes du catalogue de simulation</p></div><label class="relative block w-full sm:w-72"><i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40"></i><input id="set-search" type="search" placeholder="Rechercher un set, une année…" class="w-full rounded-xl border border-white/10 bg-white/[.035] py-2.5 pl-9 pr-3 text-xs text-white placeholder:text-white/35"></label></div>
+            <div class="mb-3 flex flex-wrap items-end justify-between gap-3"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><button id="shop-back-years" type="button" class="hidden shrink-0 items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-white/75 hover:bg-white/[.07]"><i data-lucide="arrow-left" class="h-3.5 w-3.5"></i>Années</button><h2 id="shop-heading" class="display text-xl font-semibold">Choisissez votre booster</h2></div><p id="set-count" class="muted mt-1 text-xs">Choisissez une année pour parcourir les extensions · prix arrondis du marché USD</p></div><label class="relative block w-full sm:w-72"><i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40"></i><input id="set-search" type="search" placeholder="Rechercher un set, une année…" class="w-full rounded-xl border border-white/10 bg-white/[.035] py-2.5 pl-9 pr-3 text-xs text-white placeholder:text-white/35"></label></div>
             <div id="set-list" class="min-w-0"></div>
           </section>
           <aside class="lg:sticky lg:top-6 lg:self-start">
@@ -159,7 +159,7 @@
               <div class="p-5">
                 <div class="flex items-start justify-between gap-3"><div><p id="selected-era" class="muted text-[10px] uppercase tracking-[.18em]">Sélectionnez un set</p><h2 id="selected-name" class="display mt-1 text-xl font-semibold">Votre prochain pack</h2></div><div class="text-right"><span id="selected-price-label" class="muted text-[10px] uppercase">Prix / booster</span><div id="selected-price" class="display gold text-xl font-semibold">—</div></div></div>
                 <div class="mt-4 grid grid-cols-3 gap-2 border-y border-white/[.07] py-3 text-center"><div><span class="muted block text-[9px] uppercase">Par booster</span><b id="selected-pack-count" class="text-xs">10 cartes</b></div><div><span class="muted block text-[9px] uppercase">Reverse</span><b id="selected-reverse-count" class="text-xs">2</b></div><div><span class="muted block text-[9px] uppercase">Hit simulé*</span><b class="text-xs">1</b></div></div>
-                <label class="mt-4 block text-xs text-white/70">Produit<select id="product-type" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white"><option value="booster">Booster individuel</option><option value="bundle">Booster Bundle · 6 boosters</option><option value="display">Display · 36 boosters</option></select></label><p id="product-price-note" class="muted mt-1 min-h-4 text-[10px] leading-4" aria-live="polite">Les cours du marché se chargent avec l’extension.</p>
+                <label class="mt-4 block text-xs text-white/70">Produit<select id="product-type" class="mt-1 w-full rounded-lg border border-white/10 bg-[#141722] px-3 py-2.5 text-sm text-white"><option value="booster">Booster individuel</option><option value="bundle">Booster Bundle · 6 boosters</option><option value="display">Display · 36 boosters</option></select></label><p id="product-price-note" class="muted mt-1 min-h-4 text-[10px] leading-4" aria-live="polite">Prix indicatifs arrondis à partir du marché USD ; estimés pour les sets japonais.</p>
                 <div class="mt-4 flex items-center justify-between"><label id="quantity-label" for="booster-quantity" class="muted text-xs">Nombre de boosters</label><div class="flex items-center gap-3"><button id="quantity-minus" type="button" aria-label="Diminuer le nombre de produits" class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-white/75 hover:bg-white/10"><i data-lucide="minus" class="h-4 w-4"></i></button><select id="booster-quantity" class="min-w-[74px] rounded-lg border border-white/10 bg-[#141722] px-3 py-2 text-center text-sm text-white" aria-label="Nombre de produits"></select><button id="quantity-plus" type="button" aria-label="Augmenter le nombre de produits" class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-white/75 hover:bg-white/10"><i data-lucide="plus" class="h-4 w-4"></i></button></div></div>
                 <label class="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-violet-300/15 bg-violet-300/[.045] p-3"><input id="hit-pile-mode" type="checkbox" class="mt-0.5 h-4 w-4 accent-violet-300"><span><span class="block text-xs font-semibold text-violet-100">Mode Hit Pile</span><span class="muted mt-1 block text-[10px] leading-4">Empile les 3 dernières cartes de chaque booster. Les 7 autres restent dans le classeur.</span></span></label>
                 <div class="mt-3 flex items-center justify-between text-xs"><span class="muted">Total</span><strong id="total-price" class="display gold text-base">—</strong></div>
@@ -171,7 +171,7 @@
             <p class="muted mt-3 px-1 text-[10px] leading-4">Simulation éducative non affiliée à Pokémon, Nintendo ou TCGplayer. Valeurs indicatives ; aucune transaction réelle.</p>
           </aside>
         </div>
-        <div class="muted mt-8 border-t border-white/[.07] pt-4 text-center text-[10px]">FREE CARDS · <span class="text-amber-200">BETA 0.9.4</span> · Simulateur fan-made à but éducatif · Les prix boutique sont fixes dans le catalogue de simulation.</div>
+        <div class="muted mt-8 border-t border-white/[.07] pt-4 text-center text-[10px]">FREE CARDS · <span class="text-amber-200">BETA 0.9.5</span> · Simulateur fan-made à but éducatif · Prix USD arrondis au 12 nov. 2026 ; estimés pour les sets japonais.</div>
       </section>
 
       <section id="binder-panel" class="tab-panel" hidden>
@@ -288,49 +288,49 @@
   <script>
     "use strict";
     const SETS = [
-      {id:"base1",name:"Set de Base",subtitle:"Wizards · 1999",releaseDate:"1999-01-09",price:300,colors:["#d7ab62","#513f82"],tcgdex:{language:"en",setId:"base1"}},
-      {id:"swsh7",name:"Évolution Céleste",subtitle:"Épée et Bouclier",releaseDate:"2021-08-27",price:12,colors:["#a866da","#344e87"],tcgdex:{language:"en",setId:"swsh7"}},
-      {id:"swsh12pt5",name:"Zénith Suprême",subtitle:"Épée et Bouclier",releaseDate:"2023-01-20",price:8,colors:["#e3ad63","#6a438e"],tcgdex:{language:"en",setId:"swsh12.5"}},
-      {id:"sv3pt5",name:"Écarlate et Violet : 151",subtitle:"Collection 151",releaseDate:"2023-09-22",price:6.5,colors:["#64bad5","#714984"],tcgdex:{language:"en",setId:"sv03.5"}},
-      {id:"sv6",name:"Mascarade Crépusculaire",subtitle:"Écarlate et Violet",releaseDate:"2024-05-24",price:5,colors:["#55aa89","#304978"],tcgdex:{language:"en",setId:"sv06"}},
-      {id:"swsh45",name:"Destinées Radieuses",subtitle:"Épée et Bouclier",releaseDate:"2021-02-19",price:7,colors:["#67a9db","#794b8c"],tcgdex:{language:"en",setId:"swsh4.5"}},
-      {id:"sv3",name:"Flammes Obsidiennes",subtitle:"Écarlate et Violet",releaseDate:"2023-08-11",price:4.5,colors:["#dc8250","#784269"],tcgdex:{language:"en",setId:"sv03"}},
-      {id:"sv2",name:"Évolutions à Paldia",subtitle:"Écarlate et Violet",releaseDate:"2023-06-09",price:4.5,colors:["#6aa3d1","#664b9c"],tcgdex:{language:"en",setId:"sv02"}},
-      {id:"g1",name:"Générations",subtitle:"XY · 2016",releaseDate:"2016-02-22",price:15,colors:["#e77a85","#7950a4"],tcgdex:{language:"en",setId:"g1"}},
-      {id:"sv7",name:"Couronne Stellaire",subtitle:"Écarlate et Violet",releaseDate:"2024-08-02",price:5,colors:["#8e9ce5","#3c477c"],tcgdex:{language:"en",setId:"sv07"}},
+      {id:"base1",name:"Set de Base",subtitle:"Wizards · 1999",releaseDate:"1999-01-09",price:875,colors:["#d7ab62","#513f82"],tcgdex:{language:"en",setId:"base1"}},
+      {id:"swsh7",name:"Évolution Céleste",subtitle:"Épée et Bouclier",releaseDate:"2021-08-27",price:42.5,colors:["#a866da","#344e87"],tcgdex:{language:"en",setId:"swsh7"}},
+      {id:"swsh12pt5",name:"Zénith Suprême",subtitle:"Épée et Bouclier",releaseDate:"2023-01-20",price:26,colors:["#e3ad63","#6a438e"],tcgdex:{language:"en",setId:"swsh12.5"}},
+      {id:"sv3pt5",name:"Écarlate et Violet : 151",subtitle:"Collection 151",releaseDate:"2023-09-22",price:27,colors:["#64bad5","#714984"],tcgdex:{language:"en",setId:"sv03.5"}},
+      {id:"sv6",name:"Mascarade Crépusculaire",subtitle:"Écarlate et Violet",releaseDate:"2024-05-24",price:9.5,colors:["#55aa89","#304978"],tcgdex:{language:"en",setId:"sv06"}},
+      {id:"swsh45",name:"Destinées Radieuses",subtitle:"Épée et Bouclier",releaseDate:"2021-02-19",price:18,colors:["#67a9db","#794b8c"],tcgdex:{language:"en",setId:"swsh4.5"}},
+      {id:"sv3",name:"Flammes Obsidiennes",subtitle:"Écarlate et Violet",releaseDate:"2023-08-11",price:12.5,colors:["#dc8250","#784269"],tcgdex:{language:"en",setId:"sv03"}},
+      {id:"sv2",name:"Évolutions à Paldia",subtitle:"Écarlate et Violet",releaseDate:"2023-06-09",price:15.5,colors:["#6aa3d1","#664b9c"],tcgdex:{language:"en",setId:"sv02"}},
+      {id:"g1",name:"Générations",subtitle:"XY · 2016",releaseDate:"2016-02-22",price:335,colors:["#e77a85","#7950a4"],tcgdex:{language:"en",setId:"g1"}},
+      {id:"sv7",name:"Couronne Stellaire",subtitle:"Écarlate et Violet",releaseDate:"2024-08-02",price:11,colors:["#8e9ce5","#3c477c"],tcgdex:{language:"en",setId:"sv07"}},
       {id:"M2a",name:"MEGA Dream ex · Japonais",subtitle:"Japonais · M2.5 · MEGA Dream ex",releaseDate:"2025-11-28",price:8,displayPackCount:10,colors:["#cf6b9b","#503a79"],tcgdex:{language:"ja",setId:"M2a"}},
-      {id:"me02.5",name:"Ascended Heroes",subtitle:"International · M02.5 · anglais",releaseDate:"2026-01-30",price:8,colors:["#9972db","#394873"],tcgdex:{language:"en",setId:"me02.5"}},
-      {id:"M4",name:"Ninja Spinner · Japonais",subtitle:"Japonais · M4 · Ninja Spinner",releaseDate:"2026-03-13",price:6,displayPackCount:30,colors:["#4a9da8","#293c72"],tcgdex:{language:"ja",setId:"M4"}},
-      {id:"me04",name:"Chaos Rising",subtitle:"International · M04 · anglais",releaseDate:"2026-05-22",price:6,colors:["#e18755","#593c77"],tcgdex:{language:"en",setId:"me04"}},
-      {id:"me5",name:"Pitch Black",subtitle:"Méga-Évolution · juillet 2026",releaseDate:"2026-07-17",price:8,colors:["#322b52","#16192e"],tcgdex:{language:"en",setId:"me05"}},
-      {id:"me3",name:"Perfect Order",subtitle:"Méga-Évolution · mars 2026",releaseDate:"2026-03-27",price:8,colors:["#84a06b","#263e49"],tcgdex:{language:"en",setId:"me03"}},
-      {id:"me2",name:"Phantasmal Flames",subtitle:"Méga-Évolution · novembre 2025",releaseDate:"2025-11-14",price:12.42,colors:["#e2764f","#44234f"],tcgdex:{language:"en",setId:"me02"}},
-      {id:"me1",name:"Mega Evolution",subtitle:"Méga-Évolution · septembre 2025",releaseDate:"2025-09-26",price:10,colors:["#e4b857","#493675"],tcgdex:{language:"en",setId:"me01"}},
-      {id:"sv8pt5",name:"Prismatic Evolutions",subtitle:"Écarlate et Violet · janvier 2025",releaseDate:"2025-01-17",price:12,colors:["#d7a8e9","#3d4f92"],tcgdex:{language:"en",setId:"sv08.5"}},
-      {id:"sv8",name:"Surging Sparks",subtitle:"Écarlate et Violet · novembre 2024",releaseDate:"2024-11-08",price:8,colors:["#e6b548","#2d5993"],tcgdex:{language:"en",setId:"sv08"}},
-      {id:"sv6pt5",name:"Shrouded Fable",subtitle:"Écarlate et Violet · août 2024",releaseDate:"2024-08-02",price:5,colors:["#8573c7","#292743"],tcgdex:{language:"en",setId:"sv06.5"}},
-      {id:"sv5",name:"Temporal Forces",subtitle:"Écarlate et Violet · mars 2024",releaseDate:"2024-03-22",price:5,colors:["#6c9a8e","#44366e"],tcgdex:{language:"en",setId:"sv05"}},
-      {id:"sv4",name:"Paradox Rift",subtitle:"Écarlate et Violet · novembre 2023",releaseDate:"2023-11-03",price:5,colors:["#bd7651","#3d527d"],tcgdex:{language:"en",setId:"sv04"}},
-      {id:"sv1",name:"Scarlet & Violet",subtitle:"Écarlate et Violet · mars 2023",releaseDate:"2023-03-31",price:4.5,colors:["#df7156","#5476a2"],tcgdex:{language:"en",setId:"sv01"}},
-      {id:"swsh12",name:"Silver Tempest",subtitle:"Épée et Bouclier · novembre 2022",releaseDate:"2022-11-11",price:5,colors:["#85c5e5","#5c4d91"],tcgdex:{language:"en",setId:"swsh12"}},
-      {id:"swsh10",name:"Astral Radiance",subtitle:"Épée et Bouclier · mai 2022",releaseDate:"2022-05-27",price:5,colors:["#95a6e2","#473d79"],tcgdex:{language:"en",setId:"swsh10"}},
-      {id:"swsh9",name:"Brilliant Stars",subtitle:"Épée et Bouclier · février 2022",releaseDate:"2022-02-25",price:7,colors:["#f0c875","#b45d61"],tcgdex:{language:"en",setId:"swsh9"}},
-      {id:"swsh2",name:"Rebel Clash",subtitle:"Épée et Bouclier · mai 2020",releaseDate:"2020-05-01",price:8,colors:["#d56f81","#463c77"],tcgdex:{language:"en",setId:"swsh2"}},
-      {id:"swsh5",name:"Battle Styles",subtitle:"Épée et Bouclier · mars 2021",releaseDate:"2021-03-19",price:5,colors:["#dc8250","#46527d"],tcgdex:{language:"en",setId:"swsh5"}},
-      {id:"sm12",name:"Cosmic Eclipse",subtitle:"Soleil et Lune · novembre 2019",releaseDate:"2019-11-01",price:20,colors:["#62a9cf","#7c4881"],tcgdex:{language:"en",setId:"sm12"}},
-      {id:"sm9",name:"Team Up",subtitle:"Soleil et Lune · février 2019",releaseDate:"2019-02-01",price:50,colors:["#5c85d6","#c15b73"],tcgdex:{language:"en",setId:"sm9"}},
-      {id:"xy12",name:"Evolutions",subtitle:"XY · novembre 2016",releaseDate:"2016-11-02",price:20,colors:["#dd8a59","#606ca3"],tcgdex:{language:"en",setId:"xy12"}},
-      {id:"xy4",name:"Phantom Forces",subtitle:"XY · novembre 2014",releaseDate:"2014-11-05",price:35,colors:["#8a71bf","#293853"],tcgdex:{language:"en",setId:"xy4"}},
-      {id:"xy2",name:"Flashfire",subtitle:"XY · mai 2014",releaseDate:"2014-05-07",price:25,colors:["#e28d46","#7c4d5b"],tcgdex:{language:"en",setId:"xy2"}},
-      {id:"swsh11",name:"Origine Perdue",subtitle:"Épée et Bouclier · septembre 2022",releaseDate:"2022-09-09",price:8,colors:["#8d6ac4","#35486f"],tcgdex:{language:"en",setId:"swsh11"}},
-      {id:"swsh8",name:"Poing de Fusion",subtitle:"Épée et Bouclier · novembre 2021",releaseDate:"2021-11-12",price:8,colors:["#5fa4c4","#373b78"],tcgdex:{language:"en",setId:"swsh8"}},
-      {id:"swsh6",name:"Règne de Glace",subtitle:"Chilling Reign · Épée et Bouclier",releaseDate:"2021-06-18",price:8,colors:["#83b4d1","#485081"],tcgdex:{language:"en",setId:"swsh6"}},
-      {id:"cel25",name:"Célébrations",subtitle:"25e anniversaire · octobre 2021",releaseDate:"2021-10-08",packSize:4,price:12,colors:["#eccb75","#634b9b"],tcgdex:{language:"en",setId:"cel25"}},
-      {id:"sv4pt5",name:"Destinées de Paldea",subtitle:"Écarlate et Violet · janvier 2024",releaseDate:"2024-01-26",price:12,colors:["#bd78cc","#574b9b"],tcgdex:{language:"en",setId:"sv04.5"}},
-      {id:"sv9",name:"Aventures Ensemble",subtitle:"Écarlate et Violet · mars 2025",releaseDate:"2025-03-28",price:6,colors:["#63b4a5","#3d5e8a"],tcgdex:{language:"en",setId:"sv09"}},
-      {id:"sv10",name:"Rivalités Destinées",subtitle:"Écarlate et Violet · mai 2025",releaseDate:"2025-05-30",price:9,colors:["#df7955","#633f73"],tcgdex:{language:"en",setId:"sv10"}},
-      {id:"me55",name:"30th Celebration",subtitle:"Édition 30e anniversaire · septembre 2026",releaseDate:"2026-09-16",packSize:5,price:15,colors:["#e8cf83","#604b95"],tcgdex:{language:"en",setId:"30th"}},
-      {id:"xy6",name:"Roaring Skies · Emerald Break",subtitle:"Version internationale · équivalent japonais XY6",releaseDate:"2015-05-06",price:20,colors:["#70b9d0","#4764a0"],tcgdex:{language:"en",setId:"xy6"}}
+      {id:"me02.5",name:"Ascended Heroes",subtitle:"International · M02.5 · anglais",releaseDate:"2026-01-30",price:10.5,colors:["#9972db","#394873"],tcgdex:{language:"en",setId:"me02.5"}},
+      {id:"M4",name:"Ninja Spinner · Japonais",subtitle:"Japonais · M4 · Ninja Spinner",releaseDate:"2026-03-13",price:2.5,displayPackCount:30,colors:["#4a9da8","#293c72"],tcgdex:{language:"ja",setId:"M4"}},
+      {id:"me04",name:"Chaos Rising",subtitle:"International · M04 · anglais",releaseDate:"2026-05-22",price:5.5,colors:["#e18755","#593c77"],tcgdex:{language:"en",setId:"me04"}},
+      {id:"me5",name:"Pitch Black",subtitle:"Méga-Évolution · juillet 2026",releaseDate:"2026-07-17",price:6,colors:["#322b52","#16192e"],tcgdex:{language:"en",setId:"me05"}},
+      {id:"me3",name:"Perfect Order",subtitle:"Méga-Évolution · mars 2026",releaseDate:"2026-03-27",price:5.5,colors:["#84a06b","#263e49"],tcgdex:{language:"en",setId:"me03"}},
+      {id:"me2",name:"Phantasmal Flames",subtitle:"Méga-Évolution · novembre 2025",releaseDate:"2025-11-14",price:12,colors:["#e2764f","#44234f"],tcgdex:{language:"en",setId:"me02"}},
+      {id:"me1",name:"Mega Evolution",subtitle:"Méga-Évolution · septembre 2025",releaseDate:"2025-09-26",price:9,colors:["#e4b857","#493675"],tcgdex:{language:"en",setId:"me01"}},
+      {id:"sv8pt5",name:"Prismatic Evolutions",subtitle:"Écarlate et Violet · janvier 2025",releaseDate:"2025-01-17",price:13.5,colors:["#d7a8e9","#3d4f92"],tcgdex:{language:"en",setId:"sv08.5"}},
+      {id:"sv8",name:"Surging Sparks",subtitle:"Écarlate et Violet · novembre 2024",releaseDate:"2024-11-08",price:9,colors:["#e6b548","#2d5993"],tcgdex:{language:"en",setId:"sv08"}},
+      {id:"sv6pt5",name:"Shrouded Fable",subtitle:"Écarlate et Violet · août 2024",releaseDate:"2024-08-02",price:12.5,colors:["#8573c7","#292743"],tcgdex:{language:"en",setId:"sv06.5"}},
+      {id:"sv5",name:"Temporal Forces",subtitle:"Écarlate et Violet · mars 2024",releaseDate:"2024-03-22",price:10.5,colors:["#6c9a8e","#44366e"],tcgdex:{language:"en",setId:"sv05"}},
+      {id:"sv4",name:"Paradox Rift",subtitle:"Écarlate et Violet · novembre 2023",releaseDate:"2023-11-03",price:9,colors:["#bd7651","#3d527d"],tcgdex:{language:"en",setId:"sv04"}},
+      {id:"sv1",name:"Scarlet & Violet",subtitle:"Écarlate et Violet · mars 2023",releaseDate:"2023-03-31",price:9,colors:["#df7156","#5476a2"],tcgdex:{language:"en",setId:"sv01"}},
+      {id:"swsh12",name:"Silver Tempest",subtitle:"Épée et Bouclier · novembre 2022",releaseDate:"2022-11-11",price:15,colors:["#85c5e5","#5c4d91"],tcgdex:{language:"en",setId:"swsh12"}},
+      {id:"swsh10",name:"Astral Radiance",subtitle:"Épée et Bouclier · mai 2022",releaseDate:"2022-05-27",price:10.5,colors:["#95a6e2","#473d79"],tcgdex:{language:"en",setId:"swsh10"}},
+      {id:"swsh9",name:"Brilliant Stars",subtitle:"Épée et Bouclier · février 2022",releaseDate:"2022-02-25",price:15,colors:["#f0c875","#b45d61"],tcgdex:{language:"en",setId:"swsh9"}},
+      {id:"swsh2",name:"Rebel Clash",subtitle:"Épée et Bouclier · mai 2020",releaseDate:"2020-05-01",price:11.5,colors:["#d56f81","#463c77"],tcgdex:{language:"en",setId:"swsh2"}},
+      {id:"swsh5",name:"Battle Styles",subtitle:"Épée et Bouclier · mars 2021",releaseDate:"2021-03-19",price:10,colors:["#dc8250","#46527d"],tcgdex:{language:"en",setId:"swsh5"}},
+      {id:"sm12",name:"Cosmic Eclipse",subtitle:"Soleil et Lune · novembre 2019",releaseDate:"2019-11-01",price:72,colors:["#62a9cf","#7c4881"],tcgdex:{language:"en",setId:"sm12"}},
+      {id:"sm9",name:"Team Up",subtitle:"Soleil et Lune · février 2019",releaseDate:"2019-02-01",price:325,colors:["#5c85d6","#c15b73"],tcgdex:{language:"en",setId:"sm9"}},
+      {id:"xy12",name:"Evolutions",subtitle:"XY · novembre 2016",releaseDate:"2016-11-02",price:71.5,colors:["#dd8a59","#606ca3"],tcgdex:{language:"en",setId:"xy12"}},
+      {id:"xy4",name:"Phantom Forces",subtitle:"XY · novembre 2014",releaseDate:"2014-11-05",price:229.5,colors:["#8a71bf","#293853"],tcgdex:{language:"en",setId:"xy4"}},
+      {id:"xy2",name:"Flashfire",subtitle:"XY · mai 2014",releaseDate:"2014-05-07",price:162,colors:["#e28d46","#7c4d5b"],tcgdex:{language:"en",setId:"xy2"}},
+      {id:"swsh11",name:"Origine Perdue",subtitle:"Épée et Bouclier · septembre 2022",releaseDate:"2022-09-09",price:17.5,colors:["#8d6ac4","#35486f"],tcgdex:{language:"en",setId:"swsh11"}},
+      {id:"swsh8",name:"Poing de Fusion",subtitle:"Épée et Bouclier · novembre 2021",releaseDate:"2021-11-12",price:19.5,colors:["#5fa4c4","#373b78"],tcgdex:{language:"en",setId:"swsh8"}},
+      {id:"swsh6",name:"Règne de Glace",subtitle:"Chilling Reign · Épée et Bouclier",releaseDate:"2021-06-18",price:12,colors:["#83b4d1","#485081"],tcgdex:{language:"en",setId:"swsh6"}},
+      {id:"cel25",name:"Célébrations",subtitle:"25e anniversaire · octobre 2021",releaseDate:"2021-10-08",packSize:4,price:26.5,colors:["#eccb75","#634b9b"],tcgdex:{language:"en",setId:"cel25"}},
+      {id:"sv4pt5",name:"Destinées de Paldea",subtitle:"Écarlate et Violet · janvier 2024",releaseDate:"2024-01-26",price:24.5,colors:["#bd78cc","#574b9b"],tcgdex:{language:"en",setId:"sv04.5"}},
+      {id:"sv9",name:"Aventures Ensemble",subtitle:"Écarlate et Violet · mars 2025",releaseDate:"2025-03-28",price:6.5,colors:["#63b4a5","#3d5e8a"],tcgdex:{language:"en",setId:"sv09"}},
+      {id:"sv10",name:"Rivalités Destinées",subtitle:"Écarlate et Violet · mai 2025",releaseDate:"2025-05-30",price:8.5,colors:["#df7955","#633f73"],tcgdex:{language:"en",setId:"sv10"}},
+      {id:"me55",name:"30th Celebration",subtitle:"Édition 30e anniversaire · septembre 2026",releaseDate:"2026-09-16",packSize:5,price:10,colors:["#e8cf83","#604b95"],tcgdex:{language:"en",setId:"30th"}},
+      {id:"xy6",name:"Roaring Skies · Emerald Break",subtitle:"Version internationale · équivalent japonais XY6",releaseDate:"2015-05-06",price:88.5,colors:["#70b9d0","#4764a0"],tcgdex:{language:"en",setId:"xy6"}}
     ];
     const STORAGE_KEY = "crown-cards-save-v1";
     const DAILY_KEY = "crown-cards-daily-v1";
@@ -1999,7 +1999,7 @@ $assign_admin$;`;
         document.getElementById("selected-price").textContent=currency(offer.price);
         document.getElementById("selected-price-label").textContent=offer.type==="booster"?"Prix / booster":offer.type==="bundle"?"Prix / bundle":"Prix / display";
         document.getElementById("product-price-note").textContent=offer.type==="booster"
-          ?`Prix catalogue fixe de simulation : ${currency(selectedSet.price)} par booster.`
+          ?`Prix simulé indicatif : ${currency(selectedSet.price)} par booster${selectedSet.tcgdex?.language==="ja"?" (estimation d’import).":" (marché USD arrondi)."}`
           :`${currency(offer.price/offer.packCount)} par booster · remise boutique de ${Math.round(offer.discount*100)} % incluse.`;
       }
       updateQuantityOptions();
@@ -2028,12 +2028,12 @@ $assign_admin$;`;
       backButton.classList.toggle("hidden",!showSetResults);
       backButton.classList.toggle("inline-flex",showSetResults);
       document.getElementById("shop-heading").textContent=activeShopYear?`Extensions · ${activeShopYear}`:searchingYear?`Extensions · ${search}`:searching?"Résultats de recherche":"Choisissez votre booster";
-      document.getElementById("set-count").textContent=showSetResults?`${currentSets.length} extension${currentSets.length===1?"":"s"}${activeShopYear?` en ${activeShopYear}`:""} · prix catalogue fixes`:`${yearEntries.length} année${yearEntries.length===1?"":"s"} · ${SETS.length} extensions · prix catalogue fixes`;
+      document.getElementById("set-count").textContent=showSetResults?`${currentSets.length} extension${currentSets.length===1?"":"s"}${activeShopYear?` en ${activeShopYear}`:""} · prix arrondis du marché USD`:`${yearEntries.length} année${yearEntries.length===1?"":"s"} · ${SETS.length} extensions · prix arrondis du marché USD`;
       const renderSetCard=set=>{
         const price=currency(set.price);
         return `<button class="set-card ${selectedSet===set?"selected":""} flex min-h-[164px] min-w-0 flex-col justify-between gap-3 rounded-xl p-3 text-left sm:min-h-[174px] sm:p-4" data-set-id="${escapeHtml(set.id)}">
         <span class="flex min-w-0 items-start gap-3"><span class="relative flex h-[62px] w-[46px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/15 shadow-lg" style="background:linear-gradient(155deg,${set.colors[0]},${set.colors[1]})"><span class="absolute inset-0 bg-gradient-to-br from-white/25 to-transparent"></span><i data-lucide="${set.special?"target":"sparkles"}" class="relative h-5 w-5 text-white/90"></i></span><span class="min-w-0 flex-1"><span class="block break-words text-sm font-semibold leading-snug">${escapeHtml(set.name)}</span><span class="muted mt-1 block break-words text-[10px] leading-relaxed">${escapeHtml(set.subtitle)}</span></span></span>
-        <span class="block min-w-0 border-t border-white/[.07] pt-2"><span class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"><span class="text-[10px] leading-relaxed text-white/60">${formatReleaseDate(set.releaseDate)} · ${packSizeFor(set)} cartes</span><span class="display shrink-0 text-sm font-semibold gold">${price}</span></span><span class="mt-1 block break-words text-[9px] leading-relaxed text-white/40">Prix catalogue · ${set.tcgdex?`TCGdex ${set.tcgdex.language==="ja"?"japonais":"anglais"} · ${set.tcgdex.setId}`:`API set · ${set.id}`}</span></span>
+        <span class="block min-w-0 border-t border-white/[.07] pt-2"><span class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"><span class="text-[10px] leading-relaxed text-white/60">${formatReleaseDate(set.releaseDate)} · ${packSizeFor(set)} cartes</span><span class="display shrink-0 text-sm font-semibold gold">${price}</span></span><span class="mt-1 block break-words text-[9px] leading-relaxed text-white/40">${set.tcgdex?.language==="ja"?"Estimation d’import":"Prix marché indicatif"} · ${set.tcgdex?`TCGdex ${set.tcgdex.language==="ja"?"japonais":"anglais"} · ${set.tcgdex.setId}`:`API set · ${set.id}`}</span></span>
       </button>`;
       };
       parent.innerHTML=showSetResults?(currentSets.length?`<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2">${currentSets.map(renderSetCard).join("")}</div>`:'<div class="glass rounded-2xl p-8 text-center text-sm text-white/60">Aucune extension ne correspond à cette recherche.</div>'):yearEntries.length?`<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2">${yearEntries.map(([year,sets])=>`<button type="button" class="year-card flex min-w-0 items-center justify-between gap-3 rounded-2xl p-4 text-left sm:p-5" data-shop-year="${escapeHtml(year)}"><span class="min-w-0"><span class="display block text-3xl font-semibold tracking-tight sm:text-4xl">${escapeHtml(year)}</span><span class="muted mt-1 block text-xs">${sets.length} extension${sets.length===1?"":"s"}</span><span class="mt-2 block break-words text-[10px] leading-relaxed text-white/45">${escapeHtml(sets[0].name)}${sets.length>1?` · +${sets.length-1} autre${sets.length===2?"":"s"}`:""}</span></span><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[.04]"><i data-lucide="arrow-right" class="h-4 w-4"></i></span></button>`).join("")}</div>`:'<div class="glass rounded-2xl p-8 text-center text-sm text-white/60">Aucune année ni extension ne correspond à cette recherche.</div>';
