@@ -684,12 +684,13 @@ declare
   v_card jsonb;
 begin
   if v_user_id is null then raise exception 'Connexion requise.'; end if;
-  if p_unique_keys is null or cardinality(p_unique_keys) = 0 or cardinality(p_unique_keys) > 500 then raise exception 'Sélection de cartes invalide.'; end if;
+  if p_unique_keys is null or cardinality(p_unique_keys) = 0 then raise exception 'Sélection de cartes invalide.'; end if;
   select * into v_profile from public.player_profiles where user_id = v_user_id for update;
   if not found then raise exception 'Profil cloud introuvable.'; end if;
   v_state := v_profile.game_state;
   v_inventory := v_state -> 'inventory';
   if jsonb_typeof(v_inventory) is distinct from 'array' then raise exception 'Classeur cloud invalide.'; end if;
+  if cardinality(p_unique_keys) > jsonb_array_length(v_inventory) then raise exception 'Sélection de cartes invalide.'; end if;
   for v_card in select value from jsonb_array_elements(v_inventory) loop
     if (v_card ->> 'uniqueKey') = any(p_unique_keys)
       and coalesce(v_card ->> 'favorite', 'false') <> 'true'
@@ -715,6 +716,70 @@ end;
 $body$;
 revoke all on function public.sell_cards(text[]) from public, anon;
 grant execute on function public.sell_cards(text[]) to authenticated;`;
+    const SUPABASE_SELL_DUPLICATES_SCHEMA=`create or replace function public.sell_duplicate_cards()
+returns jsonb
+language plpgsql security definer set search_path = ''
+as $body$
+declare
+  v_user_id uuid := auth.uid();
+  v_profile public.player_profiles%rowtype;
+  v_state jsonb;
+  v_inventory jsonb;
+  v_remaining jsonb;
+  v_sold_ordinals bigint[];
+  v_proceeds numeric := 0;
+begin
+  if v_user_id is null then raise exception 'Connexion requise.'; end if;
+  select * into v_profile from public.player_profiles where user_id = v_user_id for update;
+  if not found then raise exception 'Profil cloud introuvable.'; end if;
+  v_state := v_profile.game_state;
+  v_inventory := v_state -> 'inventory';
+  if jsonb_typeof(v_inventory) is distinct from 'array' then raise exception 'Classeur cloud invalide.'; end if;
+  with cards as (
+    select
+      entry.value as card,
+      entry.ordinality,
+      lower(coalesce(nullif(entry.value ->> 'id', ''), nullif(entry.value ->> 'number', ''), nullif(entry.value ->> 'name', ''), ''))
+        || '|' || lower(coalesce(entry.value ->> 'setName', '')) as identity,
+      coalesce(entry.value -> 'favorite' = 'true'::jsonb, false) as is_favorite,
+      case
+        when entry.value ->> 'priceSource' in ('tcgplayer', 'cardmarket_trend')
+          and (entry.value ->> 'value') ~ '^[0-9]+([.][0-9]{1,4})?$'
+        then case when (entry.value ->> 'value')::numeric > 0 then (entry.value ->> 'value')::numeric else 0 end
+        else 0
+      end as price_value
+    from jsonb_array_elements(v_inventory) with ordinality as entry(value, ordinality)
+  ), grouped as (
+    select cards.*,
+      count(*) over (partition by identity) as group_size,
+      bool_or(is_favorite) over (partition by identity) as has_favorite
+    from cards
+  ), candidates as (
+    select grouped.*,
+      row_number() over (partition by identity order by ordinality) as sale_order
+    from grouped
+    where group_size > 1 and not is_favorite and price_value > 0
+  ), sold as (
+    select ordinality, price_value
+    from candidates
+    where has_favorite or sale_order > 1
+  )
+  select coalesce(array_agg(ordinality), '{}'::bigint[]), coalesce(sum(price_value), 0)
+    into v_sold_ordinals, v_proceeds
+    from sold;
+  if cardinality(v_sold_ordinals) = 0 or v_proceeds <= 0 then raise exception 'Aucun doublon coté vendable.'; end if;
+  select coalesce(jsonb_agg(entry.value order by entry.ordinality), '[]'::jsonb)
+    into v_remaining
+    from jsonb_array_elements(v_inventory) with ordinality as entry(value, ordinality)
+    where not (entry.ordinality = any(v_sold_ordinals));
+  v_state := jsonb_set(v_state, '{inventory}', v_remaining, true);
+  v_state := jsonb_set(v_state, '{cash}', to_jsonb(round(coalesce((v_state ->> 'cash')::numeric, 0) + v_proceeds, 2)), true);
+  update public.player_profiles set game_state = v_state, updated_at = now() where user_id = v_user_id;
+  return jsonb_build_object('game_state', v_state, 'proceeds', v_proceeds, 'sold_count', cardinality(v_sold_ordinals));
+end;
+$body$;
+revoke all on function public.sell_duplicate_cards() from public, anon;
+grant execute on function public.sell_duplicate_cards() to authenticated;`;
     const SUPABASE_OPEN_SCHEMA=`create or replace function public.open_boosters(p_set_id text, p_quantity integer, p_card_count integer, p_free boolean, p_remove_sealed_key text, p_free_booster_index integer, p_pulls jsonb)
 returns jsonb
 language plpgsql security definer set search_path = ''
@@ -2846,12 +2911,31 @@ $assign_admin$;`;
       const proceeds=cards.reduce((sum,card)=>sum+card.value,0);
       if(window.confirm(`Vendre ${cards.length} carte${cards.length===1?"":"s"} commune${cards.length===1?"":"s"} ou peu commune${cards.length===1?"":"s"} cotée${cards.length===1?"":"s"} pour ${currency(proceeds)} ? Les cartes sans cours seront conservées.`))sellCardsByKeys(cards.map(card=>card.uniqueKey));
     }
-    function sellDuplicateCards(){
+    async function sellDuplicateCards(){
       const keys=getDuplicateSaleKeys();
       if(!keys.length){notify("Aucun doublon coté vendable trouvé. Les cartes sans cours, les favoris et une copie de chaque carte sont conservés.");return;}
       const cards=state.inventory.filter(card=>keys.includes(card.uniqueKey));
       const proceeds=cards.reduce((sum,card)=>sum+card.value,0);
-      if(window.confirm(`Vendre ${cards.length} doublon${cards.length===1?"":"s"} coté${cards.length===1?"":"s"} pour ${currency(proceeds)} ? Les favoris, les cartes sans cours et une copie de chaque carte sont conservés.`))sellCardsByKeys(keys);
+      if(!window.confirm(`Vendre ${cards.length} doublon${cards.length===1?"":"s"} coté${cards.length===1?"":"s"} pour ${currency(proceeds)} ? Les favoris, les cartes sans cours et une copie de chaque carte sont conservés.`))return;
+      if(!authUser){sellCardsByKeys(keys);return;}
+      try{
+        if(!supabaseClient)throw new Error("Connexion Supabase indisponible.");
+        const {data,error}=await supabaseClient.rpc("sell_duplicate_cards");
+        if(error)throw error;
+        const result=Array.isArray(data)?data[0]:data;
+        if(!result?.game_state)throw new Error("Réponse invalide de la vente serveur des doublons.");
+        state=normalizeState(result.game_state);
+        cloudEconomicFingerprint=economicFingerprint();
+        cloudEconomicSyncBlocked=false;
+        const remainingKeys=new Set(state.inventory.map(card=>card.uniqueKey));
+        selectedCardKeys.forEach(key=>{if(!remainingKeys.has(key))selectedCardKeys.delete(key);});
+        saveState();updateWallet();updateCollection();
+        const soldCount=Number(result.sold_count)||cards.length;
+        notify(`${soldCount} doublon${soldCount===1?"":"s"} vendu${soldCount===1?"":"s"} pour ${currency(Number(result.proceeds)||0)} (cours de marché).`);
+      }catch(error){
+        console.error("Vente cloud des doublons impossible.",error);
+        notify(`Vente refusée : ${error.message||error}`,"error");
+      }
     }
     function switchTab(tab){
       document.querySelectorAll(".nav-btn").forEach(button=>button.classList.toggle("active",button.dataset.tab===tab));
@@ -3029,8 +3113,8 @@ $assign_admin$;`;
       if(error){accountStatus(`Déconnexion impossible : ${error.message}`,true);return;}
       authUser=null;cloudLoadedUserId=null;updateAccountUI();accountStatus("Déconnecté. Cette progression reste sur cet appareil.");
     });
-    document.getElementById("supabase-schema").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_CATALOG_SCHEMA}\n\n${SUPABASE_PACK_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_SECURE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_QUEST_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
-    document.getElementById("supabase-schema-public").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_CATALOG_SCHEMA}\n\n${SUPABASE_PACK_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_SECURE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_QUEST_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
+    document.getElementById("supabase-schema").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_CATALOG_SCHEMA}\n\n${SUPABASE_PACK_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_SELL_DUPLICATES_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_SECURE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_QUEST_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
+    document.getElementById("supabase-schema-public").textContent=`${SUPABASE_SCHEMA}\n\n${SUPABASE_CATALOG_SCHEMA}\n\n${SUPABASE_PACK_SCHEMA}\n\n${SUPABASE_ECONOMY_SCHEMA}\n\n${SUPABASE_SELL_SCHEMA}\n\n${SUPABASE_SELL_DUPLICATES_SCHEMA}\n\n${SUPABASE_OPEN_SCHEMA}\n\n${SUPABASE_SECURE_OPEN_SCHEMA}\n\n${SUPABASE_DAILY_SCHEMA}\n\n${SUPABASE_QUEST_SCHEMA}\n\n${SUPABASE_PREFERENCES_SCHEMA}`;
     document.getElementById("supabase-admin-schema").textContent=SUPABASE_ADMIN_SCHEMA;
     document.getElementById("admin-card-set").innerHTML='<option value="">Choisissez une extension</option>'+SETS.map(set=>`<option value="${escapeHtml(set.id)}">${escapeHtml(set.name)}</option>`).join("");
     document.getElementById("admin-open").addEventListener("click",async()=>{

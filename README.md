@@ -17,6 +17,8 @@ Les prix boutique sont des estimations USD par booster, arrondies au dollar ou a
 
 Le SQL `catalog_pack_price` et `catalog_pack_size` est généré depuis cette même liste ; après toute modification de prix ou ajout d’extension, réexécute le SQL depuis l’application et redéploie `open-booster` pour synchroniser la validation serveur. Les extensions de 2, 4, 5, 7 et 10 cartes sont gérées par la simulation, et le mode Hit Pile révèle les slots reverse et hit en laissant les communes dans le classeur. Tu peux ajouter `POKEMONTCG_API_KEY` dans les secrets Edge Functions pour augmenter la limite de l’API. Ne mets jamais une clé secrète dans `index.html`.
 
+La vente des doublons connectés utilise `sell_duplicate_cards()` côté serveur pour traiter de grandes collections sans transmettre une liste limitée de clés depuis le navigateur. La vente manuelle accepte également une sélection jusqu’à la taille réelle du classeur. Après mise à jour, réexécute l’intégralité du SQL affiché dans **Compte → SQL sécurité et économie serveur** pour appliquer ces fonctions.
+
 Tant que la fonction n’est pas déployée, une ouverture connectée est refusée explicitement ; le navigateur ne peut pas revenir à un tirage client non sécurisé.
 
 Pour vérifier le déploiement, l’URL suivante doit répondre autrement que `404 NOT_FOUND` :
