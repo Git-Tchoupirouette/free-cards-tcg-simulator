@@ -9,6 +9,7 @@ const PACK_SIZES: Record<string, number> = {
   cel25: 4, me55: 5, M2a: 5, M4: 5, dc1: 7, det1: 4,
   pop1: 2, pop2: 2, pop3: 2, pop4: 2, pop6: 2, pop8: 2,
 };
+const COMING_SOON_SET_IDS = new Set(["me06"]);
 const SET_IDS: Record<string, string> = {};
 const TCGDEX_SET_IDS: Record<string, string> = {
   base1: "base1", swsh7: "swsh7", swsh12pt5: "swsh12.5", sv3pt5: "sv03.5",
@@ -46,7 +47,7 @@ const PACK_PRICES: Record<string, number> = {
   sv6pt5: 12.5, sv5: 10.5, sv4: 9, sv1: 9, swsh12: 15, swsh10: 10.5,
   swsh9: 15, swsh2: 11.5, swsh5: 10, sm12: 72, sm9: 325, xy12: 71.5,
   xy4: 229.5, xy2: 162, swsh11: 17.5, swsh8: 19.5, swsh6: 12, cel25: 26.5,
-  sv4pt5: 24.5, sv9: 6.5, sv10: 8.5, me55: 10, me06: 6.5, xy6: 88.5,
+  sv4pt5: 24.5, sv9: 6.5, sv10: 8.5, me55: 10, xy6: 88.5,
   base4: 459.5, base3: 340, base2: 327.5, base5: 329, gym1: 279,
   gym2: 420, neo1: 632, neo2: 1500, ex1: 800, ex3: 1125, ex5: 800,
   ex6: 1013, ex13: 1902, ex14: 1650, ex16: 1000, dp1: 304, dp2: 340,
@@ -70,9 +71,11 @@ type ApiCard = {
   rarity?: string;
   supertype?: string;
   images?: { large?: string; small?: string };
+  variants?: { normal?: boolean; holo?: boolean; reverse?: boolean; wPromo?: boolean };
+  variants_detailed?: Array<{ type?: string; pricing?: { tcgplayer?: { updated?: string; [key: string]: unknown } } }>;
   set?: { name?: string; printedTotal?: number; total?: number };
-  tcgplayer?: { prices?: Record<string, { market?: number }> };
-  pricing?: { tcgplayer?: { market?: number }; cardmarket?: { trend?: number } };
+  tcgplayer?: { prices?: Record<string, { market?: number }>; updatedAt?: string };
+  pricing?: { tcgplayer?: { market?: number }; cardmarket?: { trend?: number; unit?: string; updated?: string } };
 };
 
 function json(body: unknown, status = 200) {
@@ -91,17 +94,51 @@ function rarity(card: ApiCard) {
   return String(card.rarity || "").toLowerCase().replace(/[-_]/g, " ");
 }
 
-function price(card: ApiCard) {
+function price(card: ApiCard, eurUsdRate: number | null, exchangeRateDate: string) {
   const prices = card.tcgplayer?.prices || {};
   for (const key of ["holofoil", "reverseHolofoil", "normal", "1stEditionHolofoil", "1stEditionNormal"]) {
     const value = Number(prices[key]?.market);
-    if (Number.isFinite(value) && value > 0) return { value, priceSource: "tcgplayer" };
+    if (Number.isFinite(value) && value > 0) return { value, priceSource: "tcgplayer", priceUpdatedAt: card.tcgplayer?.updatedAt || "" };
   }
   const tcgplayer = Number(card.pricing?.tcgplayer?.market);
-  if (Number.isFinite(tcgplayer) && tcgplayer > 0) return { value: tcgplayer, priceSource: "tcgplayer" };
+  if (Number.isFinite(tcgplayer) && tcgplayer > 0) return { value: tcgplayer, priceSource: "tcgplayer", priceUpdatedAt: "" };
   const cardmarket = Number(card.pricing?.cardmarket?.trend);
-  if (Number.isFinite(cardmarket) && cardmarket > 0) return { value: cardmarket, priceSource: "cardmarket_trend" };
-  return { value: null, priceSource: "unavailable" };
+  if (Number.isFinite(cardmarket) && cardmarket > 0 && card.pricing?.cardmarket?.unit === "EUR" && eurUsdRate) {
+    return {
+      value: Math.round(cardmarket * eurUsdRate * 100) / 100,
+      priceSource: "cardmarket_trend",
+      priceUpdatedAt: card.pricing.cardmarket.updated || "",
+      priceMetric: "trend",
+      priceOriginalValueEur: cardmarket,
+      priceExchangeRate: eurUsdRate,
+      priceExchangeRateDate: exchangeRateDate,
+    };
+  }
+  return { value: null, priceSource: "unavailable", priceUpdatedAt: "" };
+}
+
+function tcgplayerPricing(card: Record<string, unknown>) {
+  const prices: Record<string, { market?: number }> = {};
+  let updatedAt = "";
+  const detailed = Array.isArray(card.variants_detailed) ? card.variants_detailed as Array<Record<string, unknown>> : [];
+  const pricingSources = detailed.map((variant) => {
+    const pricing = variant.pricing as Record<string, unknown> | undefined;
+    return pricing?.tcgplayer as Record<string, unknown> | undefined;
+  });
+  const cardPricing = card.pricing as Record<string, unknown> | undefined;
+  pricingSources.push(cardPricing?.tcgplayer as Record<string, unknown> | undefined);
+  for (const source of pricingSources) {
+    if (!source) continue;
+    if (typeof source.updated === "string") updatedAt = source.updated;
+    for (const [variant, entry] of Object.entries(source)) {
+      if (!entry || typeof entry !== "object") continue;
+      const market = Number((entry as Record<string, unknown>).marketPrice ?? (entry as Record<string, unknown>).market);
+      if (!Number.isFinite(market) || market <= 0) continue;
+      const key = variant === "reverse-holofoil" ? "reverseHolofoil" : variant;
+      prices[key] = { market };
+    }
+  }
+  return Object.keys(prices).length ? { prices, updatedAt } : undefined;
 }
 
 function isBasic(card: ApiCard) {
@@ -124,11 +161,11 @@ function isSecret(card: ApiCard) {
 
 function isClassicHit(card: ApiCard) {
   const value = rarity(card);
-  return value === "rare" || value === "rare holo" || value === "holo rare" || value === "rare holo ex";
+  return value === "rare" || value === "rare holo" || value === "holo rare" || value === "rare holo ex" || value.includes("rgb rare");
 }
 
-function toPull(card: ApiCard, setId: string, kind: string, packNumber: number) {
-  const quote = price(card);
+function toPull(card: ApiCard, setId: string, kind: string, packNumber: number, eurUsdRate: number | null, exchangeRateDate: string) {
+  const quote = price(card, eurUsdRate, exchangeRateDate);
   const printedTotal = Number(card.set?.printedTotal || card.set?.total || 0);
   return {
     id: card.id,
@@ -143,10 +180,51 @@ function toPull(card: ApiCard, setId: string, kind: string, packNumber: number) 
     image: card.images?.large || card.images?.small || "",
     value: quote.value,
     priceSource: quote.priceSource,
+    priceUpdatedAt: quote.priceUpdatedAt,
+    priceMetric: "priceMetric" in quote ? quote.priceMetric : "",
+    priceOriginalValueEur: "priceOriginalValueEur" in quote ? quote.priceOriginalValueEur : null,
+    priceExchangeRate: "priceExchangeRate" in quote ? quote.priceExchangeRate : null,
+    priceExchangeRateDate: "priceExchangeRateDate" in quote ? quote.priceExchangeRateDate : "",
     kind,
+    finish: pulledFinish(card, kind),
     packNumber,
     uniqueKey: crypto.randomUUID(),
   };
+}
+
+function pulledFinish(card: ApiCard, kind: string) {
+  const available = new Set<string>();
+  const add = (value: string) => {
+    const type = value.toLowerCase().replace(/[\s_-]+/g, "");
+    if (type.includes("masterball")) available.add("masterball");
+    else if (type.includes("pokeball")) available.add("pokeball");
+    else if (type.includes("reverse")) available.add("reverse");
+    else if (type.includes("holofoil") || type === "holo") available.add("holo");
+    else if (type === "normal") available.add("normal");
+  };
+  for (const variant of card.variants_detailed || []) if (variant.type) add(variant.type);
+  for (const key of Object.keys(card.tcgplayer?.prices || {})) add(key);
+  if (card.variants?.normal) available.add("normal");
+  if (card.variants?.holo) available.add("holo");
+  if (card.variants?.reverse) available.add("reverse");
+  if (kind === "reverse") {
+    const finishes = ["reverse", "pokeball", "masterball", "holo"].filter((finish) => available.has(finish));
+    if (finishes.length) return choose(finishes);
+    return "reverse";
+  }
+  if (kind === "hit" && available.has("holo") && !available.has("normal")) return "holo";
+  return "normal";
+}
+
+async function getEurUsdRate() {
+  const response = await fetch("https://api.frankfurter.dev/v2/rate/eur/usd", { headers: { Accept: "application/json" } });
+  if (!response.ok) throw new Error(`Taux EUR/USD indisponible (${response.status}).`);
+  const data = await response.json();
+  const rate = Number(data.rate);
+  if (!Number.isFinite(rate) || rate <= 0 || data.base !== "EUR" || data.quote !== "USD") {
+    throw new Error("Réponse de conversion EUR/USD invalide.");
+  }
+  return { rate, date: String(data.date || "") };
 }
 
 async function loadCards(setId: string): Promise<ApiCard[]> {
@@ -175,6 +253,9 @@ async function loadCards(setId: string): Promise<ApiCard[]> {
             rarity: String(card.rarity || ""),
             supertype: String(card.category || ""),
             images: { large: image, small: image },
+            tcgplayer: tcgplayerPricing(card),
+            variants: card.variants,
+            variants_detailed: card.variants_detailed,
             set: { name: String(cardSet.name || setId), printedTotal: Number((cardSet.cardCount as Record<string, unknown>)?.official || 0), total: Number((cardSet.cardCount as Record<string, unknown>)?.total || 0) },
             pricing: card.pricing,
           } satisfies ApiCard;
@@ -230,6 +311,9 @@ async function loadCards(setId: string): Promise<ApiCard[]> {
         rarity: String(card.rarity || ""),
         supertype: Array.isArray(card.category) ? card.category.join(", ") : String(card.category || ""),
         images: { large: image, small: image },
+        tcgplayer: tcgplayerPricing(card),
+        variants: card.variants as ApiCard["variants"],
+        variants_detailed: card.variants_detailed as ApiCard["variants_detailed"],
         set: { name: String(set.name || setId), printedTotal: Number(set.cardCount || 0), total: Number(set.cardCount || 0) },
       } satisfies ApiCard;
     }).filter((card) => card.id);
@@ -239,7 +323,7 @@ async function loadCards(setId: string): Promise<ApiCard[]> {
   }
 }
 
-function generatePulls(cards: ApiCard[], setId: string, quantity: number) {
+function generatePulls(cards: ApiCard[], setId: string, quantity: number, eurUsdRate: number | null, exchangeRateDate: string) {
   const packSize = PACK_SIZES[setId] || 10;
   const slots = packSize === 5 ? { common: 3, reverse: 1 }
     : packSize === 4 ? { common: 1, reverse: 2 }
@@ -254,13 +338,13 @@ function generatePulls(cards: ApiCard[], setId: string, quantity: number) {
   const rareFallback = cards.filter((card) => !isBasic(card));
   const pulls = [];
   for (let packNumber = 1; packNumber <= quantity; packNumber++) {
-    for (let index = 0; index < slots.common; index++) pulls.push(toPull(choose(basics.length ? basics : cards), setId, "common", packNumber));
-    for (let index = 0; index < slots.reverse; index++) pulls.push(toPull(choose(reverses.length ? reverses : cards), setId, "reverse", packNumber));
+    for (let index = 0; index < slots.common; index++) pulls.push(toPull(choose(basics.length ? basics : cards), setId, "common", packNumber, eurUsdRate, exchangeRateDate));
+    for (let index = 0; index < slots.reverse; index++) pulls.push(toPull(choose(reverses.length ? reverses : cards), setId, "reverse", packNumber, eurUsdRate, exchangeRateDate));
     const roll = Math.random();
     const pool = roll < 0.7
       ? classics
       : roll < 0.9 ? ultras : secrets;
-    pulls.push(toPull(choose(pool.length ? pool : rareFallback), setId, "hit", packNumber));
+    pulls.push(toPull(choose(pool.length ? pool : rareFallback), setId, "hit", packNumber, eurUsdRate, exchangeRateDate));
   }
   if (pulls.length !== quantity * packSize) {
     throw new Error(`Catalogue serveur incohérent pour ${setId} : ${pulls.length} cartes générées au lieu de ${quantity * packSize}.`);
@@ -288,11 +372,28 @@ Deno.serve(async (request) => {
     const removeSealedKey = body.removeSealedKey ? String(body.removeSealedKey) : null;
     const freeBoosterIndex = Number.isSafeInteger(body.freeBoosterIndex) ? body.freeBoosterIndex : null;
     if (!setId || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 360) return json({ error: "Quantité ou extension invalide." }, 400);
+    if (COMING_SOON_SET_IDS.has(setId)) return json({ error: "Cette extension arrive bientôt : ses illustrations ne sont pas encore disponibles." }, 409);
     if (!Object.prototype.hasOwnProperty.call(PACK_PRICES, setId)) {
       return json({ error: `Extension non configurée côté serveur : ${setId}.` }, 400);
     }
     const cards = await loadCards(setId);
-    const pulls = generatePulls(cards, setId, quantity);
+    const needsEurUsdRate = cards.some((card) =>
+      Number(card.pricing?.cardmarket?.trend) > 0
+      && card.pricing?.cardmarket?.unit === "EUR"
+      && price(card, null, "").priceSource === "unavailable"
+    );
+    let eurUsdRate: number | null = null;
+    let exchangeRateDate = "";
+    if (needsEurUsdRate) {
+      try {
+        const quote = await getEurUsdRate();
+        eurUsdRate = quote.rate;
+        exchangeRateDate = quote.date;
+      } catch (error) {
+        console.warn("Conversion Cardmarket EUR/USD indisponible; seules les cotations USD seront conservées.", error);
+      }
+    }
+    const pulls = generatePulls(cards, setId, quantity, eurUsdRate, exchangeRateDate);
     const serviceClient = createClient(url, serviceKey);
     const { data, error } = await serviceClient.rpc("open_boosters_internal", {
       p_user_id: userData.user.id,
