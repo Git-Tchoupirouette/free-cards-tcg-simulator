@@ -45,16 +45,13 @@
     .opening-stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.05) 50%,transparent 65%);transform:translateX(-100%);animation:stageSweep 2.3s ease-in-out infinite}
     @keyframes stageSweep{to{transform:translateX(100%)}}
     .reveal-stack{position:relative;width:min(42vw,430px,calc((min(68vh,680px) - 85px)*.714));max-width:calc(100vw - 72px);aspect-ratio:2.5/3.5;perspective:1100px;touch-action:none;user-select:none}
-    .stack-back{position:absolute;inset:0;border:4px solid #d6c4a1;border-radius:14px;background:radial-gradient(circle at 50% 50%,#f2d783 0 8%,#db6f6a 9% 14%,#e6d1a6 15% 17%,transparent 18%),repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0 3px,transparent 3px 8px),linear-gradient(145deg,#2d72b1,#172950 56%,#5b4387);box-shadow:0 12px 32px rgba(0,0,0,.55),inset 0 0 0 2px rgba(28,37,74,.85);transition:transform .3s}
-    .stack-back:after{content:"C";position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,239,190,.7);font:700 58px Outfit,sans-serif;text-shadow:0 2px 15px rgba(255,226,144,.65)}
     .stack-next-preview{position:absolute;inset:0;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:#111522;box-shadow:0 12px 32px rgba(0,0,0,.5);transform:translateY(-5px) scale(.985)}
     .stack-next-preview img{display:block;width:100%;height:100%;object-fit:contain;background:#10131c}
-    .stack-top{position:absolute;inset:0;z-index:5;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:#111522;box-shadow:0 18px 42px rgba(0,0,0,.58);cursor:grab;transform-origin:50% 75%;touch-action:none;animation:topCardIn .3s cubic-bezier(.2,.8,.2,1) both}
+    .stack-top{position:absolute;inset:0;z-index:5;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:#111522;box-shadow:0 18px 42px rgba(0,0,0,.58);cursor:grab;transform-origin:50% 75%;touch-action:none}
     .stack-top img{display:block;width:100%;height:100%;object-fit:contain;background:#10131c}
     .stack-top.dragging{animation:none;cursor:grabbing;transition:none}
     .stack-top.returning{animation:none;cursor:grab;transition:transform 180ms ease-out}
-    .stack-top.swiping{animation:none;transition:transform 180ms cubic-bezier(.22,.75,.25,1),opacity 180ms ease;transform:translateY(-112%) rotate(2deg) scale(.97);opacity:.12}
-    @keyframes topCardIn{from{opacity:.5;transform:translateY(8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .stack-top.swiping{animation:none;transition:transform 120ms cubic-bezier(.2,.75,.25,1),opacity 120ms ease;opacity:.12}
     .stack-card-caption{position:absolute;right:0;bottom:0;left:0;padding:30px 12px 11px;background:linear-gradient(0deg,rgba(4,6,11,.97),rgba(4,6,11,0));text-shadow:0 1px 4px #000}
     .image-unavailable{display:grid!important;place-items:center;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:radial-gradient(circle at 50% 25%,rgba(135,105,195,.27),transparent 45%),linear-gradient(150deg,#202438,#10131c)!important}
     .image-unavailable:before{content:"ILLUSTRATION NON DISPONIBLE";position:absolute;top:45%;left:10px;right:10px;text-align:center;color:rgba(255,255,255,.52);font:600 9px "DM Sans",sans-serif;letter-spacing:.12em}
@@ -101,7 +98,7 @@
       <div class="flex h-[76px] items-center justify-between">
         <a href="#" class="flex items-center gap-3" aria-label="Free Cards accueil">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[.08] text-amber-200"><i data-lucide="crown" class="h-5 w-5"></i></span>
-          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.9.0</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
+          <span><span class="display flex items-center gap-2 text-lg font-bold tracking-[.12em]">FREE<span class="gold">CARDS</span><span class="rounded border border-amber-200/20 bg-amber-200/[.06] px-1.5 py-0.5 text-[8px] font-medium tracking-normal text-amber-200">BETA 0.9.1</span></span><span class="muted block text-[9px] tracking-[.2em]">TCG COLLECTION SIMULATOR</span></span>
         </a>
         <nav class="flex items-center gap-1 rounded-xl border border-white/[.07] bg-white/[.025] p-1">
           <button class="nav-btn active flex items-center gap-2 rounded-lg px-1 py-2 text-sm sm:px-2 lg:px-3" data-tab="shop"><i data-lucide="store" class="h-4 w-4"></i><span class="hidden lg:inline">Boutique</span></button>
@@ -200,7 +197,6 @@
             </div>
             <div class="mt-5"><h2 class="display text-lg font-semibold">Boosters gratuits</h2><p class="muted mt-1 text-xs">Vos boosters gagnés attendent ici. Ouvrez-les quand vous voulez.</p><div id="free-booster-list" class="mt-3 grid gap-2"></div></div>
             <div class="mt-8"><h2 class="display text-lg font-semibold">Quêtes</h2><p class="muted mt-1 text-xs">Accomplissez des objectifs de collection pour financer vos prochaines ouvertures.</p><div id="quest-list" class="mt-3 grid gap-3"></div></div>
-            <div class="mt-8"><h2 class="display text-lg font-semibold">Mew RGB</h2><p class="muted mt-1 text-xs">Les trois Mew ex de l’extension 151, chargés depuis TCGdex.</p><div id="rgb-mew-grid" class="mt-3 grid grid-cols-3 gap-3"><div class="col-span-full rounded-xl border border-dashed border-white/10 px-4 py-5 text-center"><p class="muted text-xs">Chargement des cartes Mew…</p></div></div></div>
           </div>
           <div class="glass flex flex-col items-center rounded-3xl p-5 sm:p-7">
             <div class="daily-wheel-wrap"><span class="wheel-pointer"></span><div id="daily-wheel" class="daily-wheel"></div><div class="wheel-spin">FREE<br>CARDS</div></div>
@@ -345,13 +341,11 @@
     let adminHasNext = false;
     let restoringCloudState = false;
     let refreshingMarketPrices = false;
-    let rgbMewCards = [];
-    let rgbMewRequest = null;
     let eurUsdRateData = null;
     let eurUsdRateRequest = null;
     let eurUsdRateFetchedOn = "";
-    const APP_VERSION = "0.9.0";
-    const BUILD_ID = "server-pulls-drop-rates-2026-11-01";
+    const APP_VERSION = "0.9.1";
+    const BUILD_ID = "reveal-preload-two-card-stack-2026-11-12";
     const MARKET_PRICE_VERSION = 10;
     const TCGPLAYER_SET_IDS={swsh45:"swsh4pt5",me1:"me01",me2:"me02",me3:"me03",me5:"me05"};
     const setOffers = new Map();
@@ -1468,7 +1462,6 @@ $assign_admin$;`;
       }else result.classList.add("hidden");
       renderFreeBoosters();
       renderQuests();
-      loadRgbMews();
       renderWheel(day);
       lucide.createIcons();
     }
@@ -1508,31 +1501,6 @@ $assign_admin$;`;
         return `<article class="glass rounded-xl border ${claimed?"border-emerald-300/20":"border-white/10"} p-3"><div class="flex items-start justify-between gap-3"><div><strong class="block text-xs">${escapeHtml(quest.title)}</strong><span class="muted mt-1 block text-[10px]">${escapeHtml(quest.description)}</span></div><span class="shrink-0 text-xs gold">+$${quest.reward}</span></div><button type="button" data-claim-quest="${quest.id}" class="mt-3 w-full rounded-lg ${claimed?"border border-emerald-300/20 text-emerald-200":"bg-white text-black"} px-3 py-2 text-[10px] font-semibold" ${claimed||!completed?"disabled":""}>${claimed?"Récompensée":completed?"Réclamer la récompense":"Objectif en cours"}</button></article>`;
       }).join("");
       list.querySelectorAll("[data-claim-quest]").forEach(button=>button.addEventListener("click",()=>claimQuest(button.dataset.claimQuest)));
-    }
-    function renderRgbMews(){
-      const grid=document.getElementById("rgb-mew-grid");
-      if(!grid)return;
-      if(!rgbMewCards.length){
-        grid.innerHTML='<div class="col-span-full rounded-xl border border-dashed border-white/10 px-4 py-5 text-center"><p class="muted text-xs">Les cartes Mew RGB sont momentanément indisponibles.</p></div>';
-        return;
-      }
-      grid.innerHTML=rgbMewCards.map(card=>`<article class="glass overflow-hidden rounded-xl p-2"><img class="card-image" src="${escapeHtml(imageUrl(card))}" alt="${escapeHtml(card.name)}" loading="eager" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"><p class="mt-2 truncate text-[10px] font-semibold">${escapeHtml(card.name)}</p><p class="muted text-[9px]">${escapeHtml(card.number||"")}</p></article>`).join("");
-    }
-    async function loadRgbMews(){
-      if(rgbMewCards.length||rgbMewRequest)return rgbMewRequest;
-      const set=SETS.find(entry=>entry.id==="sv3pt5");
-      if(!set)return;
-      rgbMewRequest=(async()=>{
-        try{
-          const cards=setCards.get("sv3pt5")||await fetchTcgdexCards(set);
-          rgbMewCards=cards.filter(card=>/\bmew\b/i.test(String(card.name||""))).slice(0,3);
-          renderRgbMews();
-        }catch(error){
-          console.warn("Les cartes Mew RGB ne peuvent pas être chargées.",error);
-          renderRgbMews();
-        }finally{rgbMewRequest=null;}
-      })();
-      return rgbMewRequest;
     }
     async function claimQuest(questId){
       const quest=QUESTS.find(item=>item.id===questId);
@@ -2466,7 +2434,10 @@ $assign_admin$;`;
       const image=new Image();
       image.decoding="async";
       const promise=new Promise(resolve=>{
-        image.onload=()=>resolve(true);
+        image.onload=()=>{
+          if(typeof image.decode==="function")image.decode().then(()=>resolve(true)).catch(()=>resolve(true));
+          else resolve(true);
+        };
         image.onerror=()=>resolve(false);
       });
       image.src=url;
@@ -2476,6 +2447,13 @@ $assign_admin$;`;
     function preloadRevealWindow(){
       if(!pendingReveal)return;
       pendingReveal.queue.slice(pendingReveal.index,pendingReveal.index+3).forEach(preloadCardImage);
+    }
+    function revealQueueFor(pulls,hitPileMode){
+      const packs=[...new Set(pulls.map(card=>card.packNumber))];
+      return hitPileMode?packs.flatMap(packNumber=>pulls.filter(card=>card.packNumber===packNumber).slice(-3)):pulls;
+    }
+    function preloadInitialReveal(pulls,hitPileMode){
+      revealQueueFor(pulls,hitPileMode).slice(0,3).forEach(preloadCardImage);
     }
     function renderBinder(){
       const grid=document.getElementById("binder-grid");
@@ -2631,7 +2609,7 @@ $assign_admin$;`;
       }
       document.getElementById("reveal-subtitle").textContent=`${hitPileMode?"Hit Pile":"Booster "+current.packNumber} · carte ${index+1} sur ${queue.length}`;
       document.getElementById("opening-message").textContent=hitPileMode?`Hit Pile · ${index+1} / ${queue.length}`:`Booster ${current.packNumber} · ${index+1} / ${queue.length}`;
-      document.getElementById("opening-hint").textContent=hitPileMode?"Les 3 dernières cartes de chaque booster · glissez vers le haut":"Glissez vers le haut avec le doigt ou la souris";
+      document.getElementById("opening-hint").textContent=hitPileMode?"Les 3 dernières cartes de chaque booster · glissez dans n’importe quelle direction":"Glissez dans n’importe quelle direction avec le doigt ou la souris";
       currentValue.textContent=`Carte révélée : ${cardPriceText(current)}${cardPriceLabel(current)}`;
       if(current.value>=100)priceBadge.classList.add("price-jackpot");
       else if(current.value>=20)priceBadge.classList.add("price-hit");
@@ -2641,15 +2619,19 @@ $assign_admin$;`;
       }
       nextButton.classList.remove("hidden");
       doneButton.classList.add("hidden");
-      const backs=Math.min(queue.length-index-1,14);
-      const backCards=Array.from({length:backs},(_,layer)=>`<div class="stack-back" style="transform:translate(${(layer+1)*.45}px,${(layer+1)*.45}px) rotate(${(layer+1)*.025}deg);z-index:${layer}"></div>`).join("");
       const foil=rarityScore({rarity:current.rarity})>=5;
       const typeLabel=current.kind==="hit"?"HIT":current.kind==="reverse"?"REVERSE HOLO":"COMMON SLOT";
-      const nextCard=queue[index+1];
-      const nextPreview=nextCard?`<div class="stack-next-preview" style="z-index:${backs+1}" aria-hidden="true"><img src="${escapeHtml(imageUrl(nextCard))}" alt="" draggable="false" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div>`:"";
-      stack.innerHTML=`${backCards}${nextPreview}<button type="button" class="stack-top ${foil?"foil":""}" data-card-name="${escapeHtml(current.name)}" style="z-index:${backs+2}" aria-label="Swiper ${escapeHtml(current.name)} et révéler la carte suivante"><img src="${escapeHtml(imageUrl(current))}" alt="${escapeHtml(current.name)}" draggable="false" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"><span class="stack-card-caption"><span class="flex items-center justify-between gap-2"><span class="truncate text-base font-semibold">${escapeHtml(current.name)}</span><span class="shrink-0 text-sm gold">${cardPriceText(current)}</span></span><span class="muted mt-1 block text-[10px]">${escapeHtml(current.rarity)}${cardPriceLabel(current)} · ${typeLabel} · booster ${current.packNumber}</span></span></button>`;
+      const promotedPreview=[...stack.querySelectorAll(".stack-next-preview")].find(preview=>preview.dataset.cardKey===String(current.uniqueKey));
+      const promotedImage=promotedPreview?.querySelector("img")||null;
+      const upcoming=queue.slice(index+1,index+3);
+      const previews=upcoming.map((card,layer)=>`<div class="stack-next-preview" data-card-key="${escapeHtml(card.uniqueKey)}" style="z-index:${upcoming.length-layer};transform:translate(${(layer+1)*3}px,${-(layer+1)*5}px) scale(${1-(layer+1)*.012})" aria-hidden="true"><img src="${escapeHtml(imageUrl(card))}" alt="" draggable="false" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div>`).join("");
+      stack.innerHTML=`${previews}<button type="button" class="stack-top ${foil?"foil":""}" data-card-name="${escapeHtml(current.name)}" style="z-index:3" aria-label="Swiper ${escapeHtml(current.name)} et révéler la carte suivante"><img src="${escapeHtml(imageUrl(current))}" alt="${escapeHtml(current.name)}" draggable="false" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"><span class="stack-card-caption"><span class="flex items-center justify-between gap-2"><span class="truncate text-base font-semibold">${escapeHtml(current.name)}</span><span class="shrink-0 text-sm gold">${cardPriceText(current)}</span></span><span class="muted mt-1 block text-[10px]">${escapeHtml(current.rarity)}${cardPriceLabel(current)} · ${typeLabel} · booster ${current.packNumber}</span></span></button>`;
       preloadRevealWindow();
       const top=stack.querySelector(".stack-top");
+      if(promotedImage){
+        promotedImage.alt=current.name;
+        top.querySelector("img").replaceWith(promotedImage);
+      }
       const cardTitle=top.querySelector(".stack-card-caption .truncate");
       if(cardTitle)cardTitle.textContent=cardDisplayName(current);
       top.setAttribute("aria-label",`Swiper ${cardDisplayName(current)} et révéler la carte suivante`);
@@ -2706,21 +2688,22 @@ $assign_admin$;`;
       const top=topOrEvent instanceof Element?topOrEvent:document.querySelector(".stack-top");
       if(!top)return;
       top.classList.remove("dragging");
-      top.style.transform="";
-      top.style.transition="";
+      const length=Math.hypot(direction.x,direction.y)||1;
+      const x=direction.x/length;
+      const y=direction.y/length;
       pendingReveal.transitioning=true;
       top.classList.add("swiping");
-      top.style.transform=`translate(${direction.x*window.innerWidth}px,${direction.y*window.innerHeight}px) rotate(${(direction.x+direction.y)*.04}deg)`;
+      top.style.transition="transform 120ms cubic-bezier(.2,.75,.25,1), opacity 120ms ease";
+      top.style.transform=`translate(${x*window.innerWidth}px,${y*window.innerHeight}px) rotate(${(x+y)*8}deg)`;
       setTimeout(()=>{
         if(!pendingReveal)return;
         pendingReveal.index++;
         pendingReveal.transitioning=false;
         renderRevealCard();
-      },90);
+      },120);
     }
     function openReveal(pulls,hitPileMode,batchLabel=""){
-      const packs=[...new Set(pulls.map(card=>card.packNumber))];
-      const queue=hitPileMode?packs.flatMap(packNumber=>pulls.filter(card=>card.packNumber===packNumber).slice(-3)):pulls;
+      const queue=revealQueueFor(pulls,hitPileMode);
       pendingReveal={pulls,queue,index:0,hitPileMode,transitioning:false};
       const modal=document.getElementById("reveal-modal");
       document.getElementById("reveal-title").textContent=`${selectedSet.name} — ${batchLabel||"vos trouvailles"}`;
@@ -2729,6 +2712,7 @@ $assign_admin$;`;
       document.getElementById("reveal-cards").innerHTML="";
       document.getElementById("reveal-total").textContent=currency(0);
       document.getElementById("reveal-current-value").textContent="";
+      preloadRevealWindow();
       modal.classList.remove("hidden");document.body.style.overflow="hidden";lucide.createIcons();
       renderRevealCard();
     }
@@ -2887,6 +2871,8 @@ $assign_admin$;`;
           if(error)throw error;
           const result=Array.isArray(data)?data[0]:data;
           if(!result?.game_state||!Array.isArray(result.pulls))throw new Error("Réponse invalide de l’ouverture serveur.");
+          const hitPileMode=document.getElementById("hit-pile-mode").checked;
+          preloadInitialReveal(result.pulls,hitPileMode);
           state=normalizeState(result.game_state);
           cloudEconomicFingerprint=economicFingerprint();
           cloudEconomicSyncBlocked=false;
@@ -2895,7 +2881,7 @@ $assign_admin$;`;
           pack.classList.add("tear");
           await new Promise(resolve=>setTimeout(resolve,480));
           pack.classList.remove("tear");
-          openReveal(result.pulls,document.getElementById("hit-pile-mode").checked,options.batchLabel||`${quantity} booster${quantity===1?"":"s"}`);
+          openReveal(result.pulls,hitPileMode,options.batchLabel||`${quantity} booster${quantity===1?"":"s"}`);
           loading=false;
           updateTotalPrice();
           return;
@@ -2909,6 +2895,8 @@ $assign_admin$;`;
       for(let packNumber=1;packNumber<=quantity;packNumber++){
         pulls.push(...makeBooster(setCards.get(selectedSet.id)).map(card=>({...card,packNumber})));
       }
+      const hitPileMode=document.getElementById("hit-pile-mode").checked;
+      preloadInitialReveal(pulls,hitPileMode);
       if(options.freeBoosterIndex!==undefined)state.freeBoosters.splice(options.freeBoosterIndex,1);
       if(options.removeSealedKey)state.sealedProducts=state.sealedProducts.filter(product=>product.uniqueKey!==options.removeSealedKey);
       state.inventory.push(...pulls);
@@ -2917,7 +2905,7 @@ $assign_admin$;`;
       pack.classList.add("tear");
       await new Promise(resolve=>setTimeout(resolve,480));
       pack.classList.remove("tear");
-      openReveal(pulls,document.getElementById("hit-pile-mode").checked,options.batchLabel||`${quantity} booster${quantity===1?"":"s"}`);
+      openReveal(pulls,hitPileMode,options.batchLabel||`${quantity} booster${quantity===1?"":"s"}`);
       loading=false;
       updateTotalPrice();
     }
