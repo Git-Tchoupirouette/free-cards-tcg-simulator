@@ -9,17 +9,25 @@ const PACK_SIZES: Record<string, number> = { cel25: 4, me55: 5, M2a: 5, M4: 5 };
 const SET_IDS: Record<string, string> = {};
 const TCGDEX_SET_IDS: Record<string, string> = {
   base1: "base1", swsh7: "swsh7", swsh12pt5: "swsh12.5", sv3pt5: "sv03.5",
-  sv6: "sv06", swsh4pt5: "swsh4.5", sv3: "sv03", sv2: "sv02", g1: "g1",
-  sv7: "sv07", "me02.5": "me02.5", me04: "me04", me5: "me05", me3: "me03",
-  me2: "me02", me1: "me01", cel25: "cel25", me55: "30th",
-  M2a: "M2a", M4: "M4",
+  sv6: "sv06", swsh45: "swsh4.5", sv3: "sv03", sv2: "sv02", g1: "g1",
+  sv7: "sv07", M2a: "M2a", "me02.5": "me02.5", M4: "M4", me04: "me04",
+  me5: "me05", me3: "me03", me2: "me02", me1: "me01", sv8pt5: "sv08.5",
+  sv8: "sv08", sv6pt5: "sv06.5", sv5: "sv05", sv4: "sv04", sv1: "sv01",
+  swsh12: "swsh12", swsh10: "swsh10", swsh9: "swsh9", swsh2: "swsh2",
+  swsh5: "swsh5", sm12: "sm12", sm9: "sm9", xy12: "xy12", xy4: "xy4",
+  xy2: "xy2", swsh11: "swsh11", swsh8: "swsh8", swsh6: "swsh6",
+  cel25: "cel25", sv4pt5: "sv04.5", sv9: "sv09", sv10: "sv10",
+  me55: "30th", xy6: "xy6",
 };
 const TCGDEX_LANGUAGES: Record<string, string> = { M2a: "ja", M4: "ja" };
 const PACK_PRICES: Record<string, number> = {
   base1: 300, swsh7: 12, swsh12pt5: 8, sv3pt5: 6.5, sv6: 5, swsh45: 7,
   sv3: 4.5, sv2: 4.5, g1: 15, sv7: 5, M2a: 8, "me02.5": 8, M4: 6,
-  me04: 6, me5: 8, me3: 8, me2: 12.42, me1: 8, sv8pt5: 12, sv8: 8,
-  sv6pt5: 5, sv5: 5, sv4: 5, sv1: 4.5, cel25: 12, me55: 15, xy6: 20,
+  me04: 6, me5: 8, me3: 8, me2: 12.42, me1: 10, sv8pt5: 12, sv8: 8,
+  sv6pt5: 5, sv5: 5, sv4: 5, sv1: 4.5, swsh12: 5, swsh10: 5,
+  swsh9: 7, swsh2: 8, swsh5: 5, sm12: 20, sm9: 50, xy12: 20,
+  xy4: 35, xy2: 25, swsh11: 8, swsh8: 8, swsh6: 8, cel25: 12,
+  sv4pt5: 12, sv9: 6, sv10: 9, me55: 15, xy6: 20,
 };
 
 type ApiCard = {
