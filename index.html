@@ -92,7 +92,7 @@
     .day-node{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.025)}
     .day-node.current{border-color:rgba(238,203,120,.5);background:rgba(238,203,120,.09)}
     .day-node.claimed{border-color:rgba(110,231,183,.22);color:#86efac}
-    @media(max-width:640px){.mobile-sticky nav .nav-btn{padding-left:7px;padding-right:7px}.opening-stage{min-height:0}.reveal-container{padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom))}.reveal-stack{width:min(66vw,390px);max-width:calc(100vw - 36px);max-height:100%;}.opening-copy{bottom:9px}.wheel-label{transform:rotate(var(--wheel-angle)) translateY(-28vw) rotate(calc(-1 * var(--wheel-angle)));font-size:10px}.loading-pack-wrap{width:94px;height:143px}}
+    @media(max-width:640px){.mobile-sticky nav .nav-btn{padding-left:7px;padding-right:7px}.opening-stage{min-height:0}.reveal-container{padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom))}.reveal-stack{width:min(78vw,390px);max-width:calc(100vw - 28px);max-height:100%;}.opening-copy{bottom:9px}.wheel-label{transform:rotate(var(--wheel-angle)) translateY(-28vw) rotate(calc(-1 * var(--wheel-angle)));font-size:10px}.loading-pack-wrap{width:94px;height:143px}}
     @media(max-width:640px){.mobile-sticky #account-label{display:none}.mobile-sticky #account-open{padding:8px}}
     @media(max-width:480px){.mobile-sticky a.flex.items-center.gap-3{gap:6px}.mobile-sticky a .h-10.w-10{width:34px;height:34px}.mobile-sticky a .display{font-size:15px;letter-spacing:.1em}.mobile-sticky a>span:last-child>span:last-child{display:none}.mobile-sticky nav{gap:0!important;padding:3px!important}.mobile-sticky nav .nav-btn{padding:5px 4px!important}.mobile-sticky nav #daily-badge{display:none}.mobile-sticky #account-open{padding:7px!important}}
     @media(max-width:360px){.mobile-sticky>div:first-child{gap:4px!important}.mobile-sticky a.flex.items-center.gap-3{min-width:0;flex:1;gap:5px}.mobile-sticky a .h-10.w-10{width:32px;height:32px}.mobile-sticky a .display{font-size:14px;letter-spacing:.08em}.mobile-sticky a>span:last-child>span:last-child{display:none}.mobile-sticky nav{flex:0 0 auto;gap:0!important;padding:3px!important}.mobile-sticky nav .nav-btn{padding:5px 4px!important}.mobile-sticky nav #binder-count{display:none}.mobile-sticky #account-open{padding:7px!important}}
@@ -115,7 +115,14 @@
     .master-progress>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#9c7dff,#f0cf81);transition:width .35s ease}
     .master-slot{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025)}
     .master-slot.owned{border-color:rgba(110,231,183,.36);background:rgba(110,231,183,.07)}
-    .rgb-mew img{width:100%;aspect-ratio:2.5/3.5;object-fit:contain;border-radius:8px;background:#111522}
+    .set-hit-showcase{max-width:380px;margin:0 auto}
+    .set-hit-heading{margin-bottom:5px;text-align:center;color:rgba(255,255,255,.55);font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}
+    .set-hit-cards{display:flex;align-items:flex-end;justify-content:center;gap:10px}
+    .set-hit-card{min-width:0;width:clamp(72px,20vw,104px);text-align:center}
+    .set-hit-visual{position:relative;overflow:hidden;aspect-ratio:2.5/3.5;border:1px solid rgba(255,255,255,.2);border-radius:8px;background:#111522;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+    .set-hit-visual img{display:block;width:100%;height:100%;object-fit:cover}
+    .set-hit-name{display:block;overflow:hidden;margin-top:3px;color:rgba(255,255,255,.82);font-size:8px;line-height:1.15;text-overflow:ellipsis;white-space:nowrap}
+    .set-hit-meta{display:block;overflow:hidden;color:rgba(255,255,255,.45);font-size:7px;line-height:1.1;text-overflow:ellipsis;white-space:nowrap}
     .shop-shortcuts{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:none}
     .shop-shortcuts::-webkit-scrollbar{display:none}
     .shop-shortcut{flex:0 0 auto;min-height:40px;border:1px solid rgba(238,203,120,.2);background:rgba(238,203,120,.06)}
@@ -123,6 +130,7 @@
     .reveal-current-price{font:700 clamp(24px,5vw,46px) Outfit,sans-serif;line-height:1;color:#f2d487;text-shadow:0 0 24px rgba(238,203,120,.25)}
     .stack-top.foil:after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:13px;background:linear-gradient(115deg,transparent 10%,rgba(255,255,255,.2) 28%,rgba(95,243,255,.16) 39%,rgba(255,92,213,.2) 52%,rgba(255,235,132,.18) 65%,transparent 80%);background-size:230% 230%;mix-blend-mode:screen;opacity:.65;animation:foil 3.2s ease-in-out infinite}
     .stack-top.foil .stack-card-caption{z-index:2}
+    .stack-top.image-unavailable:after{content:attr(data-card-name);position:absolute;top:51%;left:10px;right:10px;z-index:1;text-align:center;color:#f0d38f;font:600 13px Outfit,sans-serif}
     .coming-soon-card{opacity:.68}
     @media(max-width:640px){
       body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
@@ -198,12 +206,9 @@
                 <div class="booster flex h-[142px] w-[102px] flex-col items-center justify-center rounded-xl border border-white/25 bg-gradient-to-br from-violet-500 via-indigo-800 to-slate-950 p-2 text-center">
                   <i data-lucide="sparkles" class="mb-2 h-5 w-5 text-amber-200"></i><span class="display text-xs font-bold tracking-wider">FREE<br>CARDS</span><span id="pack-card-count" class="mt-2 text-[8px] tracking-[.25em] text-white/65">10 CARTES</span>
                 </div>
-                <div id="rgb-mew-showcase" class="relative z-10 hidden w-full max-w-sm px-4" aria-label="Les trois Mew RGB de 30th Celebration">
-                  <div class="grid grid-cols-3 gap-3">
-                    <a class="rgb-mew" href="https://api.tcgdex.net/v2/en/cards/30th-R" target="_blank" rel="noreferrer"><img src="https://tcgplayer-cdn.tcgplayer.com/product/717607_200w.jpg" alt="Mew Rouge — RGB Rare" loading="lazy"><span class="mt-1 block text-center text-[10px] font-semibold text-rose-200">ROUGE</span></a>
-                    <a class="rgb-mew" href="https://api.tcgdex.net/v2/en/cards/30th-G" target="_blank" rel="noreferrer"><img src="https://tcgplayer-cdn.tcgplayer.com/product/717608_200w.jpg" alt="Mew Vert — RGB Rare" loading="lazy"><span class="mt-1 block text-center text-[10px] font-semibold text-emerald-200">VERT</span></a>
-                    <a class="rgb-mew" href="https://api.tcgdex.net/v2/en/cards/30th-B" target="_blank" rel="noreferrer"><img src="https://tcgplayer-cdn.tcgplayer.com/product/717609_200w.jpg" alt="Mew Bleu — RGB Rare" loading="lazy"><span class="mt-1 block text-center text-[10px] font-semibold text-sky-200">BLEU</span></a>
-                  </div>
+                <div id="set-hit-showcase" class="set-hit-showcase relative z-10 hidden w-full px-3" aria-label="Cartes phares de l’extension">
+                  <p class="set-hit-heading">Cartes phares</p>
+                  <div id="set-hit-cards" class="set-hit-cards"></div>
                 </div>
                 <span class="absolute bottom-3 right-4 rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-[10px] text-white/70">BOOSTER SIMULÉ</span>
               </div>
@@ -484,7 +489,7 @@
     const SUPABASE_PROJECT = {url:"https://jxxbztnuggensywuhnbi.supabase.co",anonKey:"sb_publishable_UTNvLgCCD5ylON-oXY8glQ_uqLPaKu0"};
     const WHEEL_SEGMENT_COUNT = 8;
     const DAILY_CASH = [[2,3,5,7,10,15,4,8],[4,6,8,10,15,20,25,5],[6,8,12,15,20,25,30,10],[8,12,15,20,25,30,40,10],[10,15,20,25,35,40,50,15],[15,20,30,40,50,60,75,25],[25,35,50,75,100,150,200,300]];
-    const RGB_MEW_IMAGES={R:"https://tcgplayer-cdn.tcgplayer.com/product/717607_200w.jpg",G:"https://tcgplayer-cdn.tcgplayer.com/product/717608_200w.jpg",B:"https://tcgplayer-cdn.tcgplayer.com/product/717609_200w.jpg"};
+    const RGB_MEW_IMAGES={R:"https://tcgplayer-cdn.tcgplayer.com/product/717607_400w.jpg",G:"https://tcgplayer-cdn.tcgplayer.com/product/717608_400w.jpg",B:"https://tcgplayer-cdn.tcgplayer.com/product/717609_400w.jpg"};
     const currency = value => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(value || 0);
     const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
     let state = loadState();
@@ -2394,6 +2399,7 @@ $assign_admin$;`;
           const marketCard=marketCardsByNumber.get(pokemonTcgCardNumber(localId));
           const pricing=tcgdexPricingData(card);
           if(marketCard&&cardValue(marketCard).source==="tcgplayer")pricing.tcgplayer=marketCard.tcgplayer;
+          const isRgbMew=/^30th-[RGB]$/.test(String(card.id||""))&&card.rarity==="RGB Rare";
           const image=card.image?`${card.image}/high.webp`:`https://assets.tcgdex.net/${language}/M/${encodeURIComponent(setId)}/${encodeURIComponent(localId)}/high.webp`;
           cards.push({
             id:card.id,
@@ -2401,8 +2407,8 @@ $assign_admin$;`;
             number:card.localId||ref.localId,
             printedTotal:marketCard&&marketCard.set&&marketCard.set.printedTotal||card.set&&card.set.cardCount&&card.set.cardCount.official||0,
             category:card.category||"",
-            rarity:marketCard&&marketCard.rarity||card.rarity||"Carte",
-            raritySource:marketCard&&marketCard.rarity?"Pokémon TCG API":"TCGdex",
+            rarity:isRgbMew?card.rarity:marketCard&&marketCard.rarity||card.rarity||"Carte",
+            raritySource:!isRgbMew&&marketCard&&marketCard.rarity?"Pokémon TCG API":"TCGdex",
             variants:card.variants||{},
             variantsDetailed:card.variants_detailed||[],
             types:card.types||[],
@@ -2428,9 +2434,8 @@ $assign_admin$;`;
     async function selectSet(set){
       if(set.comingSoon){notify(`${set.name} arrive bientôt : ${set.comingSoonReason}`,"error");return;}
       selectedSet=set;
-      const rgbShowcase=document.getElementById("rgb-mew-showcase");
-      rgbShowcase.classList.toggle("hidden",set.id!=="me55");
-      document.querySelector("#pack-art > .booster").classList.toggle("hidden",set.id==="me55");
+      document.getElementById("set-hit-showcase").classList.add("hidden");
+      document.querySelector("#pack-art > .booster").classList.remove("hidden");
       renderSets();
       const slots=packSlotsFor(set);
       document.getElementById("selected-era").textContent=`${set.subtitle} · ${formatReleaseDate(set.releaseDate)}`;
@@ -2454,6 +2459,7 @@ $assign_admin$;`;
         updatePurchaseButton();
         const cards=await cardsRequest;
         if(selectedSet!==set)return;
+        renderSetHitShowcase(set,cards);
         const unavailableCount=cards.filter(card=>cardValue(card).source==="unavailable").length;
         setApiStatus(`${cards.length} cartes chargées · ${unavailableCount} sans cours de marché exploitable`,"ok");
         updatePurchaseButton();
@@ -2708,6 +2714,41 @@ $assign_admin$;`;
       if(rgbId)return RGB_MEW_IMAGES[rgbId];
       return card.image || `https://images.pokemontcg.io/${encodeURIComponent(card.id)}/hires.png`;
     }
+    function renderSetHitShowcase(set,cards){
+      const showcase=document.getElementById("set-hit-showcase");
+      const container=document.getElementById("set-hit-cards");
+      let featured=[];
+      if(set.id==="me55"){
+        featured=["R","G","B"].map(color=>cards.find(card=>card.id===`30th-${color}`)).filter(Boolean);
+      }
+      if(!featured.length){
+        const chaseCards=cards.filter(card=>!["common","uncommon"].includes(normalizeRarity(card.rarity))&&isBoosterChecklistCard(card));
+        const topRarity=chaseCards.reduce((top,card)=>Math.max(top,rarityScore(card)),0);
+        featured=chaseCards
+          .filter(card=>rarityScore(card)===topRarity)
+          .sort((a,b)=>Number(cardValue(b).value||0)-Number(cardValue(a).value||0))
+          .slice(0,3);
+      }
+      if(!featured.length){
+        showcase.classList.add("hidden");
+        document.querySelector("#pack-art > .booster").classList.remove("hidden");
+        return;
+      }
+      container.innerHTML=featured.map(card=>{
+        const rgbColor=String(card.id||"").match(/^30th-([RGB])$/)?.[1];
+        const displayName=rgbColor?`Mew ${({R:"Rouge",G:"Vert",B:"Bleu"})[rgbColor]}`:card.name||"Carte rare";
+        const finishes=finishTypes(card);
+        const displayRarity=rgbColor?"RGB Rare":card.rarity||"Carte rare";
+        const displayFinish=finishes.has("holo")?"Holo":displayRarity;
+        const cardNumber=card.number?`#${card.number}${card.printedTotal?`/${card.printedTotal}`:""}`:"";
+        const title=[displayName,displayFinish,displayRarity!==displayFinish?displayRarity:"",cardNumber].filter(Boolean).join(" · ");
+        const image=imageUrl(card);
+        const finishAndRarity=displayRarity!==displayFinish?`${displayFinish} · ${displayRarity}`:displayFinish;
+        return `<div class="set-hit-card" title="${escapeHtml(title)}"><div class="set-hit-visual" data-card-name="${escapeHtml(displayName)}"><img src="${escapeHtml(image)}" alt="${escapeHtml(displayName)}" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"></div><span class="set-hit-name">${escapeHtml(displayName)}</span><span class="set-hit-meta">${escapeHtml(finishAndRarity)}</span>${cardNumber?`<span class="set-hit-meta">${escapeHtml(cardNumber)}</span>`:""}</div>`;
+      }).join("");
+      document.querySelector("#pack-art > .booster").classList.add("hidden");
+      showcase.classList.remove("hidden");
+    }
     function preloadCardImage(card){
       const url=imageUrl(card);
       if(preloadedImages.has(url))return preloadedImages.get(url);
@@ -2747,24 +2788,32 @@ $assign_admin$;`;
       if(hitAudioContext.state==="suspended")hitAudioContext.resume().catch(error=>console.warn("Audio des hits indisponible.",error));
     }
     function playHitSound(value){
-      if(!soundEnabled||Number(value)<20)return;
+      if(!soundEnabled)return;
       unlockHitAudio();
       if(!hitAudioContext)return;
-      const jackpot=Number(value)>=100;
-      const now=hitAudioContext.currentTime;
-      const notes=jackpot?[880,1174.66,1567.98]:[659.25,880];
-      notes.forEach((frequency,index)=>{
-        const oscillator=hitAudioContext.createOscillator();
-        const gain=hitAudioContext.createGain();
-        const start=now+index*.085;
-        oscillator.type="sine";
-        oscillator.frequency.setValueAtTime(frequency,start);
-        gain.gain.setValueAtTime(.0001,start);
-        gain.gain.exponentialRampToValueAtTime(jackpot?.13:.075,start+.018);
-        gain.gain.exponentialRampToValueAtTime(.0001,start+(jackpot?.45:.28));
-        oscillator.connect(gain);gain.connect(hitAudioContext.destination);
-        oscillator.start(start);oscillator.stop(start+(jackpot?.46:.29));
-      });
+      const play=()=>{
+        if(!soundEnabled)return;
+        const jackpot=Number(value)>=100;
+        const now=hitAudioContext.currentTime;
+        const notes=jackpot?[880,1174.66,1567.98]:[659.25,880];
+        notes.forEach((frequency,index)=>{
+          const oscillator=hitAudioContext.createOscillator();
+          const gain=hitAudioContext.createGain();
+          const start=now+index*.085;
+          oscillator.type="sine";
+          oscillator.frequency.setValueAtTime(frequency,start);
+          gain.gain.setValueAtTime(.0001,start);
+          gain.gain.exponentialRampToValueAtTime(jackpot?.13:.075,start+.018);
+          gain.gain.exponentialRampToValueAtTime(.0001,start+(jackpot?.45:.28));
+          oscillator.connect(gain);gain.connect(hitAudioContext.destination);
+          oscillator.start(start);oscillator.stop(start+(jackpot?.46:.29));
+        });
+      };
+      if(hitAudioContext.state==="running")play();
+      else hitAudioContext.resume().then(play).catch(error=>console.warn("Lecture du son de hit impossible.",error));
+    }
+    function isSoundHit(card){
+      return rarityScore({rarity:card.rarity})>=5||/\b(?:ex|vmax|vstar|v)$/i.test(String(card.name||"").trim());
     }
     function preloadInitialReveal(pulls,hitPileMode){
       revealQueueFor(pulls,hitPileMode).slice(0,3).forEach(preloadCardImage);
@@ -2982,7 +3031,7 @@ $assign_admin$;`;
       currentValue.textContent=cardPriceText(current);
       if(current.value>=100)priceBadge.classList.add("price-jackpot");
       else if(current.value>=20)priceBadge.classList.add("price-hit");
-      if(current.value>=20&&pendingReveal.lastSoundIndex!==index){playHitSound(current.value);pendingReveal.lastSoundIndex=index;}
+      if(isSoundHit(current)&&pendingReveal.lastSoundIndex!==index){playHitSound(current.value);pendingReveal.lastSoundIndex=index;}
       if(current.value>=5){
         void priceBadge.offsetWidth;
         priceBadge.classList.add("price-pop");
@@ -2998,7 +3047,7 @@ $assign_admin$;`;
       stack.innerHTML=`${previews}<button type="button" class="stack-top ${foil?"foil":""}" data-card-name="${escapeHtml(current.name)}" style="z-index:3" aria-label="Swiper ${escapeHtml(current.name)} et révéler la carte suivante"><img src="${escapeHtml(imageUrl(current))}" alt="${escapeHtml(current.name)}" draggable="false" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-unavailable')"><span class="stack-card-caption"><span class="flex items-center justify-between gap-2"><span class="truncate text-base font-semibold">${escapeHtml(current.name)}</span><span class="shrink-0 text-sm gold">${cardPriceText(current)}</span></span><span class="muted mt-1 block text-[10px]">${escapeHtml(current.rarity)}${cardPriceLabel(current)} · ${typeLabel} · booster ${current.packNumber}</span></span></button>`;
       preloadRevealWindow();
       const top=stack.querySelector(".stack-top");
-      if(promotedImage){
+      if(promotedImage?.complete&&promotedImage.naturalWidth>0){
         promotedImage.alt=current.name;
         top.querySelector("img").replaceWith(promotedImage);
       }
